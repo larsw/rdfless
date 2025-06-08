@@ -16,6 +16,7 @@ fn test_format_owned_subject_with_prefix() {
         object_value: "value".to_string(),
         object_datatype: None,
         object_language: None,
+        graph: None,
     };
     
     let mut prefixes = HashMap::new();
@@ -37,6 +38,7 @@ fn test_format_owned_subject_without_prefix() {
         object_value: "value".to_string(),
         object_datatype: None,
         object_language: None,
+        graph: None,
     };
     
     let colors = ColorConfig::default();
@@ -55,6 +57,7 @@ fn test_format_owned_subject_blank_node() {
         object_value: "value".to_string(),
         object_datatype: None,
         object_language: None,
+        graph: None,
     };
     
     let colors = ColorConfig::default();
@@ -73,6 +76,7 @@ fn test_format_owned_predicate_with_prefix() {
         object_value: "value".to_string(),
         object_datatype: None,
         object_language: None,
+        graph: None,
     };
     
     let mut prefixes = HashMap::new();
@@ -96,6 +100,7 @@ fn test_format_owned_object_named_node_with_prefix() {
         object_value: "http://example.org/object".to_string(),
         object_datatype: None,
         object_language: None,
+        graph: None,
     };
     
     let mut prefixes = HashMap::new();
@@ -119,6 +124,7 @@ fn test_format_owned_object_blank_node() {
         object_value: "blank1".to_string(),
         object_datatype: None,
         object_language: None,
+        graph: None,
     };
     
     let colors = ColorConfig::default();
@@ -139,6 +145,7 @@ fn test_format_owned_object_simple_literal() {
         object_value: "simple value".to_string(),
         object_datatype: None,
         object_language: None,
+        graph: None,
     };
     
     let colors = ColorConfig::default();
@@ -159,6 +166,7 @@ fn test_format_owned_object_language_tagged_literal() {
         object_value: "hello".to_string(),
         object_datatype: None,
         object_language: Some("en".to_string()),
+        graph: None,
     };
     
     let colors = ColorConfig::default();
@@ -179,6 +187,7 @@ fn test_format_owned_object_typed_literal() {
         object_value: "42".to_string(),
         object_datatype: Some("http://www.w3.org/2001/XMLSchema#integer".to_string()),
         object_language: None,
+        graph: None,
     };
     
     let mut prefixes = HashMap::new();

@@ -5,19 +5,40 @@
 // LICENSE file in the root directory of this source tree.
 
 use colored::*;
-use rio_api::model::{Triple, Term, Literal, Subject};
-use rio_api::parser::TriplesParser;
-use rio_turtle::{TurtleParser, TurtleError};
+use rio_api::model::{Triple, Term, Literal, Subject, Quad};
+use rio_api::parser::{TriplesParser, QuadsParser};
+use rio_turtle::{TurtleParser, TurtleError, TriGParser};
 use std::collections::HashMap;
 use std::io::{BufReader, Read};
 use anyhow::Result;
+use std::path::Path;
 
 pub mod config;
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum InputFormat {
+    Turtle,
+    TriG,
+}
 
 // Define a trait for the Args interface
 pub trait Args {
     // Determine if prefixes should be expanded based on args and config
     fn expand(&self, config: &config::Config) -> bool;
+
+    // Get the input format (either specified by user or detected from file extension)
+    fn format(&self) -> Option<InputFormat>;
+}
+
+// Helper function to detect format from file extension
+pub fn detect_format_from_path(path: &Path) -> Option<InputFormat> {
+    path.extension()
+        .and_then(|ext| ext.to_str())
+        .map(|ext| match ext.to_lowercase().as_str() {
+            "ttl" => InputFormat::Turtle,
+            "trig" => InputFormat::TriG,
+            _ => InputFormat::Turtle, // Default to Turtle for unknown extensions
+        })
 }
 
 // Re-export the types and functions needed for testing
@@ -30,6 +51,7 @@ pub struct OwnedTriple {
     pub object_value: String,
     pub object_datatype: Option<String>,
     pub object_language: Option<String>,
+    pub graph: Option<String>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -84,7 +106,36 @@ pub fn triple_to_owned(triple: &Triple) -> OwnedTriple {
         object_value,
         object_datatype,
         object_language,
+        graph: None,
     }
+}
+
+// Convert a Quad to an OwnedTriple with graph information
+pub fn quad_to_owned(quad: &Quad) -> OwnedTriple {
+    // First convert the triple part
+    let mut owned_triple = triple_to_owned(&Triple {
+        subject: quad.subject,
+        predicate: quad.predicate,
+        object: quad.object,
+    });
+
+    // Then add the graph information if available
+    if let Some(graph_name) = &quad.graph_name {
+        // Extract the graph name without angle brackets
+        // The format!("{}", graph_name) might include angle brackets, so we'll extract just the IRI
+        let graph_str = format!("{}", graph_name);
+
+        // Remove angle brackets if present
+        let clean_graph = if graph_str.starts_with('<') && graph_str.ends_with('>') {
+            graph_str[1..graph_str.len()-1].to_string()
+        } else {
+            graph_str
+        };
+
+        owned_triple.graph = Some(clean_graph);
+    }
+
+    owned_triple
 }
 
 // Format an owned subject
@@ -173,41 +224,103 @@ pub fn format_owned_object(triple: &OwnedTriple, prefixes: Option<&HashMap<Strin
 
 // Print triples with or without prefixes
 pub fn print_triples(triples: &[OwnedTriple], prefixes: Option<&HashMap<String, String>>, colors: &config::ColorConfig) {
-    let mut current_subject: Option<String> = None;
+    // Group triples by graph
+    let mut graph_groups: HashMap<Option<String>, Vec<&OwnedTriple>> = HashMap::new();
 
     for triple in triples {
-        let subject = format_owned_subject(triple, prefixes, colors);
-        let predicate = format_owned_predicate(triple, prefixes, colors);
-        let object = format_owned_object(triple, prefixes, colors);
+        graph_groups.entry(triple.graph.clone()).or_default().push(triple);
+    }
 
-        // Check if we're continuing with the same subject
-        if let Some(ref current) = current_subject {
-            if *current == subject {
-                // Same subject, print with semicolon
-                println!("    {} ;", predicate);
-                println!("        {} .", object);
-            } else {
-                // New subject
-                if current_subject.is_some() {
-                    println!();  // Add a blank line between statements
+    // Sort graphs to ensure consistent output (None/default graph first)
+    let mut graph_keys: Vec<_> = graph_groups.keys().collect();
+    graph_keys.sort_by(|a, b| match (a, b) {
+        (None, None) => std::cmp::Ordering::Equal,
+        (None, _) => std::cmp::Ordering::Less,
+        (_, None) => std::cmp::Ordering::Greater,
+        (Some(a_str), Some(b_str)) => a_str.cmp(b_str),
+    });
+
+    // Process each graph
+    for graph_key in graph_keys {
+        let triples_in_graph = &graph_groups[graph_key];
+
+        // Print graph name if it exists (for TriG format)
+        if let Some(graph_name) = graph_key {
+            // Try to use a prefix if available
+            let formatted_graph = if let Some(prefixes) = prefixes {
+                let mut result = format!("<{}>", graph_name);
+                for (prefix, iri) in prefixes {
+                    if graph_name.starts_with(iri) {
+                        let local_part = &graph_name[iri.len()..];
+                        result = format!("{}:{}", prefix, local_part);
+                        break;
+                    }
                 }
-                println!("{}", subject.color(colors.get_color("subject")).bold());
-                println!("    {} ;", predicate);
-                println!("        {} .", object);
+                result
+            } else {
+                format!("<{}>", graph_name)
+            };
+
+            println!("{} {{", formatted_graph.color(colors.get_color("graph")).bold());
+        }
+
+        // Group by subject within this graph
+        let mut current_subject: Option<String> = None;
+
+        for triple in triples_in_graph {
+            let subject = format_owned_subject(triple, prefixes, colors);
+            let predicate = format_owned_predicate(triple, prefixes, colors);
+            let object = format_owned_object(triple, prefixes, colors);
+
+            // Indent more if we're in a named graph
+            let indent = if graph_key.is_some() { "  " } else { "" };
+
+            // Check if we're continuing with the same subject
+            if let Some(ref current) = current_subject {
+                if *current == subject {
+                    // Same subject, print with semicolon
+                    println!("{}    {} ;", indent, predicate);
+                    println!("{}        {} .", indent, object);
+                } else {
+                    // New subject
+                    if current_subject.is_some() {
+                        println!();  // Add a blank line between statements
+                    }
+                    println!("{}{}", indent, subject.color(colors.get_color("subject")).bold());
+                    println!("{}    {} ;", indent, predicate);
+                    println!("{}        {} .", indent, object);
+                    current_subject = Some(subject);
+                }
+            } else {
+                // First subject
+                println!("{}{}", indent, subject.color(colors.get_color("subject")).bold());
+                println!("{}    {} ;", indent, predicate);
+                println!("{}        {} .", indent, object);
                 current_subject = Some(subject);
             }
-        } else {
-            // First subject
-            println!("{}", subject.color(colors.get_color("subject")).bold());
-            println!("    {} ;", predicate);
-            println!("        {} .", object);
-            current_subject = Some(subject);
+        }
+
+        // Close the graph block if it's a named graph
+        if graph_key.is_some() {
+            println!("}}");
+            println!();  // Add a blank line after each graph
         }
     }
 }
 
-// Process TTL input
+// Process input based on format
 pub fn process_input<R: Read, A: Args>(reader: BufReader<R>, args: &A, colors: &config::ColorConfig, config: &config::Config) -> Result<()> {
+    // Determine the format to use
+    let format = args.format().unwrap_or(InputFormat::Turtle);
+
+    match format {
+        InputFormat::Turtle => process_turtle(reader, args, colors, config),
+        InputFormat::TriG => process_trig(reader, args, colors, config),
+    }
+}
+
+// Process Turtle input
+fn process_turtle<R: Read, A: Args>(reader: BufReader<R>, args: &A, colors: &config::ColorConfig, config: &config::Config) -> Result<()> {
     let mut parser = TurtleParser::new(reader, None);
 
     if !args.expand(config) {
@@ -258,6 +371,67 @@ pub fn process_input<R: Read, A: Args>(reader: BufReader<R>, args: &A, colors: &
         };
 
         // Parse all triples
+        parser.parse_all(&mut callback)?;
+
+        // Print triples without prefixes
+        print_triples(&triples, None, colors);
+    }
+
+    Ok(())
+}
+
+// Process TriG input
+fn process_trig<R: Read, A: Args>(reader: BufReader<R>, args: &A, colors: &config::ColorConfig, config: &config::Config) -> Result<()> {
+    let mut parser = TriGParser::new(reader, None);
+
+    if !args.expand(config) {
+        // Collect triples and prefixes
+        let mut triples = Vec::new();
+        let mut prefixes = HashMap::new();
+
+        // Process each quad
+        let mut callback = |quad: Quad| -> std::result::Result<(), TurtleError> {
+            // Convert to owned triple with graph information
+            let owned_triple = quad_to_owned(&quad);
+            triples.push(owned_triple);
+            Ok(())
+        };
+
+        // Parse all quads
+        parser.parse_all(&mut callback)?;
+
+        // Get prefixes from parser
+        for (prefix, iri) in parser.prefixes() {
+            prefixes.insert(prefix.to_string(), iri.to_string());
+        }
+
+        // Print prefixes
+        for (prefix, iri) in &prefixes {
+            println!("{} {}: <{}> .", 
+                "PREFIX".color(colors.get_color("prefix")),
+                prefix.color(colors.get_color("prefix")),
+                iri);
+        }
+
+        if !prefixes.is_empty() {
+            println!(); // Add a blank line after prefixes
+        }
+
+        // Print triples with prefixes
+        print_triples(&triples, Some(&prefixes), colors);
+    } else {
+        // If expanding, print directly as we parse
+        let mut triples = Vec::new();
+
+        // Process each quad
+        let mut callback = |quad: Quad| -> std::result::Result<(), TurtleError> {
+            // Convert to owned triple with graph information
+            let owned_triple = quad_to_owned(&quad);
+            triples.push(owned_triple);
+            Ok(())
+        };
+
+        // Parse all quads
         parser.parse_all(&mut callback)?;
 
         // Print triples without prefixes

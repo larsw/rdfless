@@ -42,14 +42,21 @@ The binary will be available at `target/release/rdfless`.
 # Process a TTL file
 rdfless file.ttl
 
-# Process multiple TTL files
-rdfless file1.ttl file2.ttl
+# Process a TriG file
+rdfless file.trig
+
+# Process multiple files
+rdfless file1.ttl file2.trig
 
 # Read from stdin
 cat file.ttl | rdfless
 
 # Expand prefixes instead of showing PREFIX declarations
 rdfless --expand file.ttl
+
+# Override the input format (auto-detected from file extension by default)
+rdfless --format turtle file.rdf
+rdfless --format trig file.rdf
 ```
 
 ## Configuration
@@ -93,6 +100,20 @@ ex:john a ex:Person ;
 ```
 
 Output will be the same content but with syntax highlighting for better readability.
+
+## Screenshots
+
+### Turtle Format (TTL)
+
+Compact Mode | Expanded Mode
+:----------:|:------------:
+![Turtle Compact](assets/sample-ttl-compact.png) | ![Turtle Expanded](assets/sample-ttl-expanded.png)
+
+### TriG Format (TRIG)
+
+Compact Mode | Expanded Mode
+:----------:|:------------:
+![TriG Compact](assets/sample-trig-compact.png) | ![TriG Expanded](assets/sample-trig-expanded.png)
 
 ## License
 

@@ -12,21 +12,12 @@ use serde::{Deserialize, Serialize};
 use dirs::home_dir;
 use serde_yaml2 as serde_yaml;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Config {
     #[serde(default)]
     pub colors: ColorConfig,
     #[serde(default)]
     pub expand: bool,
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Config {
-            colors: ColorConfig::default(),
-            expand: false,
-        }
-    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
