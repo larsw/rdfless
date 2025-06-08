@@ -1,0 +1,18 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix ex: <http://example.org/> .
+
+ex:Person a rdfs:Class ;
+    rdfs:label "Person" ;
+    rdfs:comment "A person class" .
+
+ex:john a ex:Person ;
+    foaf:name "John Doe" ;
+    foaf:age 30 ;
+    foaf:knows ex:jane .
+
+ex:jane a ex:Person ;
+    foaf:name "Jane Smith" ;
+    foaf:age 28 ;
+    foaf:knows ex:john .
