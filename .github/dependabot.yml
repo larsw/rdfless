@@ -1,0 +1,13 @@
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: "/"
+    schedule:
+      interval: daily
+    reviewers:
+      - larsw
+    groups:
+      rust-deps:
+        patterns:
+          - "*"
+
