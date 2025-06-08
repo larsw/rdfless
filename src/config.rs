@@ -1,9 +1,16 @@
+// Copyright (c) 2024, rdfless Contributors
+// All rights reserved.
+// 
+// This source code is licensed under the BSD-3-Clause license found in the
+// LICENSE file in the root directory of this source tree.
+
 use std::fs;
 use std::path::PathBuf;
 use anyhow::{Context, Result};
 use colored::Color;
 use serde::{Deserialize, Serialize};
 use dirs::home_dir;
+use serde_yaml2 as serde_yaml;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ColorConfig {
@@ -66,42 +73,42 @@ fn string_to_color(color_name: &str) -> Color {
 
 pub fn load_config() -> Result<ColorConfig> {
     let config_path = get_config_path()?;
-    
+
     if !config_path.exists() {
         create_default_config(&config_path)?;
     }
-    
+
     let config_str = fs::read_to_string(&config_path)
         .with_context(|| format!("Failed to read config file: {}", config_path.display()))?;
-    
+
     let config: ColorConfig = serde_yaml::from_str(&config_str)
         .with_context(|| "Failed to parse config file")?;
-    
+
     Ok(config)
 }
 
 fn get_config_path() -> Result<PathBuf> {
     let home = home_dir().context("Could not find home directory")?;
-    let config_dir = home.join(".local").join("ttlless");
+    let config_dir = home.join(".local").join("rdfless");
     let config_path = config_dir.join("colors.yml");
-    
+
     Ok(config_path)
 }
 
 fn create_default_config(config_path: &PathBuf) -> Result<()> {
     let config_dir = config_path.parent().unwrap();
-    
+
     if !config_dir.exists() {
         fs::create_dir_all(config_dir)
             .with_context(|| format!("Failed to create config directory: {}", config_dir.display()))?;
     }
-    
+
     let default_config = ColorConfig::default();
     let yaml = serde_yaml::to_string(&default_config)
         .context("Failed to serialize default config")?;
-    
+
     fs::write(config_path, yaml)
         .with_context(|| format!("Failed to write default config to: {}", config_path.display()))?;
-    
+
     Ok(())
 }

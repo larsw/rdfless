@@ -1,3 +1,9 @@
+// Copyright (c) 2024, rdfless Contributors
+// All rights reserved.
+// 
+// This source code is licensed under the BSD-3-Clause license found in the
+// LICENSE file in the root directory of this source tree.
+
 use anyhow::{Context, Result};
 use clap::Parser;
 use colored::*;
@@ -40,8 +46,10 @@ fn main() -> Result<()> {
             process_input(reader, &args, &colors)?;
         } else {
             eprintln!("No input files provided and no input piped to stdin.");
-            eprintln!("Usage: cat file.ttl | ttlless");
-            eprintln!("   or: ttlless file1.ttl [file2.ttl ...]");
+            eprintln!("Usage: cat file.ttl | rdfless [--expand]");
+            eprintln!("   or: rdfless [--expand] file1.ttl [file2.ttl ...]");
+            eprintln!();
+            eprintln!("Use --expand to expand prefixes instead of showing PREFIX declarations.");
             std::process::exit(1);
         }
     } else {
