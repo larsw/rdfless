@@ -61,9 +61,15 @@ fn test_turtle_parser_with_prefixes() {
     let triple = &triples[0];
     assert_eq!(triple.subject_type, rdfless::SubjectType::NamedNode);
     assert_eq!(triple.subject_value, "https://example.org/Resource");
-    assert_eq!(triple.predicate, "http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
+    assert_eq!(
+        triple.predicate,
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+    );
     assert_eq!(triple.object_type, rdfless::ObjectType::NamedNode);
-    assert_eq!(triple.object_value, "http://www.w3.org/1999/02/22-rdf-syntax-ns#Class");
+    assert_eq!(
+        triple.object_value,
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#Class"
+    );
 
     // Check that prefixes were parsed correctly
     let prefixes = parser.prefixes();
@@ -73,7 +79,10 @@ fn test_turtle_parser_with_prefixes() {
     assert!(prefixes.contains_key("ex"));
 
     // Check the values
-    assert_eq!(prefixes.get("rdf").unwrap(), "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
+    assert_eq!(
+        prefixes.get("rdf").unwrap(),
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    );
     assert_eq!(prefixes.get("ex").unwrap(), "https://example.org/");
 }
 
@@ -132,19 +141,31 @@ fn test_turtle_parser_with_literals() {
     assert_eq!(triples.len(), 3);
 
     // Check simple string literal
-    let simple_string = triples.iter().find(|t| t.predicate == "https://example.org/string").unwrap();
+    let simple_string = triples
+        .iter()
+        .find(|t| t.predicate == "https://example.org/string")
+        .unwrap();
     assert_eq!(simple_string.object_type, rdfless::ObjectType::Literal);
     assert_eq!(simple_string.object_value, "simple string");
 
     // Check language-tagged string
-    let lang_string = triples.iter().find(|t| t.predicate == "https://example.org/langString").unwrap();
+    let lang_string = triples
+        .iter()
+        .find(|t| t.predicate == "https://example.org/langString")
+        .unwrap();
     assert_eq!(lang_string.object_type, rdfless::ObjectType::Literal);
     assert_eq!(lang_string.object_value, "hello");
     assert_eq!(lang_string.object_language.as_deref(), Some("en"));
 
     // Check typed literal
-    let typed_literal = triples.iter().find(|t| t.predicate == "https://example.org/integer").unwrap();
+    let typed_literal = triples
+        .iter()
+        .find(|t| t.predicate == "https://example.org/integer")
+        .unwrap();
     assert_eq!(typed_literal.object_type, rdfless::ObjectType::Literal);
     assert_eq!(typed_literal.object_value, "42");
-    assert_eq!(typed_literal.object_datatype.as_deref(), Some("http://www.w3.org/2001/XMLSchema#integer"));
+    assert_eq!(
+        typed_literal.object_datatype.as_deref(),
+        Some("http://www.w3.org/2001/XMLSchema#integer")
+    );
 }

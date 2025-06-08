@@ -1,16 +1,16 @@
 // Copyright (c) 2025, Lars Wilhelmsen
 // All rights reserved.
-// 
+//
 // This source code is licensed under the BSD-3-Clause license found in the
 // LICENSE file in the root directory of this source tree.
 
+use anyhow::Result;
 use colored::*;
-use rio_api::model::{Triple, Term, Literal, Subject, Quad};
-use rio_api::parser::{TriplesParser, QuadsParser};
-use rio_turtle::{TurtleParser, TurtleError, TriGParser};
+use rio_api::model::{Literal, Quad, Subject, Term, Triple};
+use rio_api::parser::{QuadsParser, TriplesParser};
+use rio_turtle::{TriGParser, TurtleError, TurtleParser};
 use std::collections::HashMap;
 use std::io::{BufReader, Read};
-use anyhow::Result;
 use std::path::Path;
 
 pub mod config;
@@ -127,7 +127,7 @@ pub fn quad_to_owned(quad: &Quad) -> OwnedTriple {
 
         // Remove angle brackets if present
         let clean_graph = if graph_str.starts_with('<') && graph_str.ends_with('>') {
-            graph_str[1..graph_str.len()-1].to_string()
+            graph_str[1..graph_str.len() - 1].to_string()
         } else {
             graph_str
         };
@@ -139,7 +139,11 @@ pub fn quad_to_owned(quad: &Quad) -> OwnedTriple {
 }
 
 // Format an owned subject
-pub fn format_owned_subject(triple: &OwnedTriple, prefixes: Option<&HashMap<String, String>>, _colors: &config::ColorConfig) -> String {
+pub fn format_owned_subject(
+    triple: &OwnedTriple,
+    prefixes: Option<&HashMap<String, String>>,
+    _colors: &config::ColorConfig,
+) -> String {
     match triple.subject_type {
         SubjectType::NamedNode => {
             if let Some(prefixes) = prefixes {
@@ -154,29 +158,41 @@ pub fn format_owned_subject(triple: &OwnedTriple, prefixes: Option<&HashMap<Stri
 
             // No prefix found, use full URI
             format!("<{}>", triple.subject_value)
-        },
+        }
         SubjectType::BlankNode => format!("_:{}", triple.subject_value),
     }
 }
 
 // Format an owned predicate
-pub fn format_owned_predicate(triple: &OwnedTriple, prefixes: Option<&HashMap<String, String>>, colors: &config::ColorConfig) -> String {
+pub fn format_owned_predicate(
+    triple: &OwnedTriple,
+    prefixes: Option<&HashMap<String, String>>,
+    colors: &config::ColorConfig,
+) -> String {
     if let Some(prefixes) = prefixes {
         // Try to use a prefix if available
         for (prefix, iri) in prefixes {
             if triple.predicate.starts_with(iri) {
                 let local_part = &triple.predicate[iri.len()..];
-                return format!("{}:{}", prefix, local_part).color(colors.get_color("predicate")).to_string();
+                return format!("{}:{}", prefix, local_part)
+                    .color(colors.get_color("predicate"))
+                    .to_string();
             }
         }
     }
 
     // No prefix found, use full URI
-    format!("<{}>", triple.predicate).color(colors.get_color("predicate")).to_string()
+    format!("<{}>", triple.predicate)
+        .color(colors.get_color("predicate"))
+        .to_string()
 }
 
 // Format an owned object
-pub fn format_owned_object(triple: &OwnedTriple, prefixes: Option<&HashMap<String, String>>, colors: &config::ColorConfig) -> String {
+pub fn format_owned_object(
+    triple: &OwnedTriple,
+    prefixes: Option<&HashMap<String, String>>,
+    colors: &config::ColorConfig,
+) -> String {
     match triple.object_type {
         ObjectType::NamedNode => {
             if let Some(prefixes) = prefixes {
@@ -184,20 +200,28 @@ pub fn format_owned_object(triple: &OwnedTriple, prefixes: Option<&HashMap<Strin
                 for (prefix, iri) in prefixes {
                     if triple.object_value.starts_with(iri) {
                         let local_part = &triple.object_value[iri.len()..];
-                        return format!("{}:{}", prefix, local_part).color(colors.get_color("object")).to_string();
+                        return format!("{}:{}", prefix, local_part)
+                            .color(colors.get_color("object"))
+                            .to_string();
                     }
                 }
             }
 
             // No prefix found, use full URI
-            format!("<{}>", triple.object_value).color(colors.get_color("object")).to_string()
-        },
-        ObjectType::BlankNode => format!("_:{}", triple.object_value).color(colors.get_color("object")).to_string(),
+            format!("<{}>", triple.object_value)
+                .color(colors.get_color("object"))
+                .to_string()
+        }
+        ObjectType::BlankNode => format!("_:{}", triple.object_value)
+            .color(colors.get_color("object"))
+            .to_string(),
         ObjectType::Literal => {
             let literal_color = colors.get_color("literal");
 
             if let Some(language) = &triple.object_language {
-                format!("\"{}\"@{}", triple.object_value, language).color(literal_color).to_string()
+                format!("\"{}\"@{}", triple.object_value, language)
+                    .color(literal_color)
+                    .to_string()
             } else if let Some(datatype) = &triple.object_datatype {
                 let datatype_str = if let Some(prefixes) = prefixes {
                     // Try to use a prefix if available
@@ -214,21 +238,32 @@ pub fn format_owned_object(triple: &OwnedTriple, prefixes: Option<&HashMap<Strin
                     format!("<{}>", datatype)
                 };
 
-                format!("\"{}\"^^{}", triple.object_value, datatype_str).color(literal_color).to_string()
+                format!("\"{}\"^^{}", triple.object_value, datatype_str)
+                    .color(literal_color)
+                    .to_string()
             } else {
-                format!("\"{}\"", triple.object_value).color(literal_color).to_string()
+                format!("\"{}\"", triple.object_value)
+                    .color(literal_color)
+                    .to_string()
             }
-        },
+        }
     }
 }
 
 // Print triples with or without prefixes
-pub fn print_triples(triples: &[OwnedTriple], prefixes: Option<&HashMap<String, String>>, colors: &config::ColorConfig) {
+pub fn print_triples(
+    triples: &[OwnedTriple],
+    prefixes: Option<&HashMap<String, String>>,
+    colors: &config::ColorConfig,
+) {
     // Group triples by graph
     let mut graph_groups: HashMap<Option<String>, Vec<&OwnedTriple>> = HashMap::new();
 
     for triple in triples {
-        graph_groups.entry(triple.graph.clone()).or_default().push(triple);
+        graph_groups
+            .entry(triple.graph.clone())
+            .or_default()
+            .push(triple);
     }
 
     // Sort graphs to ensure consistent output (None/default graph first)
@@ -261,7 +296,10 @@ pub fn print_triples(triples: &[OwnedTriple], prefixes: Option<&HashMap<String, 
                 format!("<{}>", graph_name)
             };
 
-            println!("{} {{", formatted_graph.color(colors.get_color("graph")).bold());
+            println!(
+                "{} {{",
+                formatted_graph.color(colors.get_color("graph")).bold()
+            );
         }
 
         // Group by subject within this graph
@@ -284,16 +322,24 @@ pub fn print_triples(triples: &[OwnedTriple], prefixes: Option<&HashMap<String, 
                 } else {
                     // New subject
                     if current_subject.is_some() {
-                        println!();  // Add a blank line between statements
+                        println!(); // Add a blank line between statements
                     }
-                    println!("{}{}", indent, subject.color(colors.get_color("subject")).bold());
+                    println!(
+                        "{}{}",
+                        indent,
+                        subject.color(colors.get_color("subject")).bold()
+                    );
                     println!("{}    {} ;", indent, predicate);
                     println!("{}        {} .", indent, object);
                     current_subject = Some(subject);
                 }
             } else {
                 // First subject
-                println!("{}{}", indent, subject.color(colors.get_color("subject")).bold());
+                println!(
+                    "{}{}",
+                    indent,
+                    subject.color(colors.get_color("subject")).bold()
+                );
                 println!("{}    {} ;", indent, predicate);
                 println!("{}        {} .", indent, object);
                 current_subject = Some(subject);
@@ -303,13 +349,18 @@ pub fn print_triples(triples: &[OwnedTriple], prefixes: Option<&HashMap<String, 
         // Close the graph block if it's a named graph
         if graph_key.is_some() {
             println!("}}");
-            println!();  // Add a blank line after each graph
+            println!(); // Add a blank line after each graph
         }
     }
 }
 
 // Process input based on format
-pub fn process_input<R: Read, A: Args>(reader: BufReader<R>, args: &A, colors: &config::ColorConfig, config: &config::Config) -> Result<()> {
+pub fn process_input<R: Read, A: Args>(
+    reader: BufReader<R>,
+    args: &A,
+    colors: &config::ColorConfig,
+    config: &config::Config,
+) -> Result<()> {
     // Determine the format to use
     let format = args.format().unwrap_or(InputFormat::Turtle);
 
@@ -320,7 +371,12 @@ pub fn process_input<R: Read, A: Args>(reader: BufReader<R>, args: &A, colors: &
 }
 
 // Process Turtle input
-fn process_turtle<R: Read, A: Args>(reader: BufReader<R>, args: &A, colors: &config::ColorConfig, config: &config::Config) -> Result<()> {
+fn process_turtle<R: Read, A: Args>(
+    reader: BufReader<R>,
+    args: &A,
+    colors: &config::ColorConfig,
+    config: &config::Config,
+) -> Result<()> {
     let mut parser = TurtleParser::new(reader, None);
 
     if !args.expand(config) {
@@ -346,10 +402,12 @@ fn process_turtle<R: Read, A: Args>(reader: BufReader<R>, args: &A, colors: &con
 
         // Print prefixes
         for (prefix, iri) in &prefixes {
-            println!("{} {}: <{}> .", 
+            println!(
+                "{} {}: <{}> .",
                 "PREFIX".color(colors.get_color("prefix")),
                 prefix.color(colors.get_color("prefix")),
-                iri);
+                iri
+            );
         }
 
         if !prefixes.is_empty() {
@@ -381,7 +439,12 @@ fn process_turtle<R: Read, A: Args>(reader: BufReader<R>, args: &A, colors: &con
 }
 
 // Process TriG input
-fn process_trig<R: Read, A: Args>(reader: BufReader<R>, args: &A, colors: &config::ColorConfig, config: &config::Config) -> Result<()> {
+fn process_trig<R: Read, A: Args>(
+    reader: BufReader<R>,
+    args: &A,
+    colors: &config::ColorConfig,
+    config: &config::Config,
+) -> Result<()> {
     let mut parser = TriGParser::new(reader, None);
 
     if !args.expand(config) {
@@ -407,10 +470,12 @@ fn process_trig<R: Read, A: Args>(reader: BufReader<R>, args: &A, colors: &confi
 
         // Print prefixes
         for (prefix, iri) in &prefixes {
-            println!("{} {}: <{}> .", 
+            println!(
+                "{} {}: <{}> .",
                 "PREFIX".color(colors.get_color("prefix")),
                 prefix.color(colors.get_color("prefix")),
-                iri);
+                iri
+            );
         }
 
         if !prefixes.is_empty() {

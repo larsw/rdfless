@@ -1,7 +1,6 @@
-use rdfless::config::{Config, ColorConfig, string_to_color};
-use serde_yaml;
-use rstest::rstest;
 use colored::Color;
+use rdfless::config::{string_to_color, ColorConfig, Config};
+use rstest::rstest;
 
 #[rstest]
 #[case("#336699", 51, 102, 153)]
@@ -11,11 +10,15 @@ use colored::Color;
 fn test_css_color_codes(#[case] color_code: &str, #[case] r: u8, #[case] g: u8, #[case] b: u8) {
     let color = string_to_color(color_code);
     match color {
-        Color::TrueColor { r: red, g: green, b: blue } => {
+        Color::TrueColor {
+            r: red,
+            g: green,
+            b: blue,
+        } => {
             assert_eq!(red, r);
             assert_eq!(green, g);
             assert_eq!(blue, b);
-        },
+        }
         _ => panic!("Expected TrueColor, got {:?}", color),
     }
 }
@@ -47,11 +50,15 @@ fn test_config_serialization_deserialization() {
     assert!(!yaml.contains("literal'"));
 
     // Deserialize back to Config
-    let deserialized_config: Config = serde_yaml::from_str(&yaml).expect("Failed to deserialize config");
+    let deserialized_config: Config =
+        serde_yaml::from_str(&yaml).expect("Failed to deserialize config");
 
     // Verify the deserialized config matches the original
     assert_eq!(deserialized_config.colors.subject, config.colors.subject);
-    assert_eq!(deserialized_config.colors.predicate, config.colors.predicate);
+    assert_eq!(
+        deserialized_config.colors.predicate,
+        config.colors.predicate
+    );
     assert_eq!(deserialized_config.colors.object, config.colors.object);
     assert_eq!(deserialized_config.colors.literal, config.colors.literal);
     assert_eq!(deserialized_config.colors.prefix, config.colors.prefix);
@@ -83,11 +90,15 @@ fn test_config_with_css_colors() {
     println!("Serialized YAML with CSS colors:\n{}", yaml);
 
     // Deserialize back to Config
-    let deserialized_config: Config = serde_yaml::from_str(&yaml).expect("Failed to deserialize config");
+    let deserialized_config: Config =
+        serde_yaml::from_str(&yaml).expect("Failed to deserialize config");
 
     // Verify the deserialized config matches the original
     assert_eq!(deserialized_config.colors.subject, config.colors.subject);
-    assert_eq!(deserialized_config.colors.predicate, config.colors.predicate);
+    assert_eq!(
+        deserialized_config.colors.predicate,
+        config.colors.predicate
+    );
     assert_eq!(deserialized_config.colors.object, config.colors.object);
     assert_eq!(deserialized_config.colors.literal, config.colors.literal);
     assert_eq!(deserialized_config.colors.prefix, config.colors.prefix);
@@ -102,7 +113,7 @@ fn test_config_with_css_colors() {
             assert_eq!(r, 51);
             assert_eq!(g, 102);
             assert_eq!(b, 153);
-        },
+        }
         _ => panic!("Expected TrueColor, got {:?}", subject_color),
     }
 }

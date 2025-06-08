@@ -69,7 +69,11 @@ fn test_process_input_basic() {
     "#;
 
     let reader = BufReader::new(Cursor::new(ttl));
-    let args = TestArgs { expand: false, compact: false, format: Some(InputFormat::Turtle) };
+    let args = TestArgs {
+        expand: false,
+        compact: false,
+        format: Some(InputFormat::Turtle),
+    };
     let colors = ColorConfig::default();
     let config = Config::default();
 
@@ -88,7 +92,11 @@ fn test_process_input_with_expand() {
     "#;
 
     let reader = BufReader::new(Cursor::new(ttl));
-    let args = TestArgs { expand: true, compact: false, format: Some(InputFormat::Turtle) };
+    let args = TestArgs {
+        expand: true,
+        compact: false,
+        format: Some(InputFormat::Turtle),
+    };
     let colors = ColorConfig::default();
     let config = Config::default();
 
@@ -105,7 +113,11 @@ fn test_process_input_with_compact() {
     "#;
 
     let reader = BufReader::new(Cursor::new(ttl));
-    let args = TestArgs { expand: false, compact: true, format: Some(InputFormat::Turtle) };
+    let args = TestArgs {
+        expand: false,
+        compact: true,
+        format: Some(InputFormat::Turtle),
+    };
     let colors = ColorConfig::default();
     let config = Config::default();
 
@@ -123,7 +135,11 @@ fn test_process_input_with_expand_and_compact() {
 
     let reader = BufReader::new(Cursor::new(ttl));
     // When both flags are provided, compact takes precedence
-    let args = TestArgs { expand: true, compact: true, format: Some(InputFormat::Turtle) };
+    let args = TestArgs {
+        expand: true,
+        compact: true,
+        format: Some(InputFormat::Turtle),
+    };
     let colors = ColorConfig::default();
     let config = Config::default();
 
@@ -142,7 +158,11 @@ fn test_process_input_with_file() {
     // Get a reference to the file
     let file = temp_file.reopen().unwrap();
     let reader = BufReader::new(file);
-    let args = TestArgs { expand: false, compact: false, format: Some(InputFormat::Turtle) };
+    let args = TestArgs {
+        expand: false,
+        compact: false,
+        format: Some(InputFormat::Turtle),
+    };
     let colors = ColorConfig::default();
     let config = Config::default();
 
@@ -166,7 +186,11 @@ fn test_process_input_with_multiple_triples() {
     "#;
 
     let reader = BufReader::new(Cursor::new(ttl));
-    let args = TestArgs { expand: false, compact: false, format: Some(InputFormat::Turtle) };
+    let args = TestArgs {
+        expand: false,
+        compact: false,
+        format: Some(InputFormat::Turtle),
+    };
     let colors = ColorConfig::default();
     let config = Config::default();
 
@@ -184,7 +208,11 @@ fn test_process_input_with_config_expand() {
 
     let reader = BufReader::new(Cursor::new(ttl));
     // No command line expand option provided
-    let args = TestArgs { expand: false, compact: false, format: Some(InputFormat::Turtle) };
+    let args = TestArgs {
+        expand: false,
+        compact: false,
+        format: Some(InputFormat::Turtle),
+    };
     let colors = ColorConfig::default();
 
     // Config with expand=true
@@ -196,7 +224,11 @@ fn test_process_input_with_config_expand() {
 
     // Test with config expand=false
     let reader = BufReader::new(Cursor::new(ttl));
-    let args = TestArgs { expand: false, compact: false, format: Some(InputFormat::Turtle) };
+    let args = TestArgs {
+        expand: false,
+        compact: false,
+        format: Some(InputFormat::Turtle),
+    };
     let mut config = Config::default();
     config.expand = false;
 
@@ -218,7 +250,11 @@ fn test_process_input_trig_format() {
     "#;
 
     let reader = BufReader::new(Cursor::new(trig));
-    let args = TestArgs { expand: false, compact: false, format: Some(InputFormat::TriG) };
+    let args = TestArgs {
+        expand: false,
+        compact: false,
+        format: Some(InputFormat::TriG),
+    };
     let colors = ColorConfig::default();
     let config = Config::default();
 

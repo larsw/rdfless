@@ -1,10 +1,10 @@
-use rstest::rstest;
 use rdfless::config::ColorConfig;
+use rstest::rstest;
 use std::collections::HashMap;
 
 // Import the OwnedTriple, SubjectType, and ObjectType from the main module
 // We need to make these public in the main.rs file
-use rdfless::{OwnedTriple, SubjectType, ObjectType};
+use rdfless::{ObjectType, OwnedTriple, SubjectType};
 
 #[rstest]
 fn test_format_owned_subject_with_prefix() {
@@ -18,12 +18,12 @@ fn test_format_owned_subject_with_prefix() {
         object_language: None,
         graph: None,
     };
-    
+
     let mut prefixes = HashMap::new();
     prefixes.insert("ex".to_string(), "http://example.org/".to_string());
-    
+
     let colors = ColorConfig::default();
-    
+
     let result = rdfless::format_owned_subject(&triple, Some(&prefixes), &colors);
     assert_eq!(result, "ex:subject");
 }
@@ -40,9 +40,9 @@ fn test_format_owned_subject_without_prefix() {
         object_language: None,
         graph: None,
     };
-    
+
     let colors = ColorConfig::default();
-    
+
     let result = rdfless::format_owned_subject(&triple, None, &colors);
     assert_eq!(result, "<http://example.org/subject>");
 }
@@ -59,9 +59,9 @@ fn test_format_owned_subject_blank_node() {
         object_language: None,
         graph: None,
     };
-    
+
     let colors = ColorConfig::default();
-    
+
     let result = rdfless::format_owned_subject(&triple, None, &colors);
     assert_eq!(result, "_:blank1");
 }
@@ -78,12 +78,12 @@ fn test_format_owned_predicate_with_prefix() {
         object_language: None,
         graph: None,
     };
-    
+
     let mut prefixes = HashMap::new();
     prefixes.insert("ex".to_string(), "http://example.org/".to_string());
-    
+
     let colors = ColorConfig::default();
-    
+
     // Since the result includes color formatting, we can't directly compare strings
     // Instead, we'll check that it contains the expected prefix format
     let result = rdfless::format_owned_predicate(&triple, Some(&prefixes), &colors);
@@ -102,12 +102,12 @@ fn test_format_owned_object_named_node_with_prefix() {
         object_language: None,
         graph: None,
     };
-    
+
     let mut prefixes = HashMap::new();
     prefixes.insert("ex".to_string(), "http://example.org/".to_string());
-    
+
     let colors = ColorConfig::default();
-    
+
     // Since the result includes color formatting, we can't directly compare strings
     // Instead, we'll check that it contains the expected prefix format
     let result = rdfless::format_owned_object(&triple, Some(&prefixes), &colors);
@@ -126,9 +126,9 @@ fn test_format_owned_object_blank_node() {
         object_language: None,
         graph: None,
     };
-    
+
     let colors = ColorConfig::default();
-    
+
     // Since the result includes color formatting, we can't directly compare strings
     // Instead, we'll check that it contains the expected blank node format
     let result = rdfless::format_owned_object(&triple, None, &colors);
@@ -147,9 +147,9 @@ fn test_format_owned_object_simple_literal() {
         object_language: None,
         graph: None,
     };
-    
+
     let colors = ColorConfig::default();
-    
+
     // Since the result includes color formatting, we can't directly compare strings
     // Instead, we'll check that it contains the expected literal format
     let result = rdfless::format_owned_object(&triple, None, &colors);
@@ -168,9 +168,9 @@ fn test_format_owned_object_language_tagged_literal() {
         object_language: Some("en".to_string()),
         graph: None,
     };
-    
+
     let colors = ColorConfig::default();
-    
+
     // Since the result includes color formatting, we can't directly compare strings
     // Instead, we'll check that it contains the expected language-tagged literal format
     let result = rdfless::format_owned_object(&triple, None, &colors);
@@ -189,12 +189,15 @@ fn test_format_owned_object_typed_literal() {
         object_language: None,
         graph: None,
     };
-    
+
     let mut prefixes = HashMap::new();
-    prefixes.insert("xsd".to_string(), "http://www.w3.org/2001/XMLSchema#".to_string());
-    
+    prefixes.insert(
+        "xsd".to_string(),
+        "http://www.w3.org/2001/XMLSchema#".to_string(),
+    );
+
     let colors = ColorConfig::default();
-    
+
     // Since the result includes color formatting, we can't directly compare strings
     // Instead, we'll check that it contains the expected typed literal format
     let result = rdfless::format_owned_object(&triple, Some(&prefixes), &colors);

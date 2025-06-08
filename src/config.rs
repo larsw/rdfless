@@ -1,16 +1,16 @@
 // Copyright (c) 2025, Lars Wilhelmsen
 // All rights reserved.
-// 
+//
 // This source code is licensed under the BSD-3-Clause license found in the
 // LICENSE file in the root directory of this source tree.
 
-use std::fs;
-use std::path::PathBuf;
 use anyhow::{Context, Result};
 use colored::Color;
-use serde::{Deserialize, Serialize};
 use dirs::home_dir;
+use serde::{Deserialize, Serialize};
 use serde_yaml;
+use std::fs;
+use std::path::PathBuf;
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Config {
@@ -132,14 +132,19 @@ pub fn load_config() -> Result<Config> {
             // If parsing fails, it might be using the old format with single quotes
             // Delete the old config file and create a new one
             eprintln!("Warning: Failed to parse existing config file. Creating a new one.");
-            fs::remove_file(&config_path)
-                .with_context(|| format!("Failed to remove old config file: {}", config_path.display()))?;
+            fs::remove_file(&config_path).with_context(|| {
+                format!(
+                    "Failed to remove old config file: {}",
+                    config_path.display()
+                )
+            })?;
 
             create_default_config(&config_path)?;
 
             // Read and parse the new config file
-            let new_config_str = fs::read_to_string(&config_path)
-                .with_context(|| format!("Failed to read new config file: {}", config_path.display()))?;
+            let new_config_str = fs::read_to_string(&config_path).with_context(|| {
+                format!("Failed to read new config file: {}", config_path.display())
+            })?;
 
             let config: Config = serde_yaml::from_str(&new_config_str)
                 .with_context(|| "Failed to parse new config file")?;
@@ -149,7 +154,6 @@ pub fn load_config() -> Result<Config> {
     }
 }
 
-
 fn get_config_path() -> Result<PathBuf> {
     let home = home_dir().context("Could not find home directory")?;
     let config_dir = home.join(".local").join("rdfless");
@@ -158,21 +162,28 @@ fn get_config_path() -> Result<PathBuf> {
     Ok(config_path)
 }
 
-
 fn create_default_config(config_path: &PathBuf) -> Result<()> {
     let config_dir = config_path.parent().unwrap();
 
     if !config_dir.exists() {
-        fs::create_dir_all(config_dir)
-            .with_context(|| format!("Failed to create config directory: {}", config_dir.display()))?;
+        fs::create_dir_all(config_dir).with_context(|| {
+            format!(
+                "Failed to create config directory: {}",
+                config_dir.display()
+            )
+        })?;
     }
 
     let default_config = Config::default();
-    let yaml = serde_yaml::to_string(&default_config)
-        .context("Failed to serialize default config")?;
+    let yaml =
+        serde_yaml::to_string(&default_config).context("Failed to serialize default config")?;
 
-    fs::write(config_path, yaml)
-        .with_context(|| format!("Failed to write default config to: {}", config_path.display()))?;
+    fs::write(config_path, yaml).with_context(|| {
+        format!(
+            "Failed to write default config to: {}",
+            config_path.display()
+        )
+    })?;
 
     Ok(())
 }

@@ -1,6 +1,6 @@
 // Copyright (c) 2025, Lars Wilhelmsen
 // All rights reserved.
-// 
+//
 // This source code is licensed under the BSD-3-Clause license found in the
 // LICENSE file in the root directory of this source tree.
 
@@ -39,7 +39,6 @@ struct Args {
     #[arg(long, value_enum)]
     format: Option<FormatArg>,
 }
-
 
 impl rdfless::Args for Args {
     fn expand(&self, config: &rdfless::config::Config) -> bool {
@@ -96,7 +95,9 @@ fn main() -> Result<()> {
             eprintln!("Use --compact to show PREFIX declarations (opposite of --expand).");
             eprintln!("Use --format to override the input format (auto-detected from file extension by default).");
             eprintln!("Supported formats: turtle, trig");
-            eprintln!("If both --expand and --compact flags are provided, --compact takes precedence.");
+            eprintln!(
+                "If both --expand and --compact flags are provided, --compact takes precedence."
+            );
             std::process::exit(1);
         }
     } else {
