@@ -55,7 +55,7 @@ impl rdfless::Args for Args {
     }
 
     fn format(&self) -> Option<InputFormat> {
-        // If format is explicitly specified, use it
+        // If 'format' is explicitly specified, use it
         if let Some(format_arg) = self.format {
             return Some(match format_arg {
                 FormatArg::Turtle => InputFormat::Turtle,

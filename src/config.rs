@@ -63,6 +63,12 @@ impl ColorConfig {
 }
 
 pub fn string_to_color(color_name: &str) -> Color {
+    // Check if the color is a CSS hex color code (e.g., #336699)
+    if color_name.starts_with('#') && (color_name.len() == 7 || color_name.len() == 4) {
+        return parse_hex_color(color_name).unwrap_or(Color::White);
+    }
+
+    // Otherwise, try to match named colors
     match color_name.to_lowercase().as_str() {
         "black" => Color::Black,
         "red" => Color::Red,
@@ -82,6 +88,31 @@ pub fn string_to_color(color_name: &str) -> Color {
         "bright_white" => Color::BrightWhite,
         _ => Color::White, // Default to white for unknown colors
     }
+}
+
+// Parse a CSS hex color code to an RGB Color
+fn parse_hex_color(hex: &str) -> Option<Color> {
+    // Remove the leading '#'
+    let hex = hex.trim_start_matches('#');
+
+    // Handle both 3-digit and 6-digit hex codes
+    let (r, g, b) = if hex.len() == 6 {
+        // 6-digit hex code: #RRGGBB
+        let r = u8::from_str_radix(&hex[0..2], 16).ok()?;
+        let g = u8::from_str_radix(&hex[2..4], 16).ok()?;
+        let b = u8::from_str_radix(&hex[4..6], 16).ok()?;
+        (r, g, b)
+    } else if hex.len() == 3 {
+        // 3-digit hex code: #RGB (equivalent to #RRGGBB)
+        let r = u8::from_str_radix(&hex[0..1].repeat(2), 16).ok()?;
+        let g = u8::from_str_radix(&hex[1..2].repeat(2), 16).ok()?;
+        let b = u8::from_str_radix(&hex[2..3].repeat(2), 16).ok()?;
+        (r, g, b)
+    } else {
+        return None;
+    };
+
+    Some(Color::TrueColor { r, g, b })
 }
 
 pub fn load_config() -> Result<Config> {

@@ -64,7 +64,7 @@ rdfless --format trig file.rdf
 `rdfless` uses a YAML configuration file to customize colors. The configuration file is located at:
 
 ```
-~/.local/rdfless/colors.yml
+~/.local/rdfless/config.yml
 ```
 
 If the file doesn't exist, a default configuration will be created automatically.
@@ -72,17 +72,35 @@ If the file doesn't exist, a default configuration will be created automatically
 Example configuration:
 
 ```yaml
-subject: blue
-predicate: green
-object: white
-literal: red
-prefix: yellow
-base: yellow
+colors:
+  subject: blue
+  predicate: green
+  object: white
+  literal: red
+  prefix: yellow
+  base: yellow
+  graph: yellow
+expand: false
 ```
 
 Available colors:
-- black, red, green, yellow, blue, magenta, cyan, white
-- bright_black, bright_red, bright_green, bright_yellow, bright_blue, bright_magenta, bright_cyan, bright_white
+- Named colors: black, red, green, yellow, blue, magenta, cyan, white
+- Bright named colors: bright_black, bright_red, bright_green, bright_yellow, bright_blue, bright_magenta, bright_cyan, bright_white
+- CSS color codes: Any valid hex color code in the format #RRGGBB or #RGB (e.g., #336699 or #369)
+
+Example configuration with CSS color codes:
+
+```yaml
+colors:
+  subject: "#336699"
+  predicate: "#00cc00"
+  object: "#ffffff"
+  literal: "#ff0000"
+  prefix: "#ffcc00"
+  base: "#ffcc00"
+  graph: "#ffcc00"
+expand: false
+```
 
 ## Example
 
