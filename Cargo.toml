@@ -4,8 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-rio_api = "0.8.4"
-rio_turtle = "0.8.4"
-colored = "2.0.4"
-clap = { version = "4.4.11", features = ["derive"] }
-anyhow = "1.0.75"
+rio_api = "0.8.5"
+rio_turtle = "0.8.5"
+colored = "3.0.0"
+clap = { version = "4.5.39", features = ["derive"] }
+anyhow = "1.0.98"
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.9"
+dirs = "5.0"
