@@ -16,7 +16,7 @@ pub mod config;
 
 // Define a trait for the Args interface
 pub trait Args {
-    fn expand(&self) -> bool;
+    fn expand(&self, config: &config::Config) -> bool;
 }
 
 // Re-export the types and functions needed for testing
@@ -206,10 +206,10 @@ pub fn print_triples(triples: &[OwnedTriple], prefixes: Option<&HashMap<String, 
 }
 
 // Process TTL input
-pub fn process_input<R: Read, A: Args>(reader: BufReader<R>, args: &A, colors: &config::ColorConfig) -> Result<()> {
+pub fn process_input<R: Read, A: Args>(reader: BufReader<R>, args: &A, colors: &config::ColorConfig, config: &config::Config) -> Result<()> {
     let mut parser = TurtleParser::new(reader, None);
 
-    if !args.expand() {
+    if !args.expand(config) {
         // Collect triples and prefixes
         let mut triples = Vec::new();
         let mut prefixes = HashMap::new();

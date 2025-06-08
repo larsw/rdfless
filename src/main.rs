@@ -16,7 +16,7 @@ use std::io::{self, BufReader, IsTerminal, Read};
 use std::path::PathBuf;
 
 mod config;
-use config::{ColorConfig, load_config};
+use config::{Config, ColorConfig, load_config};
 
 /// A TTL (Turtle) pretty printer with ANSI colors
 #[derive(Parser, Debug)]
@@ -28,14 +28,22 @@ struct Args {
 
     /// Expand prefixes instead of showing PREFIX declarations
     #[arg(long)]
-    expand: bool,
+    expand: Option<bool>,
+}
+
+impl Args {
+    fn expand(&self, config: &Config) -> bool {
+        // Use command line value if provided, otherwise use config value
+        self.expand.unwrap_or(config.expand)
+    }
 }
 
 fn main() -> Result<()> {
     let args = Args::parse();
 
-    // Load color configuration
-    let colors = load_config()?;
+    // Load configuration
+    let config = load_config()?;
+    let colors = &config.colors;
 
     // Check if we should read from stdin or files
     if args.files.is_empty() {
@@ -43,7 +51,7 @@ fn main() -> Result<()> {
         if !io::stdin().is_terminal() {
             let stdin = io::stdin();
             let reader = BufReader::new(stdin);
-            process_input(reader, &args, &colors)?;
+            process_input(reader, &args, colors, &config)?;
         } else {
             eprintln!("No input files provided and no input piped to stdin.");
             eprintln!("Usage: cat file.ttl | rdfless [--expand]");
@@ -58,7 +66,7 @@ fn main() -> Result<()> {
             let file = File::open(file_path)
                 .with_context(|| format!("Failed to open file: {}", file_path.display()))?;
             let reader = BufReader::new(file);
-            process_input(reader, &args, &colors)?;
+            process_input(reader, &args, colors, &config)?;
         }
     }
 
@@ -90,10 +98,13 @@ enum ObjectType {
     Literal,
 }
 
-fn process_input<R: Read>(reader: BufReader<R>, args: &Args, colors: &ColorConfig) -> Result<()> {
+fn process_input<R: Read>(reader: BufReader<R>, args: &Args, colors: &ColorConfig, config: &Config) -> Result<()> {
     let mut parser = TurtleParser::new(reader, None);
 
-    if !args.expand {
+    // Determine if we should expand prefixes
+    let should_expand = args.expand(config);
+
+    if !should_expand {
         // Collect triples and prefixes
         let mut triples = Vec::new();
         let mut prefixes = HashMap::new();

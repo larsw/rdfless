@@ -13,6 +13,23 @@ use dirs::home_dir;
 use serde_yaml2 as serde_yaml;
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct Config {
+    #[serde(default)]
+    pub colors: ColorConfig,
+    #[serde(default)]
+    pub expand: bool,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Config {
+            colors: ColorConfig::default(),
+            expand: false,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ColorConfig {
     pub subject: String,
     pub predicate: String,
@@ -71,7 +88,7 @@ pub fn string_to_color(color_name: &str) -> Color {
     }
 }
 
-pub fn load_config() -> Result<ColorConfig> {
+pub fn load_config() -> Result<Config> {
     let config_path = get_config_path()?;
 
     if !config_path.exists() {
@@ -81,19 +98,21 @@ pub fn load_config() -> Result<ColorConfig> {
     let config_str = fs::read_to_string(&config_path)
         .with_context(|| format!("Failed to read config file: {}", config_path.display()))?;
 
-    let config: ColorConfig = serde_yaml::from_str(&config_str)
+    let config: Config = serde_yaml::from_str(&config_str)
         .with_context(|| "Failed to parse config file")?;
 
     Ok(config)
 }
 
+
 fn get_config_path() -> Result<PathBuf> {
     let home = home_dir().context("Could not find home directory")?;
     let config_dir = home.join(".local").join("rdfless");
-    let config_path = config_dir.join("colors.yml");
+    let config_path = config_dir.join("config.yml");
 
     Ok(config_path)
 }
+
 
 fn create_default_config(config_path: &PathBuf) -> Result<()> {
     let config_dir = config_path.parent().unwrap();
@@ -103,7 +122,7 @@ fn create_default_config(config_path: &PathBuf) -> Result<()> {
             .with_context(|| format!("Failed to create config directory: {}", config_dir.display()))?;
     }
 
-    let default_config = ColorConfig::default();
+    let default_config = Config::default();
     let yaml = serde_yaml::to_string(&default_config)
         .context("Failed to serialize default config")?;
 

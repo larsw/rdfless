@@ -1,14 +1,14 @@
+use rdfless::triple_to_owned;
+use rio_api::model::Triple;
+use rio_api::parser::TriplesParser;
+use rio_turtle::{TurtleError, TurtleParser};
 use rstest::rstest;
 use std::io::BufReader;
-use rio_api::model::{Triple, Term, Literal, Subject};
-use rio_api::parser::TriplesParser;
-use rio_turtle::{TurtleParser, TurtleError};
-use rdfless::{OwnedTriple, triple_to_owned};
 
 #[rstest]
 fn test_turtle_parser_basic() {
     let ttl = r#"
-        @prefix ex: <http://example.org/> .
+        @prefix ex: <https://example.org/> .
 
         ex:subject ex:predicate "object" .
     "#;
@@ -17,7 +17,7 @@ fn test_turtle_parser_basic() {
     let mut parser = TurtleParser::new(reader, None);
 
     let mut triples = Vec::new();
-    let mut callback = |triple: Triple| -> std::result::Result<(), TurtleError> {
+    let mut callback = |triple: Triple| -> Result<(), TurtleError> {
         let owned_triple = triple_to_owned(&triple);
         triples.push(owned_triple);
         Ok(())
@@ -29,8 +29,8 @@ fn test_turtle_parser_basic() {
 
     let triple = &triples[0];
     assert_eq!(triple.subject_type, rdfless::SubjectType::NamedNode);
-    assert_eq!(triple.subject_value, "http://example.org/subject");
-    assert_eq!(triple.predicate, "http://example.org/predicate");
+    assert_eq!(triple.subject_value, "https://example.org/subject");
+    assert_eq!(triple.predicate, "https://example.org/predicate");
     assert_eq!(triple.object_type, rdfless::ObjectType::Literal);
     assert_eq!(triple.object_value, "object");
 }
@@ -39,7 +39,7 @@ fn test_turtle_parser_basic() {
 fn test_turtle_parser_with_prefixes() {
     let ttl = r#"
         @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-        @prefix ex: <http://example.org/> .
+        @prefix ex: <https://example.org/> .
 
         ex:Resource a rdf:Class .
     "#;
@@ -48,7 +48,7 @@ fn test_turtle_parser_with_prefixes() {
     let mut parser = TurtleParser::new(reader, None);
 
     let mut triples = Vec::new();
-    let mut callback = |triple: Triple| -> std::result::Result<(), TurtleError> {
+    let mut callback = |triple: Triple| -> Result<(), TurtleError> {
         let owned_triple = triple_to_owned(&triple);
         triples.push(owned_triple);
         Ok(())
@@ -60,7 +60,7 @@ fn test_turtle_parser_with_prefixes() {
 
     let triple = &triples[0];
     assert_eq!(triple.subject_type, rdfless::SubjectType::NamedNode);
-    assert_eq!(triple.subject_value, "http://example.org/Resource");
+    assert_eq!(triple.subject_value, "https://example.org/Resource");
     assert_eq!(triple.predicate, "http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
     assert_eq!(triple.object_type, rdfless::ObjectType::NamedNode);
     assert_eq!(triple.object_value, "http://www.w3.org/1999/02/22-rdf-syntax-ns#Class");
@@ -74,13 +74,13 @@ fn test_turtle_parser_with_prefixes() {
 
     // Check the values
     assert_eq!(prefixes.get("rdf").unwrap(), "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
-    assert_eq!(prefixes.get("ex").unwrap(), "http://example.org/");
+    assert_eq!(prefixes.get("ex").unwrap(), "https://example.org/");
 }
 
 #[rstest]
 fn test_turtle_parser_with_blank_nodes() {
     let ttl = r#"
-        @prefix ex: <http://example.org/> .
+        @prefix ex: <https://example.org/> .
 
         _:blank ex:predicate "value" .
     "#;
@@ -89,7 +89,7 @@ fn test_turtle_parser_with_blank_nodes() {
     let mut parser = TurtleParser::new(reader, None);
 
     let mut triples = Vec::new();
-    let mut callback = |triple: Triple| -> std::result::Result<(), TurtleError> {
+    let mut callback = |triple: Triple| -> Result<(), TurtleError> {
         let owned_triple = triple_to_owned(&triple);
         triples.push(owned_triple);
         Ok(())
@@ -101,7 +101,7 @@ fn test_turtle_parser_with_blank_nodes() {
 
     let triple = &triples[0];
     assert_eq!(triple.subject_type, rdfless::SubjectType::BlankNode);
-    assert_eq!(triple.predicate, "http://example.org/predicate");
+    assert_eq!(triple.predicate, "https://example.org/predicate");
     assert_eq!(triple.object_type, rdfless::ObjectType::Literal);
     assert_eq!(triple.object_value, "value");
 }
@@ -109,7 +109,7 @@ fn test_turtle_parser_with_blank_nodes() {
 #[rstest]
 fn test_turtle_parser_with_literals() {
     let ttl = r#"
-        @prefix ex: <http://example.org/> .
+        @prefix ex: <https://example.org/> .
         @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
         ex:subject ex:string "simple string" .
@@ -121,7 +121,7 @@ fn test_turtle_parser_with_literals() {
     let mut parser = TurtleParser::new(reader, None);
 
     let mut triples = Vec::new();
-    let mut callback = |triple: Triple| -> std::result::Result<(), TurtleError> {
+    let mut callback = |triple: Triple| -> Result<(), TurtleError> {
         let owned_triple = triple_to_owned(&triple);
         triples.push(owned_triple);
         Ok(())
@@ -132,18 +132,18 @@ fn test_turtle_parser_with_literals() {
     assert_eq!(triples.len(), 3);
 
     // Check simple string literal
-    let simple_string = triples.iter().find(|t| t.predicate == "http://example.org/string").unwrap();
+    let simple_string = triples.iter().find(|t| t.predicate == "https://example.org/string").unwrap();
     assert_eq!(simple_string.object_type, rdfless::ObjectType::Literal);
     assert_eq!(simple_string.object_value, "simple string");
 
     // Check language-tagged string
-    let lang_string = triples.iter().find(|t| t.predicate == "http://example.org/langString").unwrap();
+    let lang_string = triples.iter().find(|t| t.predicate == "https://example.org/langString").unwrap();
     assert_eq!(lang_string.object_type, rdfless::ObjectType::Literal);
     assert_eq!(lang_string.object_value, "hello");
     assert_eq!(lang_string.object_language.as_deref(), Some("en"));
 
     // Check typed literal
-    let typed_literal = triples.iter().find(|t| t.predicate == "http://example.org/integer").unwrap();
+    let typed_literal = triples.iter().find(|t| t.predicate == "https://example.org/integer").unwrap();
     assert_eq!(typed_literal.object_type, rdfless::ObjectType::Literal);
     assert_eq!(typed_literal.object_value, "42");
     assert_eq!(typed_literal.object_datatype.as_deref(), Some("http://www.w3.org/2001/XMLSchema#integer"));

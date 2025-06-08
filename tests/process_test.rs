@@ -1,18 +1,17 @@
+use rdfless::config::{ColorConfig, Config};
+use rdfless::Args;
 use rstest::rstest;
+use std::io::Write;
 use std::io::{BufReader, Cursor};
 use tempfile::NamedTempFile;
-use std::io::Write;
-use std::fs::File;
-use rdfless::config::ColorConfig;
-use rdfless::Args;
 
 struct TestArgs {
-    expand: bool,
+    expand: Option<bool>,
 }
 
 impl Args for TestArgs {
-    fn expand(&self) -> bool {
-        self.expand
+    fn expand(&self, config: &Config) -> bool {
+        self.expand.unwrap_or(config.expand)
     }
 }
 
@@ -58,12 +57,13 @@ fn test_process_input_basic() {
     "#;
 
     let reader = BufReader::new(Cursor::new(ttl));
-    let args = TestArgs { expand: false };
+    let args = TestArgs { expand: Some(false) };
     let colors = ColorConfig::default();
+    let config = Config::default();
 
     // This test is more of a smoke test to ensure process_input doesn't panic
     // We can't easily capture the stdout in a unit test, so we just verify it doesn't error
-    let result = rdfless::process_input(reader, &args, &colors);
+    let result = rdfless::process_input(reader, &args, &colors, &config);
     assert!(result.is_ok());
 }
 
@@ -76,10 +76,11 @@ fn test_process_input_with_expand() {
     "#;
 
     let reader = BufReader::new(Cursor::new(ttl));
-    let args = TestArgs { expand: true };
+    let args = TestArgs { expand: Some(true) };
     let colors = ColorConfig::default();
+    let config = Config::default();
 
-    let result = rdfless::process_input(reader, &args, &colors);
+    let result = rdfless::process_input(reader, &args, &colors, &config);
     assert!(result.is_ok());
 }
 
@@ -94,10 +95,11 @@ fn test_process_input_with_file() {
     // Get a reference to the file
     let file = temp_file.reopen().unwrap();
     let reader = BufReader::new(file);
-    let args = TestArgs { expand: false };
+    let args = TestArgs { expand: Some(false) };
     let colors = ColorConfig::default();
+    let config = Config::default();
 
-    let result = rdfless::process_input(reader, &args, &colors);
+    let result = rdfless::process_input(reader, &args, &colors, &config);
     assert!(result.is_ok());
 }
 
@@ -117,9 +119,40 @@ fn test_process_input_with_multiple_triples() {
     "#;
 
     let reader = BufReader::new(Cursor::new(ttl));
-    let args = TestArgs { expand: false };
+    let args = TestArgs { expand: Some(false) };
+    let colors = ColorConfig::default();
+    let config = Config::default();
+
+    let result = rdfless::process_input(reader, &args, &colors, &config);
+    assert!(result.is_ok());
+}
+
+#[rstest]
+fn test_process_input_with_config_expand() {
+    let ttl = r#"
+        @prefix ex: <http://example.org/> .
+
+        ex:subject ex:predicate "object" .
+    "#;
+
+    let reader = BufReader::new(Cursor::new(ttl));
+    // No command line expand option provided
+    let args = TestArgs { expand: None };
     let colors = ColorConfig::default();
 
-    let result = rdfless::process_input(reader, &args, &colors);
+    // Config with expand=true
+    let mut config = Config::default();
+    config.expand = true;
+
+    let result = rdfless::process_input(reader, &args, &colors, &config);
+    assert!(result.is_ok());
+
+    // Test with config expand=false
+    let reader = BufReader::new(Cursor::new(ttl));
+    let args = TestArgs { expand: None };
+    let mut config = Config::default();
+    config.expand = false;
+
+    let result = rdfless::process_input(reader, &args, &colors, &config);
     assert!(result.is_ok());
 }

@@ -1,11 +1,40 @@
 use rstest::rstest;
-use rdfless::config::{ColorConfig, string_to_color};
+use rdfless::config::{Config, ColorConfig, string_to_color};
 use colored::Color;
+
+#[rstest]
+fn test_default_config() {
+    let config = Config::default();
+
+    // Test default expand value
+    assert_eq!(config.expand, false);
+
+    // Test default color config
+    assert_eq!(config.colors.subject, "blue");
+    assert_eq!(config.colors.predicate, "green");
+    assert_eq!(config.colors.object, "white");
+    assert_eq!(config.colors.literal, "red");
+    assert_eq!(config.colors.prefix, "yellow");
+    assert_eq!(config.colors.base, "yellow");
+}
+
+#[rstest]
+fn test_config_expand() {
+    // Test with expand=true
+    let mut config = Config::default();
+    config.expand = true;
+    assert_eq!(config.expand, true);
+
+    // Test with expand=false
+    let mut config = Config::default();
+    config.expand = false;
+    assert_eq!(config.expand, false);
+}
 
 #[rstest]
 fn test_default_color_config() {
     let config = ColorConfig::default();
-    
+
     assert_eq!(config.subject, "blue");
     assert_eq!(config.predicate, "green");
     assert_eq!(config.object, "white");
@@ -23,7 +52,7 @@ fn test_default_color_config() {
 #[case("base", "yellow", Color::Yellow)]
 fn test_get_color(#[case] component: &str, #[case] color_name: &str, #[case] expected: Color) {
     let mut config = ColorConfig::default();
-    
+
     // Override the default color for the test
     match component {
         "subject" => config.subject = color_name.to_string(),
@@ -34,7 +63,7 @@ fn test_get_color(#[case] component: &str, #[case] color_name: &str, #[case] exp
         "base" => config.base = color_name.to_string(),
         _ => {}
     }
-    
+
     assert_eq!(config.get_color(component), expected);
 }
 
