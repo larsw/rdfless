@@ -44,7 +44,6 @@ where
         .spawn()
         .unwrap();
 
-
     // Redirect stdout to the pipe
     let pipe_stdin = pipe.stdin.as_mut().unwrap();
 
