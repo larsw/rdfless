@@ -10,7 +10,7 @@ use anyhow::{Context, Result};
 use colored::Color;
 use serde::{Deserialize, Serialize};
 use dirs::home_dir;
-use serde_yaml2 as serde_yaml;
+use serde_yaml;
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Config {
@@ -24,9 +24,9 @@ pub struct Config {
 pub struct ColorConfig {
     pub subject: String,
     pub predicate: String,
-    #[serde(rename = "object'")]
+    #[serde(rename = "object")]
     pub object: String,
-    #[serde(rename = "literal'")]
+    #[serde(rename = "literal")]
     pub literal: String,
     pub prefix: String,
     pub base: String,
@@ -91,13 +91,31 @@ pub fn load_config() -> Result<Config> {
         create_default_config(&config_path)?;
     }
 
+    // Try to read and parse the config file
     let config_str = fs::read_to_string(&config_path)
         .with_context(|| format!("Failed to read config file: {}", config_path.display()))?;
 
-    let config: Config = serde_yaml::from_str(&config_str)
-        .with_context(|| "Failed to parse config file")?;
+    match serde_yaml::from_str::<Config>(&config_str) {
+        Ok(config) => Ok(config),
+        Err(_e) => {
+            // If parsing fails, it might be using the old format with single quotes
+            // Delete the old config file and create a new one
+            eprintln!("Warning: Failed to parse existing config file. Creating a new one.");
+            fs::remove_file(&config_path)
+                .with_context(|| format!("Failed to remove old config file: {}", config_path.display()))?;
 
-    Ok(config)
+            create_default_config(&config_path)?;
+
+            // Read and parse the new config file
+            let new_config_str = fs::read_to_string(&config_path)
+                .with_context(|| format!("Failed to read new config file: {}", config_path.display()))?;
+
+            let config: Config = serde_yaml::from_str(&new_config_str)
+                .with_context(|| "Failed to parse new config file")?;
+
+            Ok(config)
+        }
+    }
 }
 
 

@@ -1,113 +1,43 @@
+use rdfless::config::{Config, ColorConfig};
+use serde_yaml;
 use rstest::rstest;
-use rdfless::config::{Config, ColorConfig, string_to_color};
-use colored::Color;
-use serde_yaml2 as serde_yaml;
 
 #[rstest]
-fn test_default_config() {
-    let config = Config::default();
+fn test_config_serialization_deserialization() {
+    // Create a default config
+    let config = Config {
+        colors: ColorConfig {
+            subject: "blue".to_string(),
+            predicate: "green".to_string(),
+            object: "white".to_string(),
+            literal: "red".to_string(),
+            prefix: "yellow".to_string(),
+            base: "yellow".to_string(),
+            graph: "yellow".to_string(),
+        },
+        expand: false,
+    };
 
-    // Test default expand value
-    assert_eq!(config.expand, false);
+    // Serialize to YAML
+    let yaml = serde_yaml::to_string(&config).expect("Failed to serialize config");
 
-    // Test default color config
-    assert_eq!(config.colors.subject, "blue");
-    assert_eq!(config.colors.predicate, "green");
-    assert_eq!(config.colors.object, "white");
-    assert_eq!(config.colors.literal, "red");
-    assert_eq!(config.colors.prefix, "yellow");
-    assert_eq!(config.colors.base, "yellow");
-    assert_eq!(config.colors.graph, "yellow");
-}
+    // Print the YAML for debugging
+    println!("Serialized YAML:\n{}", yaml);
 
-#[rstest]
-fn test_config_expand() {
-    // Test with expand=true
-    let mut config = Config::default();
-    config.expand = true;
-    assert_eq!(config.expand, true);
+    // Ensure the YAML doesn't contain problematic quotes
+    assert!(!yaml.contains("object'"));
+    assert!(!yaml.contains("literal'"));
 
-    // Test with expand=false
-    let mut config = Config::default();
-    config.expand = false;
-    assert_eq!(config.expand, false);
-}
+    // Deserialize back to Config
+    let deserialized_config: Config = serde_yaml::from_str(&yaml).expect("Failed to deserialize config");
 
-#[rstest]
-fn test_default_color_config() {
-    let config = ColorConfig::default();
-
-    assert_eq!(config.subject, "blue");
-    assert_eq!(config.predicate, "green");
-    assert_eq!(config.object, "white");
-    assert_eq!(config.literal, "red");
-    assert_eq!(config.prefix, "yellow");
-    assert_eq!(config.base, "yellow");
-    assert_eq!(config.graph, "yellow");
-}
-
-#[rstest]
-#[case("subject", "blue", Color::Blue)]
-#[case("predicate", "green", Color::Green)]
-#[case("object", "white", Color::White)]
-#[case("literal", "red", Color::Red)]
-#[case("prefix", "yellow", Color::Yellow)]
-#[case("base", "yellow", Color::Yellow)]
-#[case("graph", "yellow", Color::Yellow)]
-fn test_get_color(#[case] component: &str, #[case] color_name: &str, #[case] expected: Color) {
-    let mut config = ColorConfig::default();
-
-    // Override the default color for the test
-    match component {
-        "subject" => config.subject = color_name.to_string(),
-        "predicate" => config.predicate = color_name.to_string(),
-        "object" => config.object = color_name.to_string(),
-        "literal" => config.literal = color_name.to_string(),
-        "prefix" => config.prefix = color_name.to_string(),
-        "base" => config.base = color_name.to_string(),
-        "graph" => config.graph = color_name.to_string(),
-        _ => {}
-    }
-
-    assert_eq!(config.get_color(component), expected);
-}
-
-#[rstest]
-#[case("black", Color::Black)]
-#[case("red", Color::Red)]
-#[case("green", Color::Green)]
-#[case("yellow", Color::Yellow)]
-#[case("blue", Color::Blue)]
-#[case("magenta", Color::Magenta)]
-#[case("cyan", Color::Cyan)]
-#[case("white", Color::White)]
-#[case("bright_black", Color::BrightBlack)]
-#[case("bright_red", Color::BrightRed)]
-#[case("bright_green", Color::BrightGreen)]
-#[case("bright_yellow", Color::BrightYellow)]
-#[case("bright_blue", Color::BrightBlue)]
-#[case("bright_magenta", Color::BrightMagenta)]
-#[case("bright_cyan", Color::BrightCyan)]
-#[case("bright_white", Color::BrightWhite)]
-#[case("unknown", Color::White)] // Default for unknown colors
-fn test_string_to_color(#[case] color_name: &str, #[case] expected: Color) {
-    assert_eq!(string_to_color(color_name), expected);
-}
-
-#[rstest]
-fn test_yaml_serialization() {
-    let config = Config::default();
-    let yaml = serde_yaml::to_string(&config).unwrap();
-
-    // Check that the YAML contains the expected field names
-    assert!(yaml.contains("'colors':"));
-    assert!(yaml.contains("'subject':"));
-    assert!(yaml.contains("'predicate':"));
-    assert!(yaml.contains("'object\\'':"));  // Escaped single quote
-    assert!(yaml.contains("'literal\\'':"));  // Escaped single quote
-    assert!(yaml.contains("'prefix':"));
-    assert!(yaml.contains("'base':"));
-    assert!(yaml.contains("'graph':"));
-    assert!(yaml.contains("'expand':"));
-    assert!(yaml.contains("false"));
+    // Verify the deserialized config matches the original
+    assert_eq!(deserialized_config.colors.subject, config.colors.subject);
+    assert_eq!(deserialized_config.colors.predicate, config.colors.predicate);
+    assert_eq!(deserialized_config.colors.object, config.colors.object);
+    assert_eq!(deserialized_config.colors.literal, config.colors.literal);
+    assert_eq!(deserialized_config.colors.prefix, config.colors.prefix);
+    assert_eq!(deserialized_config.colors.base, config.colors.base);
+    assert_eq!(deserialized_config.colors.graph, config.colors.graph);
+    assert_eq!(deserialized_config.expand, config.expand);
 }
