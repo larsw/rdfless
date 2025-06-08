@@ -1,0 +1,44 @@
+name: Publish
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - '**.md'
+      - '.github/workflows/ci.yml'
+
+jobs:
+  publish:
+    name: Publish to crates.io
+    runs-on: ubuntu-latest
+    # Only run this job if the commit was a merge to main (from a PR)
+    if: contains(github.event.head_commit.message, 'Merge pull request')
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Check version change
+        id: check_version
+        run: |
+          # Get the current version from Cargo.toml
+          CURRENT_VERSION=$(grep -m 1 '^version = ' Cargo.toml | cut -d '"' -f 2)
+          echo "Current version: $CURRENT_VERSION"
+
+          # Check if this version already exists on crates.io
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://crates.io/api/v1/crates/rdfless/$CURRENT_VERSION)
+
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "Version $CURRENT_VERSION already exists on crates.io. Please update the version in Cargo.toml."
+            echo "should_publish=false" >> $GITHUB_OUTPUT
+            exit 1
+          else
+            echo "Version $CURRENT_VERSION is new and can be published."
+            echo "should_publish=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Publish to crates.io
+        if: steps.check_version.outputs.should_publish == 'true'
+        run: |
+          cargo login ${{ secrets.CRATES_IO_TOKEN }}
+          cargo publish --no-verify

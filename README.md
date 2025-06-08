@@ -1,5 +1,9 @@
 # rdfless
 
+[![CI](https://github.com/larsw/rdfless/actions/workflows/ci.yml/badge.svg)](https://github.com/larsw/rdfless/actions/workflows/ci.yml)
+[![Crates.io](https://img.shields.io/crates/v/rdfless.svg)](https://crates.io/crates/rdfless)
+[![License](https://img.shields.io/crates/l/rdfless.svg)](https://github.com/larsw/rdfless/blob/main/LICENSE)
+
 A colorful pretty printer for RDF data with ANSI colors.
 
 ## Description
