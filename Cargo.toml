@@ -1,6 +1,6 @@
 [package]
 name = "rdfless"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 description = "A colorful TTL (Turtle) pretty printer for RDF data with ANSI colors"
 authors = ["Lars Wilhelmsen"]
