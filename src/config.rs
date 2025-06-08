@@ -33,10 +33,13 @@ impl Default for Config {
 pub struct ColorConfig {
     pub subject: String,
     pub predicate: String,
+    #[serde(rename = "object'")]
     pub object: String,
+    #[serde(rename = "literal'")]
     pub literal: String,
     pub prefix: String,
     pub base: String,
+    pub graph: String,
 }
 
 impl Default for ColorConfig {
@@ -48,6 +51,7 @@ impl Default for ColorConfig {
             literal: "red".to_string(),
             prefix: "yellow".to_string(),
             base: "yellow".to_string(),
+            graph: "yellow".to_string(),
         }
     }
 }
@@ -61,6 +65,7 @@ impl ColorConfig {
             "literal" => string_to_color(&self.literal),
             "prefix" => string_to_color(&self.prefix),
             "base" => string_to_color(&self.base),
+            "graph" => string_to_color(&self.graph),
             _ => Color::White,
         }
     }

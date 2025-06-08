@@ -6,12 +6,19 @@ use std::io::{BufReader, Cursor};
 use tempfile::NamedTempFile;
 
 struct TestArgs {
-    expand: Option<bool>,
+    expand: bool,
+    compact: bool,
 }
 
 impl Args for TestArgs {
     fn expand(&self, config: &Config) -> bool {
-        self.expand.unwrap_or(config.expand)
+        if self.compact {
+            false
+        } else if self.expand {
+            true
+        } else {
+            config.expand
+        }
     }
 }
 
@@ -57,7 +64,7 @@ fn test_process_input_basic() {
     "#;
 
     let reader = BufReader::new(Cursor::new(ttl));
-    let args = TestArgs { expand: Some(false) };
+    let args = TestArgs { expand: false, compact: false };
     let colors = ColorConfig::default();
     let config = Config::default();
 
@@ -76,7 +83,42 @@ fn test_process_input_with_expand() {
     "#;
 
     let reader = BufReader::new(Cursor::new(ttl));
-    let args = TestArgs { expand: Some(true) };
+    let args = TestArgs { expand: true, compact: false };
+    let colors = ColorConfig::default();
+    let config = Config::default();
+
+    let result = rdfless::process_input(reader, &args, &colors, &config);
+    assert!(result.is_ok());
+}
+
+#[rstest]
+fn test_process_input_with_compact() {
+    let ttl = r#"
+        @prefix ex: <http://example.org/> .
+
+        ex:subject ex:predicate "object" .
+    "#;
+
+    let reader = BufReader::new(Cursor::new(ttl));
+    let args = TestArgs { expand: false, compact: true };
+    let colors = ColorConfig::default();
+    let config = Config::default();
+
+    let result = rdfless::process_input(reader, &args, &colors, &config);
+    assert!(result.is_ok());
+}
+
+#[rstest]
+fn test_process_input_with_expand_and_compact() {
+    let ttl = r#"
+        @prefix ex: <http://example.org/> .
+
+        ex:subject ex:predicate "object" .
+    "#;
+
+    let reader = BufReader::new(Cursor::new(ttl));
+    // When both flags are provided, compact takes precedence
+    let args = TestArgs { expand: true, compact: true };
     let colors = ColorConfig::default();
     let config = Config::default();
 
@@ -95,7 +137,7 @@ fn test_process_input_with_file() {
     // Get a reference to the file
     let file = temp_file.reopen().unwrap();
     let reader = BufReader::new(file);
-    let args = TestArgs { expand: Some(false) };
+    let args = TestArgs { expand: false, compact: false };
     let colors = ColorConfig::default();
     let config = Config::default();
 
@@ -119,7 +161,7 @@ fn test_process_input_with_multiple_triples() {
     "#;
 
     let reader = BufReader::new(Cursor::new(ttl));
-    let args = TestArgs { expand: Some(false) };
+    let args = TestArgs { expand: false, compact: false };
     let colors = ColorConfig::default();
     let config = Config::default();
 
@@ -137,7 +179,7 @@ fn test_process_input_with_config_expand() {
 
     let reader = BufReader::new(Cursor::new(ttl));
     // No command line expand option provided
-    let args = TestArgs { expand: None };
+    let args = TestArgs { expand: false, compact: false };
     let colors = ColorConfig::default();
 
     // Config with expand=true
@@ -149,7 +191,7 @@ fn test_process_input_with_config_expand() {
 
     // Test with config expand=false
     let reader = BufReader::new(Cursor::new(ttl));
-    let args = TestArgs { expand: None };
+    let args = TestArgs { expand: false, compact: false };
     let mut config = Config::default();
     config.expand = false;
 

@@ -28,13 +28,24 @@ struct Args {
 
     /// Expand prefixes instead of showing PREFIX declarations
     #[arg(long)]
-    expand: Option<bool>,
+    expand: bool,
+
+    /// Compact mode (opposite of expand)
+    #[arg(long)]
+    compact: bool,
 }
 
 impl Args {
     fn expand(&self, config: &Config) -> bool {
-        // Use command line value if provided, otherwise use config value
-        self.expand.unwrap_or(config.expand)
+        // If both flags are provided, compact takes precedence
+        if self.compact {
+            false
+        } else if self.expand {
+            true
+        } else {
+            // If neither flag is provided, use config value
+            config.expand
+        }
     }
 }
 
@@ -54,10 +65,12 @@ fn main() -> Result<()> {
             process_input(reader, &args, colors, &config)?;
         } else {
             eprintln!("No input files provided and no input piped to stdin.");
-            eprintln!("Usage: cat file.ttl | rdfless [--expand]");
-            eprintln!("   or: rdfless [--expand] file1.ttl [file2.ttl ...]");
+            eprintln!("Usage: cat file.ttl | rdfless [--expand] [--compact]");
+            eprintln!("   or: rdfless [--expand] [--compact] file1.ttl [file2.ttl ...]");
             eprintln!();
             eprintln!("Use --expand to expand prefixes instead of showing PREFIX declarations.");
+            eprintln!("Use --compact to show PREFIX declarations (opposite of --expand).");
+            eprintln!("If both flags are provided, --compact takes precedence.");
             std::process::exit(1);
         }
     } else {

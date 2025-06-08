@@ -1,6 +1,7 @@
 use rstest::rstest;
 use rdfless::config::{Config, ColorConfig, string_to_color};
 use colored::Color;
+use serde_yaml2 as serde_yaml;
 
 #[rstest]
 fn test_default_config() {
@@ -16,6 +17,7 @@ fn test_default_config() {
     assert_eq!(config.colors.literal, "red");
     assert_eq!(config.colors.prefix, "yellow");
     assert_eq!(config.colors.base, "yellow");
+    assert_eq!(config.colors.graph, "yellow");
 }
 
 #[rstest]
@@ -41,6 +43,7 @@ fn test_default_color_config() {
     assert_eq!(config.literal, "red");
     assert_eq!(config.prefix, "yellow");
     assert_eq!(config.base, "yellow");
+    assert_eq!(config.graph, "yellow");
 }
 
 #[rstest]
@@ -50,6 +53,7 @@ fn test_default_color_config() {
 #[case("literal", "red", Color::Red)]
 #[case("prefix", "yellow", Color::Yellow)]
 #[case("base", "yellow", Color::Yellow)]
+#[case("graph", "yellow", Color::Yellow)]
 fn test_get_color(#[case] component: &str, #[case] color_name: &str, #[case] expected: Color) {
     let mut config = ColorConfig::default();
 
@@ -61,6 +65,7 @@ fn test_get_color(#[case] component: &str, #[case] color_name: &str, #[case] exp
         "literal" => config.literal = color_name.to_string(),
         "prefix" => config.prefix = color_name.to_string(),
         "base" => config.base = color_name.to_string(),
+        "graph" => config.graph = color_name.to_string(),
         _ => {}
     }
 
@@ -87,4 +92,22 @@ fn test_get_color(#[case] component: &str, #[case] color_name: &str, #[case] exp
 #[case("unknown", Color::White)] // Default for unknown colors
 fn test_string_to_color(#[case] color_name: &str, #[case] expected: Color) {
     assert_eq!(string_to_color(color_name), expected);
+}
+
+#[rstest]
+fn test_yaml_serialization() {
+    let config = Config::default();
+    let yaml = serde_yaml::to_string(&config).unwrap();
+
+    // Check that the YAML contains the expected field names
+    assert!(yaml.contains("'colors':"));
+    assert!(yaml.contains("'subject':"));
+    assert!(yaml.contains("'predicate':"));
+    assert!(yaml.contains("'object\\'':"));  // Escaped single quote
+    assert!(yaml.contains("'literal\\'':"));  // Escaped single quote
+    assert!(yaml.contains("'prefix':"));
+    assert!(yaml.contains("'base':"));
+    assert!(yaml.contains("'graph':"));
+    assert!(yaml.contains("'expand':"));
+    assert!(yaml.contains("false"));
 }

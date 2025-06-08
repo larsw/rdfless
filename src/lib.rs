@@ -16,6 +16,7 @@ pub mod config;
 
 // Define a trait for the Args interface
 pub trait Args {
+    // Determine if prefixes should be expanded based on args and config
     fn expand(&self, config: &config::Config) -> bool;
 }
 
