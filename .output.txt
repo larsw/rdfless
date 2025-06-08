@@ -296,7 +296,6 @@ index 01103de..2325cd6 100644
 +++ b/src/config.rs
 @@ -13,6 +13,23 @@ use dirs::home_dir;
  use serde_yaml2 as serde_yaml;
-
  #[derive(Debug, Serialize, Deserialize)]
 +pub struct Config {
 +    #[serde(default)]
@@ -321,67 +320,53 @@ index 01103de..2325cd6 100644
 @@ -71,7 +88,7 @@ pub fn string_to_color(color_name: &str) -> Color {
      }
  }
-
 -pub fn load_config() -> Result<ColorConfig> {
 +pub fn load_config() -> Result<Config> {
      let config_path = get_config_path()?;
-
      if !config_path.exists() {
 @@ -81,20 +98,22 @@ pub fn load_config() -> Result<ColorConfig> {
      let config_str = fs::read_to_string(&config_path)
          .with_context(|| format!("Failed to read config file: {}", config_path.display()))?;
-
 -    let config: ColorConfig = serde_yaml::from_str(&config_str)
 +    let config: Config = serde_yaml::from_str(&config_str)
          .with_context(|| "Failed to parse config file")?;
-
      Ok(config)
  }
-
 +
  fn get_config_path() -> Result<PathBuf> {
      let home = home_dir().context("Could not find home directory")?;
      let config_dir = home.join(".local").join("rdfless");
 -    let config_path = config_dir.join("colors.yml");
 +    let config_path = config_dir.join("config.yml");
-
      Ok(config_path)
  }
-
 +
  fn create_default_config(config_path: &PathBuf) -> Result<()> {
      let config_dir = config_path.parent().unwrap();
-
 @@ -103,7 +122,7 @@ fn create_default_config(config_path: &PathBuf) -> Result<()> {
              .with_context(|| format!("Failed to create config directory: {}", config_dir.display()))?;
      }
-
 -    let default_config = ColorConfig::default();
 +    let default_config = Config::default();
      let yaml = serde_yaml::to_string(&default_config)
          .context("Failed to serialize default config")?;
-
 diff --git a/src/lib.rs b/src/lib.rs
 index 0a29f8f..cf5e33b 100644
 --- a/src/lib.rs
 +++ b/src/lib.rs
 @@ -16,7 +16,7 @@ pub mod config;
-
  // Define a trait for the Args interface
  pub trait Args {
 -    fn expand(&self) -> bool;
 +    fn expand(&self, config: &config::Config) -> bool;
  }
-
  // Re-export the types and functions needed for testing
 @@ -206,10 +206,10 @@ pub fn print_triples(triples: &[OwnedTriple], prefixes: Option<&HashMap<String,
  }
-
  // Process TTL input
 -pub fn process_input<R: Read, A: Args>(reader: BufReader<R>, args: &A, colors: &config::ColorConfig) -> Result<()> {
 +pub fn process_input<R: Read, A: Args>(reader: BufReader<R>, args: &A, colors: &config::ColorConfig, config: &config::Config) -> Result<()> {
      let mut parser = TurtleParser::new(reader, None);
-
 -    if !args.expand() {
 +    if !args.expand(config) {
          // Collect triples and prefixes
@@ -393,15 +378,12 @@ index 0b7fc5f..c0da406 100644
 +++ b/src/main.rs
 @@ -16,7 +16,7 @@ use std::io::{self, BufReader, IsTerminal, Read};
  use std::path::PathBuf;
-
  mod config;
 -use config::{ColorConfig, load_config};
 +use config::{Config, ColorConfig, load_config};
-
  /// A TTL (Turtle) pretty printer with ANSI colors
  #[derive(Parser, Debug)]
 @@ -28,14 +28,22 @@ struct Args {
-
      /// Expand prefixes instead of showing PREFIX declarations
      #[arg(long)]
 -    expand: bool,
@@ -414,16 +396,13 @@ index 0b7fc5f..c0da406 100644
 +        self.expand.unwrap_or(config.expand)
 +    }
  }
-
  fn main() -> Result<()> {
      let args = Args::parse();
-
 -    // Load color configuration
 -    let colors = load_config()?;
 +    // Load configuration
 +    let config = load_config()?;
 +    let colors = &config.colors;
-
      // Check if we should read from stdin or files
      if args.files.is_empty() {
 @@ -43,7 +51,7 @@ fn main() -> Result<()> {
@@ -443,15 +422,12 @@ index 0b7fc5f..c0da406 100644
 +            process_input(reader, &args, colors, &config)?;
          }
      }
-
 @@ -90,10 +98,13 @@ enum ObjectType {
      Literal,
  }
-
 -fn process_input<R: Read>(reader: BufReader<R>, args: &Args, colors: &ColorConfig) -> Result<()> {
 +fn process_input<R: Read>(reader: BufReader<R>, args: &Args, colors: &ColorConfig, config: &Config) -> Result<()> {
      let mut parser = TurtleParser::new(reader, None);
-
 -    if !args.expand {
 +    // Determine if we should expand prefixes
 +    let should_expand = args.expand(config);
@@ -469,7 +445,6 @@ index c24b50e..72457ad 100644
 -use rdfless::config::{ColorConfig, string_to_color};
 +use rdfless::config::{Config, ColorConfig, string_to_color};
  use colored::Color;
-
 +#[rstest]
 +fn test_default_config() {
 +    let config = Config::default();
@@ -524,7 +499,6 @@ index c24b50e..72457ad 100644
 +
      assert_eq!(config.get_color(component), expected);
  }
-
 @@ -58,4 +87,4 @@ fn test_get_color(#[case] component: &str, #[case] color_name: &str, #[case] exp
  #[case("unknown", Color::White)] // Default for unknown colors
  fn test_string_to_color(#[case] color_name: &str, #[case] expected: Color) {
@@ -547,18 +521,15 @@ index 749f04c..cf42c49 100644
 -use rio_api::parser::TriplesParser;
 -use rio_turtle::{TurtleParser, TurtleError};
 -use rdfless::{OwnedTriple, triple_to_owned};
-
  #[rstest]
  fn test_turtle_parser_basic() {
      let ttl = r#"
 -        @prefix ex: <http://example.org/> .
 +        @prefix ex: <https://example.org/> .
-
          ex:subject ex:predicate "object" .
      "#;
 @@ -17,7 +17,7 @@ fn test_turtle_parser_basic() {
      let mut parser = TurtleParser::new(reader, None);
-
      let mut triples = Vec::new();
 -    let mut callback = |triple: Triple| -> std::result::Result<(), TurtleError> {
 +    let mut callback = |triple: Triple| -> Result<(), TurtleError> {
@@ -566,7 +537,6 @@ index 749f04c..cf42c49 100644
          triples.push(owned_triple);
          Ok(())
 @@ -29,8 +29,8 @@ fn test_turtle_parser_basic() {
-
      let triple = &triples[0];
      assert_eq!(triple.subject_type, rdfless::SubjectType::NamedNode);
 -    assert_eq!(triple.subject_value, "http://example.org/subject");
@@ -582,12 +552,10 @@ index 749f04c..cf42c49 100644
          @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 -        @prefix ex: <http://example.org/> .
 +        @prefix ex: <https://example.org/> .
-
          ex:Resource a rdf:Class .
      "#;
 @@ -48,7 +48,7 @@ fn test_turtle_parser_with_prefixes() {
      let mut parser = TurtleParser::new(reader, None);
-
      let mut triples = Vec::new();
 -    let mut callback = |triple: Triple| -> std::result::Result<(), TurtleError> {
 +    let mut callback = |triple: Triple| -> Result<(), TurtleError> {
@@ -595,7 +563,6 @@ index 749f04c..cf42c49 100644
          triples.push(owned_triple);
          Ok(())
 @@ -60,7 +60,7 @@ fn test_turtle_parser_with_prefixes() {
-
      let triple = &triples[0];
      assert_eq!(triple.subject_type, rdfless::SubjectType::NamedNode);
 -    assert_eq!(triple.subject_value, "http://example.org/Resource");
@@ -604,24 +571,20 @@ index 749f04c..cf42c49 100644
      assert_eq!(triple.object_type, rdfless::ObjectType::NamedNode);
      assert_eq!(triple.object_value, "http://www.w3.org/1999/02/22-rdf-syntax-ns#Class");
 @@ -74,13 +74,13 @@ fn test_turtle_parser_with_prefixes() {
-
      // Check the values
      assert_eq!(prefixes.get("rdf").unwrap(), "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
 -    assert_eq!(prefixes.get("ex").unwrap(), "http://example.org/");
 +    assert_eq!(prefixes.get("ex").unwrap(), "https://example.org/");
  }
-
  #[rstest]
  fn test_turtle_parser_with_blank_nodes() {
      let ttl = r#"
 -        @prefix ex: <http://example.org/> .
 +        @prefix ex: <https://example.org/> .
-
          _:blank ex:predicate "value" .
      "#;
 @@ -89,7 +89,7 @@ fn test_turtle_parser_with_blank_nodes() {
      let mut parser = TurtleParser::new(reader, None);
-
      let mut triples = Vec::new();
 -    let mut callback = |triple: Triple| -> std::result::Result<(), TurtleError> {
 +    let mut callback = |triple: Triple| -> Result<(), TurtleError> {
@@ -629,7 +592,6 @@ index 749f04c..cf42c49 100644
          triples.push(owned_triple);
          Ok(())
 @@ -101,7 +101,7 @@ fn test_turtle_parser_with_blank_nodes() {
-
      let triple = &triples[0];
      assert_eq!(triple.subject_type, rdfless::SubjectType::BlankNode);
 -    assert_eq!(triple.predicate, "http://example.org/predicate");
@@ -644,11 +606,9 @@ index 749f04c..cf42c49 100644
 -        @prefix ex: <http://example.org/> .
 +        @prefix ex: <https://example.org/> .
          @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-
          ex:subject ex:string "simple string" .
 @@ -121,7 +121,7 @@ fn test_turtle_parser_with_literals() {
      let mut parser = TurtleParser::new(reader, None);
-
      let mut triples = Vec::new();
 -    let mut callback = |triple: Triple| -> std::result::Result<(), TurtleError> {
 +    let mut callback = |triple: Triple| -> Result<(), TurtleError> {
@@ -657,20 +617,17 @@ index 749f04c..cf42c49 100644
          Ok(())
 @@ -132,18 +132,18 @@ fn test_turtle_parser_with_literals() {
      assert_eq!(triples.len(), 3);
-
      // Check simple string literal
 -    let simple_string = triples.iter().find(|t| t.predicate == "http://example.org/string").unwrap();
 +    let simple_string = triples.iter().find(|t| t.predicate == "https://example.org/string").unwrap();
      assert_eq!(simple_string.object_type, rdfless::ObjectType::Literal);
      assert_eq!(simple_string.object_value, "simple string");
-
      // Check language-tagged string
 -    let lang_string = triples.iter().find(|t| t.predicate == "http://example.org/langString").unwrap();
 +    let lang_string = triples.iter().find(|t| t.predicate == "https://example.org/langString").unwrap();
      assert_eq!(lang_string.object_type, rdfless::ObjectType::Literal);
      assert_eq!(lang_string.object_value, "hello");
      assert_eq!(lang_string.object_language.as_deref(), Some("en"));
-
      // Check typed literal
 -    let typed_literal = triples.iter().find(|t| t.predicate == "http://example.org/integer").unwrap();
 +    let typed_literal = triples.iter().find(|t| t.predicate == "https://example.org/integer").unwrap();
@@ -692,12 +649,10 @@ index 9282de9..bf4abab 100644
 -use std::fs::File;
 -use rdfless::config::ColorConfig;
 -use rdfless::Args;
-
  struct TestArgs {
 -    expand: bool,
 +    expand: Option<bool>,
  }
-
  impl Args for TestArgs {
 -    fn expand(&self) -> bool {
 -        self.expand
@@ -705,37 +660,30 @@ index 9282de9..bf4abab 100644
 +        self.expand.unwrap_or(config.expand)
      }
  }
-
 @@ -58,12 +57,13 @@ fn test_process_input_basic() {
      "#;
-
      let reader = BufReader::new(Cursor::new(ttl));
 -    let args = TestArgs { expand: false };
 +    let args = TestArgs { expand: Some(false) };
      let colors = ColorConfig::default();
 +    let config = Config::default();
-
      // This test is more of a smoke test to ensure process_input doesn't panic
      // We can't easily capture the stdout in a unit test, so we just verify it doesn't error
 -    let result = rdfless::process_input(reader, &args, &colors);
 +    let result = rdfless::process_input(reader, &args, &colors, &config);
      assert!(result.is_ok());
  }
-
 @@ -76,10 +76,11 @@ fn test_process_input_with_expand() {
      "#;
-
      let reader = BufReader::new(Cursor::new(ttl));
 -    let args = TestArgs { expand: true };
 +    let args = TestArgs { expand: Some(true) };
      let colors = ColorConfig::default();
 +    let config = Config::default();
-
 -    let result = rdfless::process_input(reader, &args, &colors);
 +    let result = rdfless::process_input(reader, &args, &colors, &config);
      assert!(result.is_ok());
  }
-
 @@ -94,10 +95,11 @@ fn test_process_input_with_file() {
      // Get a reference to the file
      let file = temp_file.reopen().unwrap();
@@ -744,15 +692,12 @@ index 9282de9..bf4abab 100644
 +    let args = TestArgs { expand: Some(false) };
      let colors = ColorConfig::default();
 +    let config = Config::default();
-
 -    let result = rdfless::process_input(reader, &args, &colors);
 +    let result = rdfless::process_input(reader, &args, &colors, &config);
      assert!(result.is_ok());
  }
-
 @@ -117,9 +119,40 @@ fn test_process_input_with_multiple_triples() {
      "#;
-
      let reader = BufReader::new(Cursor::new(ttl));
 -    let args = TestArgs { expand: false };
 +    let args = TestArgs { expand: Some(false) };
@@ -775,7 +720,6 @@ index 9282de9..bf4abab 100644
 +    // No command line expand option provided
 +    let args = TestArgs { expand: None };
      let colors = ColorConfig::default();
-
 -    let result = rdfless::process_input(reader, &args, &colors);
 +    // Config with expand=true
 +    let mut config = Config::default();
