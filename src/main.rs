@@ -5,7 +5,7 @@
 // LICENSE file in the root directory of this source tree.
 
 use anyhow::{Context, Result};
-use clap::{Parser, ValueEnum};
+use clap::{CommandFactory, Parser, ValueEnum};
 use std::fs::File;
 use std::io::{self, BufReader, IsTerminal};
 use std::path::PathBuf;
@@ -88,16 +88,7 @@ fn main() -> Result<()> {
             rdfless::process_input(reader, &args, colors, &config)?;
         } else {
             eprintln!("No input files provided and no input piped to stdin.");
-            eprintln!("Usage: cat file.ttl | rdfless [--expand] [--compact] [--format <FORMAT>]");
-            eprintln!("   or: rdfless [--expand] [--compact] [--format <FORMAT>] file1.ttl [file2.ttl ...]");
-            eprintln!();
-            eprintln!("Use --expand to expand prefixes instead of showing PREFIX declarations.");
-            eprintln!("Use --compact to show PREFIX declarations (opposite of --expand).");
-            eprintln!("Use --format to override the input format (auto-detected from file extension by default).");
-            eprintln!("Supported formats: turtle, trig");
-            eprintln!(
-                "If both --expand and --compact flags are provided, --compact takes precedence."
-            );
+            Args::command().print_help().expect("Failed to print help");
             std::process::exit(1);
         }
     } else {
