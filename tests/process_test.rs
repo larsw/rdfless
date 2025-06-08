@@ -44,6 +44,7 @@ where
         .spawn()
         .unwrap();
 
+
     // Redirect stdout to the pipe
     let pipe_stdin = pipe.stdin.as_mut().unwrap();
 
@@ -53,9 +54,15 @@ where
     // Close the pipe stdin
     let _ = pipe_stdin;
 
+    // Take stdout out of pipe to avoid partial move issues
+    let mut stdout = pipe.stdout.take().unwrap();
+
     // Read the captured output
     let mut output = String::new();
-    pipe.stdout.unwrap().read_to_string(&mut output).unwrap();
+    stdout.read_to_string(&mut output).unwrap();
+
+    // Wait for the process to finish to avoid zombie processes
+    pipe.wait().unwrap();
 
     output
 }
@@ -152,7 +159,7 @@ fn test_process_input_with_file() {
     // Create a temporary file with TTL content
     let mut temp_file = NamedTempFile::new().unwrap();
     writeln!(temp_file, "@prefix ex: <http://example.org/> .").unwrap();
-    writeln!(temp_file, "").unwrap();
+    writeln!(temp_file).unwrap();
     writeln!(temp_file, "ex:subject ex:predicate \"object\" .").unwrap();
 
     // Get a reference to the file
@@ -216,8 +223,10 @@ fn test_process_input_with_config_expand() {
     let colors = ColorConfig::default();
 
     // Config with expand=true
-    let mut config = Config::default();
-    config.expand = true;
+    let config = Config {
+        expand: true,
+        ..Default::default()
+    };
 
     let result = rdfless::process_input(reader, &args, &colors, &config);
     assert!(result.is_ok());
@@ -229,8 +238,10 @@ fn test_process_input_with_config_expand() {
         compact: false,
         format: Some(InputFormat::Turtle),
     };
-    let mut config = Config::default();
-    config.expand = false;
+    let config = Config {
+        expand: false,
+        ..Default::default()
+    };
 
     let result = rdfless::process_input(reader, &args, &colors, &config);
     assert!(result.is_ok());
