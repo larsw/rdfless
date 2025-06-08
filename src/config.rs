@@ -1,4 +1,4 @@
-// Copyright (c) 2024, rdfless Contributors
+// Copyright (c) 2025, Lars Wilhelmsen
 // All rights reserved.
 // 
 // This source code is licensed under the BSD-3-Clause license found in the
@@ -49,7 +49,7 @@ impl ColorConfig {
     }
 }
 
-fn string_to_color(color_name: &str) -> Color {
+pub fn string_to_color(color_name: &str) -> Color {
     match color_name.to_lowercase().as_str() {
         "black" => Color::Black,
         "red" => Color::Red,
