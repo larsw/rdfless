@@ -1,6 +1,6 @@
 [package]
 name = "rdfless"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 description = "A colorful TTL (Turtle) pretty printer for RDF data with ANSI colors"
 authors = ["Lars Wilhelmsen"]
@@ -13,6 +13,9 @@ categories = ["command-line-utilities", "text-processing"]
 [dependencies]
 rio_api = "0.8.5"
 rio_turtle = "0.8.5"
+sophia_api = "0.8.0"
+sophia_term = "0.8.0"
+sophia_turtle = "0.8.0"
 colored = "3.0.0"
 clap = { version = "4.5.39", features = ["derive"] }
 anyhow = "1.0.98"

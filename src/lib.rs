@@ -9,6 +9,8 @@ use colored::*;
 use rio_api::model::{Literal, Quad, Subject, Term, Triple};
 use rio_api::parser::{QuadsParser, TriplesParser};
 use rio_turtle::{TriGParser, TurtleError, TurtleParser};
+// Sophia imports will be used in the future implementation
+// Currently keeping the dependencies for future migration
 use std::collections::HashMap;
 use std::io::{BufReader, Read};
 use std::path::Path;
@@ -67,7 +69,7 @@ pub enum ObjectType {
     Literal,
 }
 
-// Convert a Triple to an OwnedTriple
+// Convert a Triple to an OwnedTriple (rio version)
 pub fn triple_to_owned(triple: &Triple) -> OwnedTriple {
     let (subject_type, subject_value) = match &triple.subject {
         Subject::NamedNode(node) => (SubjectType::NamedNode, node.iri.to_string()),
@@ -109,6 +111,9 @@ pub fn triple_to_owned(triple: &Triple) -> OwnedTriple {
         graph: None,
     }
 }
+
+// TODO: Implement sophia_triple_to_owned function
+// This will be implemented later when we migrate to sophia
 
 // Convert a Quad to an OwnedTriple with graph information
 pub fn quad_to_owned(quad: &Quad) -> OwnedTriple {
@@ -198,11 +203,55 @@ pub fn format_owned_object(
                     .color(literal_color)
                     .to_string()
             } else if let Some(datatype) = &triple.object_datatype {
-                let datatype_str = resolve_uri_with_prefixes(datatype, prefixes);
+                // In compact mode (prefixes is Some), don't expand basic data types
+                // In expanded mode (prefixes is None), always expand data types
+                let is_compact_mode = prefixes.is_some();
+                let is_basic_datatype = match datatype.as_str() {
+                    "http://www.w3.org/2001/XMLSchema#integer" |
+                    "http://www.w3.org/2001/XMLSchema#string" |
+                    "http://www.w3.org/2001/XMLSchema#boolean" |
+                    "http://www.w3.org/2001/XMLSchema#decimal" |
+                    "http://www.w3.org/2001/XMLSchema#float" |
+                    "http://www.w3.org/2001/XMLSchema#double" |
+                    "http://www.w3.org/2001/XMLSchema#date" |
+                    "http://www.w3.org/2001/XMLSchema#time" |
+                    "http://www.w3.org/2001/XMLSchema#dateTime" => true,
+                    _ => false,
+                };
 
-                format!("\"{}\"^^{}", triple.object_value, datatype_str)
-                    .color(literal_color)
-                    .to_string()
+                if is_compact_mode && is_basic_datatype {
+                    // In compact mode, don't expand basic data types
+                    // Handle different literal types appropriately
+                    match datatype.as_str() {
+                        "http://www.w3.org/2001/XMLSchema#integer" |
+                        "http://www.w3.org/2001/XMLSchema#decimal" |
+                        "http://www.w3.org/2001/XMLSchema#float" |
+                        "http://www.w3.org/2001/XMLSchema#double" => {
+                            // Output numeric types without quotes
+                            format!("{}", triple.object_value)
+                                .color(literal_color)
+                                .to_string()
+                        }
+                        "http://www.w3.org/2001/XMLSchema#boolean" => {
+                            // Output boolean values without quotes
+                            format!("{}", triple.object_value)
+                                .color(literal_color)
+                                .to_string()
+                        }
+                        _ => {
+                            // Keep other types (like strings, dates, etc.) in quotes
+                            format!("\"{}\"", triple.object_value)
+                                .color(literal_color)
+                                .to_string()
+                        }
+                    }
+                } else {
+                    // In expanded mode or for non-basic data types, show the full datatype
+                    let datatype_str = resolve_uri_with_prefixes(datatype, prefixes);
+                    format!("\"{}\"^^{}", triple.object_value, datatype_str)
+                        .color(literal_color)
+                        .to_string()
+                }
             } else {
                 format!("\"{}\"", triple.object_value)
                     .color(literal_color)
@@ -360,7 +409,7 @@ pub fn process_input<R: Read, A: Args>(
     }
 }
 
-// Process Turtle input
+// Process Turtle input (rio version)
 fn process_turtle<R: Read, A: Args>(
     reader: BufReader<R>,
     args: &A,
@@ -396,6 +445,9 @@ fn process_turtle<R: Read, A: Args>(
 
     Ok(())
 }
+
+// TODO: Implement process_turtle_sophia function
+// This will be implemented later when we migrate to sophia
 
 // Process TriG input
 fn process_trig<R: Read, A: Args>(

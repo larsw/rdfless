@@ -15,4 +15,10 @@ ex:john a ex:Person ;
 ex:jane a ex:Person ;
     foaf:name "Jane Smith" ;
     foaf:age 28 ;
+    foaf:address [
+        rdf:type foaf:Address ;
+        foaf:street "123 Main St" ;
+        foaf:city "Anytown" ;
+        foaf:country "USA"
+    ] ;
     foaf:knows ex:john .

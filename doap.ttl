@@ -16,7 +16,7 @@ Key features:
 - Support for reading from files or stdin (piped input)
 - Option to expand prefixes or display PREFIX declarations
 - Customizable colors through a configuration file"""@en ;
-    doap:created "2021"^^xsd:gYear ;  # Based on the edition in Cargo.toml
+    doap:created "2025"^^xsd:gYear ;
     doap:homepage <https://github.com/larsw/rdfless> ;
     doap:license <https://spdx.org/licenses/BSD-3-Clause> ;
     doap:programming-language "Rust" ;

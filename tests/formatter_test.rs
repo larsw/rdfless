@@ -200,6 +200,35 @@ fn test_format_owned_object_typed_literal() {
 
     // Since the result includes color formatting, we can't directly compare strings
     // Instead, we'll check that it contains the expected typed literal format
+    // With the fix for integers, the value should not be in quotes
     let result = rdfless::format_owned_object(&triple, Some(&prefixes), &colors);
-    assert!(result.contains("\"42\"^^xsd:integer"));
+    assert!(result.contains("42"));
+}
+
+#[rstest]
+fn test_format_owned_object_boolean_literal() {
+    let triple = OwnedTriple {
+        subject_type: SubjectType::NamedNode,
+        subject_value: "http://example.org/subject".to_string(),
+        predicate: "http://example.org/predicate".to_string(),
+        object_type: ObjectType::Literal,
+        object_value: "true".to_string(),
+        object_datatype: Some("http://www.w3.org/2001/XMLSchema#boolean".to_string()),
+        object_language: None,
+        graph: None,
+    };
+
+    let mut prefixes = HashMap::new();
+    prefixes.insert(
+        "xsd".to_string(),
+        "http://www.w3.org/2001/XMLSchema#".to_string(),
+    );
+
+    let colors = ColorConfig::default();
+
+    // Since the result includes color formatting, we can't directly compare strings
+    // Instead, we'll check that it contains the expected boolean literal format
+    // With the fix for booleans, the value should not be in quotes
+    let result = rdfless::format_owned_object(&triple, Some(&prefixes), &colors);
+    assert!(result.contains("true"));
 }

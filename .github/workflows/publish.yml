@@ -13,29 +13,71 @@ jobs:
     runs-on: ubuntu-latest
     # Only run this job if the commit was a merge to main (from a PR)
     if: contains(github.event.head_commit.message, 'Merge pull request')
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
 
-      - name: Check version change
-        id: check_version
+      - name: Setup Git
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+      - name: Bump version
+        id: bump_version
         run: |
           # Get the current version from Cargo.toml
           CURRENT_VERSION=$(grep -m 1 '^version = ' Cargo.toml | cut -d '"' -f 2)
           echo "Current version: $CURRENT_VERSION"
 
+          # Parse the version components
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+
+          # Increment the patch version
+          NEW_PATCH=$((PATCH + 1))
+          NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
+          echo "New version: $NEW_VERSION"
+
+          # Update the version in Cargo.toml
+          sed -i "s/^version = \"$CURRENT_VERSION\"/version = \"$NEW_VERSION\"/" Cargo.toml
+
+          # Also update Cargo.lock
+          cargo update -p rdfless
+
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if version exists on crates.io
+        id: check_version
+        run: |
+          NEW_VERSION=${{ steps.bump_version.outputs.new_version }}
+
           # Check if this version already exists on crates.io
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://crates.io/api/v1/crates/rdfless/$CURRENT_VERSION)
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://crates.io/api/v1/crates/rdfless/$NEW_VERSION)
 
           if [ "$HTTP_STATUS" = "200" ]; then
-            echo "Version $CURRENT_VERSION already exists on crates.io. Please update the version in Cargo.toml."
+            echo "Version $NEW_VERSION already exists on crates.io."
             echo "should_publish=false" >> $GITHUB_OUTPUT
             exit 1
           else
-            echo "Version $CURRENT_VERSION is new and can be published."
+            echo "Version $NEW_VERSION is new and can be published."
             echo "should_publish=true" >> $GITHUB_OUTPUT
           fi
+
+      - name: Commit and tag new version
+        if: steps.check_version.outputs.should_publish == 'true'
+        run: |
+          NEW_VERSION=${{ steps.bump_version.outputs.new_version }}
+
+          git add Cargo.toml Cargo.lock
+          git commit -m "Bump version to $NEW_VERSION [skip ci]"
+          git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
+          git push origin main
+          git push origin "v$NEW_VERSION"
 
       - name: Publish to crates.io
         if: steps.check_version.outputs.should_publish == 'true'

@@ -290,6 +290,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4a5f13b858c8d314ee3e8f639011f7ccefe71f97f96e50151fb991f267928e2c"
 
 [[package]]
+name = "lazy_static"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
+
+[[package]]
 name = "libc"
 version = "0.2.172"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -316,6 +322,12 @@ name = "memchr"
 version = "2.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "78ca9ab1a0babb1e7d5695e3530886289c18cf2f87ec19a575a0abdce112e3a3"
+
+[[package]]
+name = "mownstr"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8bc45ce96192b5d8b20cffb10ccd85cc431c283a7d171a0d843ac0bd7d444598"
 
 [[package]]
 name = "once_cell"
@@ -397,7 +409,7 @@ checksum = "74765f6d916ee2faa39bc8e68e4f3ed8949b48cccdac59983d287a7cb71ce9c5"
 
 [[package]]
 name = "rdfless"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "anyhow",
  "clap",
@@ -408,6 +420,9 @@ dependencies = [
  "rstest",
  "serde",
  "serde_yaml",
+ "sophia_api",
+ "sophia_term",
+ "sophia_turtle",
  "tempfile",
 ]
 
@@ -419,7 +434,7 @@ checksum = "dd6f9d3d47bdd2ad6945c5015a226ec6155d0bcdfd8f7cd29f86b71f8de99d2b"
 dependencies = [
  "getrandom 0.2.16",
  "libredox",
- "thiserror",
+ "thiserror 2.0.12",
 ]
 
 [[package]]
@@ -456,6 +471,12 @@ name = "relative-path"
 version = "1.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba39f3699c378cd8970968dcbff9c43159ea4cfbd88d43c00b22f2ef10a435d2"
+
+[[package]]
+name = "resiter"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cbc95d56eb1865f69288945759cc0879d60ee68168dce676730275804ad2b276"
 
 [[package]]
 name = "rio_api"
@@ -581,6 +602,70 @@ dependencies = [
 ]
 
 [[package]]
+name = "sophia_api"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2e41b1197b9dbd2e5e2a7d8dc62fd6bab001724576463831920b13567bde2a4c"
+dependencies = [
+ "lazy_static",
+ "mownstr",
+ "regex",
+ "resiter",
+ "serde",
+ "sophia_iri",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "sophia_iri"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bb62d2fcd10fc3a44b646b1893ad478df0cb771f7ceb0331a5f3cee25f37ba7e"
+dependencies = [
+ "lazy_static",
+ "oxiri",
+ "regex",
+ "serde",
+ "thiserror 1.0.69",
+]
+
+[[package]]
+name = "sophia_rio"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "93e107086ca2b3e329dbe0f85f9ce504b1fbb478c85341338942b9dff613d4d8"
+dependencies = [
+ "rio_api",
+ "sophia_api",
+ "sophia_iri",
+]
+
+[[package]]
+name = "sophia_term"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ca3a77f8523038dc1204a59dd461f27322cbe14bea3da873d41b6cc40c3e63e9"
+dependencies = [
+ "lazy_static",
+ "sophia_api",
+]
+
+[[package]]
+name = "sophia_turtle"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a7b7ce7aeb34f55867599544622420b2a6b6488b16811e06fd3755fc9cae4d0"
+dependencies = [
+ "lazy_static",
+ "oxiri",
+ "regex",
+ "rio_turtle",
+ "sophia_api",
+ "sophia_iri",
+ "sophia_rio",
+]
+
+[[package]]
 name = "strsim"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -612,11 +697,31 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
+version = "1.0.69"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b6aaf5339b578ea85b50e080feb250a3e8ae8cfcdff9a461c9ec2904bc923f52"
+dependencies = [
+ "thiserror-impl 1.0.69",
+]
+
+[[package]]
+name = "thiserror"
 version = "2.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "567b8a2dae586314f7be2a752ec7474332959c6460e02bde30d702a66d488708"
 dependencies = [
- "thiserror-impl",
+ "thiserror-impl 2.0.12",
+]
+
+[[package]]
+name = "thiserror-impl"
+version = "1.0.69"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4fee6c4efc90059e10f81e6d42c60a18f76588c3d74cb83a0b242a2b6c7504c1"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
