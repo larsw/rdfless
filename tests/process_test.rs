@@ -1,4 +1,4 @@
-use rdfless::config::{ColorConfig, Config};
+use rdfless::config::{ColorConfig, Config, OutputConfig};
 use rdfless::{Args, InputFormat};
 use rstest::rstest;
 use std::io::Write;
@@ -18,7 +18,7 @@ impl Args for TestArgs {
         } else if self.expand {
             true
         } else {
-            config.expand
+            config.output.expand
         }
     }
 
@@ -223,7 +223,7 @@ fn test_process_input_with_config_expand() {
 
     // Config with expand=true
     let config = Config {
-        expand: true,
+        output: OutputConfig { expand: true },
         ..Default::default()
     };
 
@@ -238,7 +238,7 @@ fn test_process_input_with_config_expand() {
         format: Some(InputFormat::Turtle),
     };
     let config = Config {
-        expand: false,
+        output: OutputConfig { expand: false },
         ..Default::default()
     };
 
@@ -264,6 +264,48 @@ fn test_process_input_trig_format() {
         expand: false,
         compact: false,
         format: Some(InputFormat::TriG),
+    };
+    let colors = ColorConfig::default();
+    let config = Config::default();
+
+    let result = rdfless::process_input(reader, &args, &colors, &config);
+    assert!(result.is_ok());
+}
+
+#[rstest]
+fn test_process_input_ntriples_format() {
+    let ntriples = r#"
+        <https://example.org/john> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://xmlns.com/foaf/0.1/Person> .
+        <https://example.org/john> <https://xmlns.com/foaf/0.1/name> "John Doe" .
+        <https://example.org/john> <https://xmlns.com/foaf/0.1/age> "30"^^<http://www.w3.org/2001/XMLSchema#integer> .
+    "#;
+
+    let reader = BufReader::new(Cursor::new(ntriples));
+    let args = TestArgs {
+        expand: false,
+        compact: false,
+        format: Some(InputFormat::NTriples),
+    };
+    let colors = ColorConfig::default();
+    let config = Config::default();
+
+    let result = rdfless::process_input(reader, &args, &colors, &config);
+    assert!(result.is_ok());
+}
+
+#[rstest]
+fn test_process_input_nquads_format() {
+    let nquads = r#"
+        <https://example.org/john> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://xmlns.com/foaf/0.1/Person> <https://example.org/graph1> .
+        <https://example.org/john> <https://xmlns.com/foaf/0.1/name> "John Doe" <https://example.org/graph1> .
+        <https://example.org/john> <https://xmlns.com/foaf/0.1/age> "30"^^<http://www.w3.org/2001/XMLSchema#integer> <https://example.org/graph1> .
+    "#;
+
+    let reader = BufReader::new(Cursor::new(nquads));
+    let args = TestArgs {
+        expand: false,
+        compact: false,
+        format: Some(InputFormat::NQuads),
     };
     let colors = ColorConfig::default();
     let config = Config::default();

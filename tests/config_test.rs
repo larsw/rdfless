@@ -1,5 +1,5 @@
 use colored::Color;
-use rdfless::config::{string_to_color, ColorConfig, Config};
+use rdfless::config::{string_to_color, ColorConfig, Config, OutputConfig};
 use rstest::rstest;
 
 #[rstest]
@@ -36,22 +36,22 @@ fn test_config_serialization_deserialization() {
             base: "yellow".to_string(),
             graph: "yellow".to_string(),
         },
-        expand: false,
+        output: OutputConfig { expand: false },
     };
 
-    // Serialize to YAML
-    let yaml = serde_yaml::to_string(&config).expect("Failed to serialize config");
+    // Serialize to TOML
+    let toml_str = toml::to_string(&config).expect("Failed to serialize config");
 
-    // Print the YAML for debugging
-    println!("Serialized YAML:\n{}", yaml);
+    // Print the TOML for debugging
+    println!("Serialized TOML:\n{}", toml_str);
 
-    // Ensure the YAML doesn't contain problematic quotes
-    assert!(!yaml.contains("object'"));
-    assert!(!yaml.contains("literal'"));
+    // Ensure the TOML doesn't contain problematic quotes
+    assert!(!toml_str.contains("object'"));
+    assert!(!toml_str.contains("literal'"));
 
     // Deserialize back to Config
     let deserialized_config: Config =
-        serde_yaml::from_str(&yaml).expect("Failed to deserialize config");
+        toml::from_str(&toml_str).expect("Failed to deserialize config");
 
     // Verify the deserialized config matches the original
     assert_eq!(deserialized_config.colors.subject, config.colors.subject);
@@ -64,7 +64,7 @@ fn test_config_serialization_deserialization() {
     assert_eq!(deserialized_config.colors.prefix, config.colors.prefix);
     assert_eq!(deserialized_config.colors.base, config.colors.base);
     assert_eq!(deserialized_config.colors.graph, config.colors.graph);
-    assert_eq!(deserialized_config.expand, config.expand);
+    assert_eq!(deserialized_config.output.expand, config.output.expand);
 }
 
 #[rstest]
@@ -80,18 +80,18 @@ fn test_config_with_css_colors() {
             base: "#ffcc00".to_string(),
             graph: "#ffcc00".to_string(),
         },
-        expand: false,
+        output: OutputConfig { expand: false },
     };
 
-    // Serialize to YAML
-    let yaml = serde_yaml::to_string(&config).expect("Failed to serialize config");
+    // Serialize to TOML
+    let toml_str = toml::to_string(&config).expect("Failed to serialize config");
 
-    // Print the YAML for debugging
-    println!("Serialized YAML with CSS colors:\n{}", yaml);
+    // Print the TOML for debugging
+    println!("Serialized TOML with CSS colors:\n{}", toml_str);
 
     // Deserialize back to Config
     let deserialized_config: Config =
-        serde_yaml::from_str(&yaml).expect("Failed to deserialize config");
+        toml::from_str(&toml_str).expect("Failed to deserialize config");
 
     // Verify the deserialized config matches the original
     assert_eq!(deserialized_config.colors.subject, config.colors.subject);
@@ -104,7 +104,7 @@ fn test_config_with_css_colors() {
     assert_eq!(deserialized_config.colors.prefix, config.colors.prefix);
     assert_eq!(deserialized_config.colors.base, config.colors.base);
     assert_eq!(deserialized_config.colors.graph, config.colors.graph);
-    assert_eq!(deserialized_config.expand, config.expand);
+    assert_eq!(deserialized_config.output.expand, config.output.expand);
 
     // Verify that the colors are correctly parsed
     let subject_color = string_to_color(&config.colors.subject);

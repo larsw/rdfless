@@ -49,7 +49,7 @@ impl rdfless::Args for Args {
             true
         } else {
             // If neither flag is provided, use config value
-            config.expand
+            config.output.expand
         }
     }
 

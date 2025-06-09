@@ -9,7 +9,7 @@ use colored::*;
 // Rio imports for the implementation
 use rio_api::model::{Literal, Quad, Subject, Term, Triple};
 use rio_api::parser::{QuadsParser, TriplesParser};
-use rio_turtle::{TriGParser, TurtleError, TurtleParser};
+use rio_turtle::{NQuadsParser, NTriplesParser, TriGParser, TurtleError, TurtleParser};
 use std::collections::HashMap;
 use std::io::{BufReader, Read};
 use std::path::Path;
@@ -20,6 +20,8 @@ pub mod config;
 pub enum InputFormat {
     Turtle,
     TriG,
+    NTriples,
+    NQuads,
 }
 
 // Define a trait for the Args interface
@@ -38,6 +40,8 @@ pub fn detect_format_from_path(path: &Path) -> Option<InputFormat> {
         .map(|ext| match ext.to_lowercase().as_str() {
             "ttl" => InputFormat::Turtle,
             "trig" => InputFormat::TriG,
+            "nt" => InputFormat::NTriples,
+            "nq" => InputFormat::NQuads,
             _ => InputFormat::Turtle, // Default to Turtle for unknown extensions
         })
 }
@@ -110,7 +114,6 @@ pub fn triple_to_owned(triple: &Triple) -> OwnedTriple {
         graph: None,
     }
 }
-
 
 // Convert a Quad to an OwnedTriple with graph information
 pub fn quad_to_owned(quad: &Quad) -> OwnedTriple {
@@ -408,6 +411,8 @@ pub fn process_input<R: Read, A: Args>(
     match format {
         InputFormat::Turtle => process_turtle(reader, args, colors, config),
         InputFormat::TriG => process_trig(reader, args, colors, config),
+        InputFormat::NTriples => process_ntriples(reader, args, colors, config),
+        InputFormat::NQuads => process_nquads(reader, args, colors, config),
     }
 }
 
@@ -448,7 +453,6 @@ fn process_turtle<R: Read, A: Args>(
     Ok(())
 }
 
-
 // Process TriG input (rio version)
 fn process_trig<R: Read, A: Args>(
     reader: BufReader<R>,
@@ -486,3 +490,70 @@ fn process_trig<R: Read, A: Args>(
     Ok(())
 }
 
+// Process N-Triples input (rio version)
+fn process_ntriples<R: Read, A: Args>(
+    reader: BufReader<R>,
+    args: &A,
+    colors: &config::ColorConfig,
+    config: &config::Config,
+) -> Result<()> {
+    let mut parser = NTriplesParser::new(reader);
+    let mut triples = Vec::new();
+    let mut prefixes = HashMap::new();
+
+    // Process each triple
+    let mut callback = |triple: Triple| -> std::result::Result<(), TurtleError> {
+        // Convert to owned triple
+        let owned_triple = triple_to_owned(&triple);
+        triples.push(owned_triple);
+        Ok(())
+    };
+
+    // Parse all triples
+    parser.parse_all(&mut callback)?;
+
+    // N-Triples doesn't have prefixes, so we pass an empty iterator
+    collect_and_print_triples(
+        &mut triples,
+        &mut prefixes,
+        std::iter::empty(),
+        args.expand(config),
+        colors,
+    );
+
+    Ok(())
+}
+
+// Process N-Quads input (rio version)
+fn process_nquads<R: Read, A: Args>(
+    reader: BufReader<R>,
+    args: &A,
+    colors: &config::ColorConfig,
+    config: &config::Config,
+) -> Result<()> {
+    let mut parser = NQuadsParser::new(reader);
+    let mut triples = Vec::new();
+    let mut prefixes = HashMap::new();
+
+    // Process each quad
+    let mut callback = |quad: Quad| -> std::result::Result<(), TurtleError> {
+        // Convert to owned triple with graph information
+        let owned_triple = quad_to_owned(&quad);
+        triples.push(owned_triple);
+        Ok(())
+    };
+
+    // Parse all quads
+    parser.parse_all(&mut callback)?;
+
+    // N-Quads doesn't have prefixes, so we pass an empty iterator
+    collect_and_print_triples(
+        &mut triples,
+        &mut prefixes,
+        std::iter::empty(),
+        args.expand(config),
+        colors,
+    );
+
+    Ok(())
+}
