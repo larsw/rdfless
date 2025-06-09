@@ -1,0 +1,11 @@
+<https://example.org/Person> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2000/01/rdf-schema#Class> <https://example.org/graph1> .
+<https://example.org/Person> <http://www.w3.org/2000/01/rdf-schema#label> "Person" <https://example.org/graph1> .
+<https://example.org/Person> <http://www.w3.org/2000/01/rdf-schema#comment> "A person class" <https://example.org/graph1> .
+<https://example.org/john> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://example.org/Person> <https://example.org/graph1> .
+<https://example.org/john> <http://xmlns.com/foaf/0.1/name> "John Doe" <https://example.org/graph1> .
+<https://example.org/john> <http://xmlns.com/foaf/0.1/age> "30"^^<http://www.w3.org/2001/XMLSchema#integer> <https://example.org/graph1> .
+<https://example.org/john> <http://xmlns.com/foaf/0.1/knows> <https://example.org/jane> <https://example.org/graph1> .
+<https://example.org/jane> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://example.org/Person> <https://example.org/graph1> .
+<https://example.org/jane> <http://xmlns.com/foaf/0.1/name> "Jane Smith" <https://example.org/graph1> .
+<https://example.org/jane> <http://xmlns.com/foaf/0.1/age> "28"^^<http://www.w3.org/2001/XMLSchema#integer> <https://example.org/graph1> .
+<https://example.org/jane> <http://xmlns.com/foaf/0.1/knows> <https://example.org/john> <https://example.org/graph1> .

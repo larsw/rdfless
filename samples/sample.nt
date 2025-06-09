@@ -1,0 +1,16 @@
+<https://example.org/Person> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2000/01/rdf-schema#Class> .
+<https://example.org/Person> <http://www.w3.org/2000/01/rdf-schema#label> "Person" .
+<https://example.org/Person> <http://www.w3.org/2000/01/rdf-schema#comment> "A person class" .
+<https://example.org/john> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://example.org/Person> .
+<https://example.org/john> <http://xmlns.com/foaf/0.1/name> "John Doe" .
+<https://example.org/john> <http://xmlns.com/foaf/0.1/age> "30"^^<http://www.w3.org/2001/XMLSchema#integer> .
+<https://example.org/john> <http://xmlns.com/foaf/0.1/knows> <https://example.org/jane> .
+<https://example.org/jane> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <https://example.org/Person> .
+<https://example.org/jane> <http://xmlns.com/foaf/0.1/name> "Jane Smith" .
+<https://example.org/jane> <http://xmlns.com/foaf/0.1/age> "28"^^<http://www.w3.org/2001/XMLSchema#integer> .
+_:Bad7a6b21b3d7e2dad1031011b5282331 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Address> .
+_:Bad7a6b21b3d7e2dad1031011b5282331 <http://xmlns.com/foaf/0.1/street> "123 Main St" .
+_:Bad7a6b21b3d7e2dad1031011b5282331 <http://xmlns.com/foaf/0.1/city> "Anytown" .
+_:Bad7a6b21b3d7e2dad1031011b5282331 <http://xmlns.com/foaf/0.1/country> "USA" .
+<https://example.org/jane> <http://xmlns.com/foaf/0.1/address> _:Bad7a6b21b3d7e2dad1031011b5282331 .
+<https://example.org/jane> <http://xmlns.com/foaf/0.1/knows> <https://example.org/john> .

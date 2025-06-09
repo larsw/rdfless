@@ -8,7 +8,7 @@ A colorful pretty printer for RDF data with ANSI colors.
 
 ## Description
 
-`rdfless` is a command-line tool that reads RDF data in Turtle format and pretty-prints it with syntax highlighting. It's designed to make RDF data more readable in terminal environments.
+`rdfless` is a command-line tool that reads RDF data in various formats (Turtle, TriG, N-Triples, N-Quads) and pretty-prints it with syntax highlighting. It's designed to make RDF data more readable in terminal environments.
 
 Key features:
 - Colorized output for different RDF components (subjects, predicates, objects, literals)
@@ -17,12 +17,21 @@ Key features:
 - Customizable colors through a configuration file
 
 ### Supported Formats
-- Turtle (TTL)
-- Turtle-star
-- TriG
-- TriG-star
+
+- Turtle / Turtle-*
+- TriG / TriG-*
+- N-Triples (NT)
+- N-Quads (NQ)
 
 ## Installation
+
+### Debian/Ubuntu from PPA
+
+```bash
+sudo add-apt-repository ppa:larsw/rdfless
+sudo apt update
+sudo apt install rdfless
+```
 
 ### Using Cargo
 
@@ -58,8 +67,14 @@ rdfless file.ttl
 # Process a TriG file
 rdfless file.trig
 
+# Process an N-Triples file
+rdfless file.nt
+
+# Process an N-Quads file
+rdfless file.nq
+
 # Process multiple files
-rdfless file1.ttl file2.trig
+rdfless file1.ttl file2.trig file3.nt file4.nq
 
 # Read from stdin
 cat file.ttl | rdfless
@@ -70,30 +85,34 @@ rdfless --expand file.ttl
 # Override the input format (auto-detected from file extension by default)
 rdfless --format turtle file.rdf
 rdfless --format trig file.rdf
+rdfless --format ntriples file.rdf
+rdfless --format nquads file.rdf
 ```
 
 ## Configuration
 
-`rdfless` uses a YAML configuration file to customize colors. The configuration file is located at:
+`rdfless` uses a TOML configuration file to customize colors. The configuration file is located at:
 
 ```
-~/.local/rdfless/config.yml
+~/.local/rdfless/config.toml
 ```
 
 If the file doesn't exist, a default configuration will be created automatically.
 
 Example configuration:
 
-```yaml
-colors:
-  subject: blue
-  predicate: green
-  object: white
-  literal: red
-  prefix: yellow
-  base: yellow
-  graph: yellow
-expand: false
+```toml
+[colors]
+subject = "blue"
+predicate = "green"
+object = "white"
+literal = "red"
+prefix = "yellow"
+base = "yellow"
+graph = "yellow"
+
+[output]
+expand = false
 ```
 
 Available colors:
@@ -103,16 +122,18 @@ Available colors:
 
 Example configuration with CSS color codes:
 
-```yaml
-colors:
-  subject: "#336699"
-  predicate: "#00cc00"
-  object: "#ffffff"
-  literal: "#ff0000"
-  prefix: "#ffcc00"
-  base: "#ffcc00"
-  graph: "#ffcc00"
-expand: false
+```toml
+[colors]
+subject = "#336699"
+predicate = "#00cc00"
+object = "#ffffff"
+literal = "#ff0000"
+prefix = "#ffcc00"
+base = "#ffcc00"
+graph = "#ffcc00"
+
+[output]
+expand = false
 ```
 
 ## Example

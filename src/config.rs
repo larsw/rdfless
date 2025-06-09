@@ -8,14 +8,20 @@ use anyhow::{Context, Result};
 use colored::Color;
 use dirs::home_dir;
 use serde::{Deserialize, Serialize};
-use serde_yaml;
 use std::fs;
 use std::path::PathBuf;
+use toml;
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Config {
     #[serde(default)]
     pub colors: ColorConfig,
+    #[serde(default)]
+    pub output: OutputConfig,
+}
+
+#[derive(Debug, Serialize, Deserialize, Default, Clone)]
+pub struct OutputConfig {
     #[serde(default)]
     pub expand: bool,
 }
@@ -126,11 +132,10 @@ pub fn load_config() -> Result<Config> {
     let config_str = fs::read_to_string(&config_path)
         .with_context(|| format!("Failed to read config file: {}", config_path.display()))?;
 
-    match serde_yaml::from_str::<Config>(&config_str) {
+    match toml::from_str::<Config>(&config_str) {
         Ok(config) => Ok(config),
         Err(_e) => {
-            // If parsing fails, it might be using the old format with single quotes
-            // Delete the old config file and create a new one
+            // If parsing fails, delete the old config file and create a new one
             eprintln!("Warning: Failed to parse existing config file. Creating a new one.");
             fs::remove_file(&config_path).with_context(|| {
                 format!(
@@ -146,7 +151,7 @@ pub fn load_config() -> Result<Config> {
                 format!("Failed to read new config file: {}", config_path.display())
             })?;
 
-            let config: Config = serde_yaml::from_str(&new_config_str)
+            let config: Config = toml::from_str(&new_config_str)
                 .with_context(|| "Failed to parse new config file")?;
 
             Ok(config)
@@ -157,7 +162,7 @@ pub fn load_config() -> Result<Config> {
 fn get_config_path() -> Result<PathBuf> {
     let home = home_dir().context("Could not find home directory")?;
     let config_dir = home.join(".local").join("rdfless");
-    let config_path = config_dir.join("config.yml");
+    let config_path = config_dir.join("config.toml");
 
     Ok(config_path)
 }
@@ -175,10 +180,10 @@ fn create_default_config(config_path: &PathBuf) -> Result<()> {
     }
 
     let default_config = Config::default();
-    let yaml =
-        serde_yaml::to_string(&default_config).context("Failed to serialize default config")?;
+    let toml_str =
+        toml::to_string_pretty(&default_config).context("Failed to serialize default config")?;
 
-    fs::write(config_path, yaml).with_context(|| {
+    fs::write(config_path, toml_str).with_context(|| {
         format!(
             "Failed to write default config to: {}",
             config_path.display()
