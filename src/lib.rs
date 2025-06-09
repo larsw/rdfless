@@ -6,11 +6,10 @@
 
 use anyhow::Result;
 use colored::*;
+// Rio imports for the implementation
 use rio_api::model::{Literal, Quad, Subject, Term, Triple};
 use rio_api::parser::{QuadsParser, TriplesParser};
 use rio_turtle::{TriGParser, TurtleError, TurtleParser};
-// Sophia imports will be used in the future implementation
-// Currently keeping the dependencies for future migration
 use std::collections::HashMap;
 use std::io::{BufReader, Read};
 use std::path::Path;
@@ -32,7 +31,7 @@ pub trait Args {
     fn format(&self) -> Option<InputFormat>;
 }
 
-// Helper function to detect format from file extension
+// Helper function to detect 'format' from file extension
 pub fn detect_format_from_path(path: &Path) -> Option<InputFormat> {
     path.extension()
         .and_then(|ext| ext.to_str())
@@ -112,8 +111,6 @@ pub fn triple_to_owned(triple: &Triple) -> OwnedTriple {
     }
 }
 
-// TODO: Implement sophia_triple_to_owned function
-// This will be implemented later when we migrate to sophia
 
 // Convert a Quad to an OwnedTriple with graph information
 pub fn quad_to_owned(quad: &Quad) -> OwnedTriple {
@@ -206,35 +203,39 @@ pub fn format_owned_object(
                 // In compact mode (prefixes is Some), don't expand basic data types
                 // In expanded mode (prefixes is None), always expand data types
                 let is_compact_mode = prefixes.is_some();
-                let is_basic_datatype = match datatype.as_str() {
-                    "http://www.w3.org/2001/XMLSchema#integer" |
-                    "http://www.w3.org/2001/XMLSchema#string" |
-                    "http://www.w3.org/2001/XMLSchema#boolean" |
-                    "http://www.w3.org/2001/XMLSchema#decimal" |
-                    "http://www.w3.org/2001/XMLSchema#float" |
-                    "http://www.w3.org/2001/XMLSchema#double" |
-                    "http://www.w3.org/2001/XMLSchema#date" |
-                    "http://www.w3.org/2001/XMLSchema#time" |
-                    "http://www.w3.org/2001/XMLSchema#dateTime" => true,
-                    _ => false,
-                };
+                let is_basic_datatype = matches!(
+                    datatype.as_str(),
+                    "http://www.w3.org/2001/XMLSchema#integer"
+                        | "http://www.w3.org/2001/XMLSchema#string"
+                        | "http://www.w3.org/2001/XMLSchema#boolean"
+                        | "http://www.w3.org/2001/XMLSchema#decimal"
+                        | "http://www.w3.org/2001/XMLSchema#float"
+                        | "http://www.w3.org/2001/XMLSchema#double"
+                        | "http://www.w3.org/2001/XMLSchema#date"
+                        | "http://www.w3.org/2001/XMLSchema#time"
+                        | "http://www.w3.org/2001/XMLSchema#dateTime"
+                );
 
                 if is_compact_mode && is_basic_datatype {
                     // In compact mode, don't expand basic data types
                     // Handle different literal types appropriately
                     match datatype.as_str() {
-                        "http://www.w3.org/2001/XMLSchema#integer" |
-                        "http://www.w3.org/2001/XMLSchema#decimal" |
-                        "http://www.w3.org/2001/XMLSchema#float" |
-                        "http://www.w3.org/2001/XMLSchema#double" => {
+                        "http://www.w3.org/2001/XMLSchema#integer"
+                        | "http://www.w3.org/2001/XMLSchema#decimal"
+                        | "http://www.w3.org/2001/XMLSchema#float"
+                        | "http://www.w3.org/2001/XMLSchema#double" => {
                             // Output numeric types without quotes
-                            format!("{}", triple.object_value)
+                            triple
+                                .object_value
+                                .to_string()
                                 .color(literal_color)
                                 .to_string()
                         }
                         "http://www.w3.org/2001/XMLSchema#boolean" => {
                             // Output boolean values without quotes
-                            format!("{}", triple.object_value)
+                            triple
+                                .object_value
+                                .to_string()
                                 .color(literal_color)
                                 .to_string()
                         }
@@ -403,6 +404,7 @@ pub fn process_input<R: Read, A: Args>(
     // Determine the format to use
     let format = args.format().unwrap_or(InputFormat::Turtle);
 
+    // Use the rio implementation
     match format {
         InputFormat::Turtle => process_turtle(reader, args, colors, config),
         InputFormat::TriG => process_trig(reader, args, colors, config),
@@ -446,10 +448,8 @@ fn process_turtle<R: Read, A: Args>(
     Ok(())
 }
 
-// TODO: Implement process_turtle_sophia function
-// This will be implemented later when we migrate to sophia
 
-// Process TriG input
+// Process TriG input (rio version)
 fn process_trig<R: Read, A: Args>(
     reader: BufReader<R>,
     args: &A,
@@ -485,3 +485,4 @@ fn process_trig<R: Read, A: Args>(
 
     Ok(())
 }
+

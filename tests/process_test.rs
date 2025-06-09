@@ -69,7 +69,7 @@ where
 #[rstest]
 fn test_process_input_basic() {
     let ttl = r#"
-        @prefix ex: <http://example.org/> .
+        @prefix ex: <https://example.org/> .
 
         ex:subject ex:predicate "object" .
     "#;
@@ -92,7 +92,7 @@ fn test_process_input_basic() {
 #[rstest]
 fn test_process_input_with_expand() {
     let ttl = r#"
-        @prefix ex: <http://example.org/> .
+        @prefix ex: <https://example.org/> .
 
         ex:subject ex:predicate "object" .
     "#;
@@ -113,7 +113,7 @@ fn test_process_input_with_expand() {
 #[rstest]
 fn test_process_input_with_compact() {
     let ttl = r#"
-        @prefix ex: <http://example.org/> .
+        @prefix ex: <https://example.org/> .
 
         ex:subject ex:predicate "object" .
     "#;
@@ -134,7 +134,7 @@ fn test_process_input_with_compact() {
 #[rstest]
 fn test_process_input_with_expand_and_compact() {
     let ttl = r#"
-        @prefix ex: <http://example.org/> .
+        @prefix ex: <https://example.org/> .
 
         ex:subject ex:predicate "object" .
     "#;
@@ -157,7 +157,7 @@ fn test_process_input_with_expand_and_compact() {
 fn test_process_input_with_file() {
     // Create a temporary file with TTL content
     let mut temp_file = NamedTempFile::new().unwrap();
-    writeln!(temp_file, "@prefix ex: <http://example.org/> .").unwrap();
+    writeln!(temp_file, "@prefix ex: <https://example.org/> .").unwrap();
     writeln!(temp_file).unwrap();
     writeln!(temp_file, "ex:subject ex:predicate \"object\" .").unwrap();
 
@@ -179,8 +179,8 @@ fn test_process_input_with_file() {
 #[rstest]
 fn test_process_input_with_multiple_triples() {
     let ttl = r#"
-        @prefix ex: <http://example.org/> .
-        @prefix foaf: <http://xmlns.com/foaf/0.1/> .
+        @prefix ex: <https://example.org/> .
+        @prefix foaf: <https://xmlns.com/foaf/0.1/> .
 
         ex:john a foaf:Person ;
             foaf:name "John Doe" ;
@@ -207,7 +207,7 @@ fn test_process_input_with_multiple_triples() {
 #[rstest]
 fn test_process_input_with_config_expand() {
     let ttl = r#"
-        @prefix ex: <http://example.org/> .
+        @prefix ex: <https://example.org/> .
 
         ex:subject ex:predicate "object" .
     "#;
@@ -249,8 +249,8 @@ fn test_process_input_with_config_expand() {
 #[rstest]
 fn test_process_input_trig_format() {
     let trig = r#"
-        @prefix ex: <http://example.org/> .
-        @prefix foaf: <http://xmlns.com/foaf/0.1/> .
+        @prefix ex: <https://example.org/> .
+        @prefix foaf: <https://xmlns.com/foaf/0.1/> .
 
         ex:graph1 {
             ex:john a foaf:Person ;

@@ -40,6 +40,15 @@ cargo build --release
 
 The binary will be available at `target/release/rdfless`.
 
+#### Build Optimizations
+
+Release builds automatically include the following optimizations:
+
+- Debug symbols are stripped from the binary to reduce file size
+- If [UPX](https://upx.github.io/) is available on your system path, the binary will be compressed for even smaller file size
+
+These optimizations help create a more compact executable without affecting functionality.
+
 ## Usage
 
 ```bash
@@ -112,7 +121,7 @@ Input:
 ```turtle
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix ex: <http://example.org/> .
+@prefix ex: <https://example.org/> .
 
 ex:Person a rdfs:Class ;
     rdfs:label "Person" .

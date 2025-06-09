@@ -10,8 +10,8 @@ use rdfless::{ObjectType, OwnedTriple, SubjectType};
 fn test_format_owned_subject_with_prefix() {
     let triple = OwnedTriple {
         subject_type: SubjectType::NamedNode,
-        subject_value: "http://example.org/subject".to_string(),
-        predicate: "http://example.org/predicate".to_string(),
+        subject_value: "https://example.org/subject".to_string(),
+        predicate: "httpa://example.org/predicate".to_string(),
         object_type: ObjectType::Literal,
         object_value: "value".to_string(),
         object_datatype: None,
@@ -20,7 +20,7 @@ fn test_format_owned_subject_with_prefix() {
     };
 
     let mut prefixes = HashMap::new();
-    prefixes.insert("ex".to_string(), "http://example.org/".to_string());
+    prefixes.insert("ex".to_string(), "https://example.org/".to_string());
 
     let colors = ColorConfig::default();
 
@@ -32,8 +32,8 @@ fn test_format_owned_subject_with_prefix() {
 fn test_format_owned_subject_without_prefix() {
     let triple = OwnedTriple {
         subject_type: SubjectType::NamedNode,
-        subject_value: "http://example.org/subject".to_string(),
-        predicate: "http://example.org/predicate".to_string(),
+        subject_value: "https://example.org/subject".to_string(),
+        predicate: "https://example.org/predicate".to_string(),
         object_type: ObjectType::Literal,
         object_value: "value".to_string(),
         object_datatype: None,
@@ -44,7 +44,7 @@ fn test_format_owned_subject_without_prefix() {
     let colors = ColorConfig::default();
 
     let result = rdfless::format_owned_subject(&triple, None, &colors);
-    assert_eq!(result, "<http://example.org/subject>");
+    assert_eq!(result, "<https://example.org/subject>");
 }
 
 #[rstest]
@@ -52,7 +52,7 @@ fn test_format_owned_subject_blank_node() {
     let triple = OwnedTriple {
         subject_type: SubjectType::BlankNode,
         subject_value: "blank1".to_string(),
-        predicate: "http://example.org/predicate".to_string(),
+        predicate: "https://example.org/predicate".to_string(),
         object_type: ObjectType::Literal,
         object_value: "value".to_string(),
         object_datatype: None,
@@ -70,8 +70,8 @@ fn test_format_owned_subject_blank_node() {
 fn test_format_owned_predicate_with_prefix() {
     let triple = OwnedTriple {
         subject_type: SubjectType::NamedNode,
-        subject_value: "http://example.org/subject".to_string(),
-        predicate: "http://example.org/predicate".to_string(),
+        subject_value: "https://example.org/subject".to_string(),
+        predicate: "https://example.org/predicate".to_string(),
         object_type: ObjectType::Literal,
         object_value: "value".to_string(),
         object_datatype: None,
@@ -80,7 +80,7 @@ fn test_format_owned_predicate_with_prefix() {
     };
 
     let mut prefixes = HashMap::new();
-    prefixes.insert("ex".to_string(), "http://example.org/".to_string());
+    prefixes.insert("ex".to_string(), "https://example.org/".to_string());
 
     let colors = ColorConfig::default();
 
@@ -94,17 +94,17 @@ fn test_format_owned_predicate_with_prefix() {
 fn test_format_owned_object_named_node_with_prefix() {
     let triple = OwnedTriple {
         subject_type: SubjectType::NamedNode,
-        subject_value: "http://example.org/subject".to_string(),
-        predicate: "http://example.org/predicate".to_string(),
+        subject_value: "https://example.org/subject".to_string(),
+        predicate: "https://example.org/predicate".to_string(),
         object_type: ObjectType::NamedNode,
-        object_value: "http://example.org/object".to_string(),
+        object_value: "https://example.org/object".to_string(),
         object_datatype: None,
         object_language: None,
         graph: None,
     };
 
     let mut prefixes = HashMap::new();
-    prefixes.insert("ex".to_string(), "http://example.org/".to_string());
+    prefixes.insert("ex".to_string(), "https://example.org/".to_string());
 
     let colors = ColorConfig::default();
 
@@ -118,8 +118,8 @@ fn test_format_owned_object_named_node_with_prefix() {
 fn test_format_owned_object_blank_node() {
     let triple = OwnedTriple {
         subject_type: SubjectType::NamedNode,
-        subject_value: "http://example.org/subject".to_string(),
-        predicate: "http://example.org/predicate".to_string(),
+        subject_value: "https://example.org/subject".to_string(),
+        predicate: "https://example.org/predicate".to_string(),
         object_type: ObjectType::BlankNode,
         object_value: "blank1".to_string(),
         object_datatype: None,
@@ -139,8 +139,8 @@ fn test_format_owned_object_blank_node() {
 fn test_format_owned_object_simple_literal() {
     let triple = OwnedTriple {
         subject_type: SubjectType::NamedNode,
-        subject_value: "http://example.org/subject".to_string(),
-        predicate: "http://example.org/predicate".to_string(),
+        subject_value: "https://example.org/subject".to_string(),
+        predicate: "https://example.org/predicate".to_string(),
         object_type: ObjectType::Literal,
         object_value: "simple value".to_string(),
         object_datatype: None,
@@ -160,8 +160,8 @@ fn test_format_owned_object_simple_literal() {
 fn test_format_owned_object_language_tagged_literal() {
     let triple = OwnedTriple {
         subject_type: SubjectType::NamedNode,
-        subject_value: "http://example.org/subject".to_string(),
-        predicate: "http://example.org/predicate".to_string(),
+        subject_value: "https://example.org/subject".to_string(),
+        predicate: "https://example.org/predicate".to_string(),
         object_type: ObjectType::Literal,
         object_value: "hello".to_string(),
         object_datatype: None,
@@ -181,8 +181,8 @@ fn test_format_owned_object_language_tagged_literal() {
 fn test_format_owned_object_typed_literal() {
     let triple = OwnedTriple {
         subject_type: SubjectType::NamedNode,
-        subject_value: "http://example.org/subject".to_string(),
-        predicate: "http://example.org/predicate".to_string(),
+        subject_value: "https://example.org/subject".to_string(),
+        predicate: "https://example.org/predicate".to_string(),
         object_type: ObjectType::Literal,
         object_value: "42".to_string(),
         object_datatype: Some("http://www.w3.org/2001/XMLSchema#integer".to_string()),
@@ -209,8 +209,8 @@ fn test_format_owned_object_typed_literal() {
 fn test_format_owned_object_boolean_literal() {
     let triple = OwnedTriple {
         subject_type: SubjectType::NamedNode,
-        subject_value: "http://example.org/subject".to_string(),
-        predicate: "http://example.org/predicate".to_string(),
+        subject_value: "https://example.org/subject".to_string(),
+        predicate: "https://example.org/predicate".to_string(),
         object_type: ObjectType::Literal,
         object_value: "true".to_string(),
         object_datatype: Some("http://www.w3.org/2001/XMLSchema#boolean".to_string()),
