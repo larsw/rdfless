@@ -75,6 +75,40 @@ cargo build --release
 
 The binary will be available at `target/release/rdfless`.
 
+#### Using Just (Recommended)
+
+For a complete development workflow with formatting, linting, testing, and building:
+
+```bash
+# Install Just: https://github.com/casey/just
+cargo install just
+
+# Build release version
+just build
+
+# Development workflow (format, lint, test, build)
+just dev
+
+# Install system-wide (requires sudo)
+sudo just install
+
+# Build distribution binaries for all platforms
+just dist
+
+# See all available commands
+just list
+```
+
+#### Using Make (Legacy)
+
+You can also use the traditional Makefile:
+
+```bash
+make build
+sudo make install
+make dist
+```
+
 #### Build Optimizations
 
 Release builds automatically include the following optimizations:

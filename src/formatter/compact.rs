@@ -70,11 +70,7 @@ pub fn print_triples_to_writer<W: Write>(
         // Print graph name if it exists (for TriG format)
         if let Some(graph_name) = graph_key {
             let formatted_graph = resolve_uri_with_prefixes(graph_name, prefixes);
-            writeln!(
-                writer,
-                "{} {{",
-                colors.colorize(&formatted_graph, "graph")
-            )?;
+            writeln!(writer, "{} {{", colors.colorize(&formatted_graph, "graph"))?;
         }
 
         // Group by subject within this graph

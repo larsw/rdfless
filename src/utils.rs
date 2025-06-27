@@ -25,7 +25,7 @@ pub fn resolve_uri_with_prefixes(uri: &str, prefixes: Option<&HashMap<String, St
 /// Get terminal height for paging decisions
 pub fn get_terminal_height() -> usize {
     use terminal_size::{terminal_size, Height, Width};
-    
+
     if let Some((Width(_), Height(height))) = terminal_size() {
         height as usize
     } else {

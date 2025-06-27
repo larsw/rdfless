@@ -104,10 +104,7 @@ pub fn format_object(
 }
 
 /// Generic writer for formatted output
-pub fn write_formatted_output<W: Write>(
-    writer: &mut W,
-    content: &str,
-) -> Result<()> {
-    writeln!(writer, "{}", content)?;
+pub fn write_formatted_output<W: Write>(writer: &mut W, content: &str) -> Result<()> {
+    writeln!(writer, "{content}")?;
     Ok(())
 }

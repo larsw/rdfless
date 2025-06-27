@@ -9,7 +9,21 @@ This directory contains manual pages for `rdfless` and its configuration format.
 
 ## Installation
 
-### Using the Makefile
+### Using Just (Recommended)
+
+To install the manual pages system-wide using [Just](https://github.com/casey/just) (requires sudo):
+
+```bash
+sudo just install-man
+```
+
+To uninstall:
+
+```bash
+sudo just uninstall-man
+```
+
+### Using the Makefile (Legacy)
 
 To install the manual pages system-wide (requires sudo):
 

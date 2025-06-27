@@ -26,6 +26,10 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
+      - name: Install Just
+        uses: taiki-e/install-action@v2
+        with:
+          tool: just
 
       - name: Setup Git
         run: |
@@ -168,24 +172,27 @@ jobs:
 
       - name: Build Linux binary
         if: steps.check_version.outputs.should_publish == 'true'
+        run: just dist-linux
+
+      - name: Install cross-compilation targets
+        if: steps.check_version.outputs.should_publish == 'true'
         run: |
-          cargo build --release
-          upx --best --lzma target/release/rdfless || echo "UPX not found or failed, skipping compression."
-          cp target/release/rdfless target/release/rdfless-linux-x86_64
+          rustup target add x86_64-pc-windows-gnu
+          rustup target add x86_64-apple-darwin
+
+      - name: Install UPX
+        if: steps.check_version.outputs.should_publish == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y upx-ucl
 
       - name: Build Windows binary
         if: steps.check_version.outputs.should_publish == 'true'
-        run: |
-          cargo build --release --target x86_64-pc-windows-gnu
-          upx --best --lzma target/x86_64-pc-windows-gnu/release/rdfless.exe || echo "UPX not found or failed, skipping compression."
-          cp target/x86_64-pc-windows-gnu/release/rdfless.exe target/release/rdfless-windows-x86_64.exe
+        run: just dist-windows
 
       - name: Build MacOS binary
         if: steps.check_version.outputs.should_publish == 'true'
-        run: |
-          cargo build --release --target x86_64-apple-darwin
-          upx --best --lzma target/x86_64-apple-darwin/release/rdfless || echo "UPX not found or failed, skipping compression."
-          cp target/x86_64-apple-darwin/release/rdfless target/release/rdfless-macos-x86_64
+        run: just dist-macos
 
  #     - name: Find .deb package
  #       id: find_deb

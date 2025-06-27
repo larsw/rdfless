@@ -4,7 +4,7 @@
 // This source code is licensed under the BSD-3-Clause license found in the
 // LICENSE file in the root directory of this source tree.
 
-use crate::types::{OwnedTriple, ObjectType, SubjectType};
+use crate::types::{ObjectType, OwnedTriple, SubjectType};
 use rio_api::model::{Literal, Quad, Subject, Term, Triple};
 
 /// Convert a Triple to an OwnedTriple (rio version)

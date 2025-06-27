@@ -144,15 +144,17 @@ fn main() -> Result<()> {
     let config = load_config()?;
 
     // Helper function to process and output data
-    let process_and_output = |triples: &[rdfless::OwnedTriple], 
-                             prefixes: &HashMap<String, String>| -> Result<()> {
+    let process_and_output = |triples: &[rdfless::OwnedTriple],
+                              prefixes: &HashMap<String, String>|
+     -> Result<()> {
         let colors = &args.get_colors(&config);
         let should_expand = args.expand(&config);
 
         if let Some(output_path) = &args.output {
             // Write to file
-            let mut file = File::create(output_path)
-                .with_context(|| format!("Failed to create output file: {}", output_path.display()))?;
+            let mut file = File::create(output_path).with_context(|| {
+                format!("Failed to create output file: {}", output_path.display())
+            })?;
             rdfless::render_output(triples, prefixes, should_expand, colors, &mut file)?;
         } else {
             // Write to stdout (with potential paging)
@@ -170,7 +172,13 @@ fn main() -> Result<()> {
                 minus::page_all(pager)?;
             } else {
                 // Direct output to stdout
-                rdfless::render_output(triples, prefixes, should_expand, colors, &mut io::stdout())?;
+                rdfless::render_output(
+                    triples,
+                    prefixes,
+                    should_expand,
+                    colors,
+                    &mut io::stdout(),
+                )?;
             }
         }
         Ok(())
