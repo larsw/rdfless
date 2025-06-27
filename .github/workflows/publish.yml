@@ -7,6 +7,9 @@ on:
       - completed
     branches: [ main ]
 
+permissions:
+  contents: write
+
 jobs:
   publish:
     name: Publish to crates.io
@@ -241,6 +244,8 @@ jobs:
     runs-on: ubuntu-latest
     if: needs.publish.outputs.should_publish == 'true'
     needs: [publish, build-cross-platform]
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
