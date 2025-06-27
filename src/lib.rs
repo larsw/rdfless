@@ -137,8 +137,8 @@ pub fn quad_to_owned(quad: &Quad) -> OwnedTriple {
     // Then add the graph information if available
     if let Some(graph_name) = &quad.graph_name {
         // Extract the graph name without angle brackets
-        // The format!("{}", graph_name) might include angle brackets, so we'll extract just the IRI
-        let graph_str = format!("{}", graph_name);
+        // The format!("{graph_name}") might include angle brackets, so we'll extract just the IRI
+        let graph_str = format!("{graph_name}");
 
         // Remove angle brackets if present
         let clean_graph = if graph_str.starts_with('<') && graph_str.ends_with('>') {
@@ -160,13 +160,13 @@ fn resolve_uri_with_prefixes(uri: &str, prefixes: Option<&HashMap<String, String
         for (prefix, iri) in prefixes {
             if uri.starts_with(iri) {
                 let local_part = &uri[iri.len()..];
-                return format!("{}:{}", prefix, local_part);
+                return format!("{prefix}:{local_part}");
             }
         }
     }
 
     // No prefix found, use full URI
-    format!("<{}>", uri)
+    format!("<{uri}>")
 }
 
 // Format an owned subject
@@ -329,8 +329,8 @@ pub fn print_triples(
             if let Some(ref current) = current_subject {
                 if *current == subject {
                     // Same subject, print with semicolon
-                    println!("{}    {} ;", indent, predicate);
-                    println!("{}        {} .", indent, object);
+                    println!("{indent}    {predicate} ;");
+                    println!("{indent}        {object} .");
                 } else {
                     // New subject
                     if current_subject.is_some() {
@@ -341,8 +341,8 @@ pub fn print_triples(
                         indent,
                         subject.color(colors.get_color("subject")).bold()
                     );
-                    println!("{}    {} ;", indent, predicate);
-                    println!("{}        {} .", indent, object);
+                    println!("{indent}    {predicate} ;");
+                    println!("{indent}        {object} .");
                     current_subject = Some(subject);
                 }
             } else {
@@ -352,8 +352,8 @@ pub fn print_triples(
                     indent,
                     subject.color(colors.get_color("subject")).bold()
                 );
-                println!("{}    {} ;", indent, predicate);
-                println!("{}        {} .", indent, object);
+                println!("{indent}    {predicate} ;");
+                println!("{indent}        {object} .");
                 current_subject = Some(subject);
             }
         }
@@ -421,8 +421,8 @@ pub fn print_triples_to_writer<W: Write>(
             if let Some(ref current) = current_subject {
                 if current == &subject {
                     // Same subject, continue with predicate-object
-                    writeln!(writer, "{}    {} ;", indent, predicate)?;
-                    writeln!(writer, "{}        {} .", indent, object)?;
+                    writeln!(writer, "{indent}    {predicate} ;")?;
+                    writeln!(writer, "{indent}        {object} .")?;
                 } else {
                     // Different subject, add blank line and start new triple
                     if graph_key.is_none() {
@@ -435,7 +435,7 @@ pub fn print_triples_to_writer<W: Write>(
                         subject.color(colors.get_color("subject")),
                         predicate
                     )?;
-                    writeln!(writer, "{}    {} .", indent, object)?;
+                    writeln!(writer, "{indent}    {object} .")?;
                     current_subject = Some(subject);
                 }
             } else {
@@ -447,7 +447,7 @@ pub fn print_triples_to_writer<W: Write>(
                     subject.color(colors.get_color("subject")),
                     predicate
                 )?;
-                writeln!(writer, "{}    {} .", indent, object)?;
+                writeln!(writer, "{indent}    {object} .")?;
                 current_subject = Some(subject);
             }
         }

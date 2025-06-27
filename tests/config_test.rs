@@ -19,7 +19,7 @@ fn test_css_color_codes(#[case] color_code: &str, #[case] r: u8, #[case] g: u8, 
             assert_eq!(green, g);
             assert_eq!(blue, b);
         }
-        _ => panic!("Expected TrueColor, got {:?}", color),
+        _ => panic!("Expected TrueColor, got {color:?}"),
     }
 }
 
@@ -49,7 +49,7 @@ fn test_config_serialization_deserialization() {
     let toml_str = toml::to_string(&config).expect("Failed to serialize config");
 
     // Print the TOML for debugging
-    println!("Serialized TOML:\n{}", toml_str);
+    println!("Serialized TOML:\n{toml_str}");
 
     // Ensure the TOML doesn't contain problematic quotes
     assert!(!toml_str.contains("object'"));
@@ -108,7 +108,7 @@ fn test_config_with_css_colors() {
     let toml_str = toml::to_string(&config).expect("Failed to serialize config");
 
     // Print the TOML for debugging
-    println!("Serialized TOML with CSS colors:\n{}", toml_str);
+    println!("Serialized TOML with CSS colors:\n{toml_str}");
 
     // Deserialize back to Config
     let deserialized_config: Config =
@@ -144,7 +144,7 @@ fn test_config_with_css_colors() {
             assert_eq!(g, 102);
             assert_eq!(b, 153);
         }
-        _ => panic!("Expected TrueColor, got {:?}", subject_color),
+        _ => panic!("Expected TrueColor, got {subject_color:?}"),
     }
 }
 
@@ -164,7 +164,7 @@ fn test_config_with_paging_options() {
 
     // Serialize to TOML
     let toml_str = toml::to_string(&config).expect("Failed to serialize config");
-    println!("Serialized TOML with paging options:\n{}", toml_str);
+    println!("Serialized TOML with paging options:\n{toml_str}");
 
     // Deserialize back to Config
     let deserialized_config: Config =
@@ -231,7 +231,7 @@ fn test_config_serialization_with_theme() {
 
     // Serialize to TOML
     let toml_str = toml::to_string(&config).expect("Failed to serialize config");
-    println!("Serialized TOML with custom theme:\n{}", toml_str);
+    println!("Serialized TOML with custom theme:\n{toml_str}");
 
     // Deserialize back to Config
     let deserialized_config: Config =
