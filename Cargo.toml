@@ -19,6 +19,9 @@ anyhow = "1.0.98"
 serde = { version = "1.0", features = ["derive"] }
 toml = "0.8.12"
 dirs = "6.0.0"
+minus = { version = "5.6.1", features = ["search", "static_output"] }
+terminal_size = "0.4.2"
+termbg = "0.6.2"
 
 [dev-dependencies]
 rstest = "0.25.0"

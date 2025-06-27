@@ -18,12 +18,36 @@ pub struct Config {
     pub colors: ColorConfig,
     #[serde(default)]
     pub output: OutputConfig,
+    #[serde(default)]
+    pub theme: ThemeConfig,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ThemeConfig {
+    #[serde(default)]
+    pub auto_detect: bool,
+    #[serde(default)]
+    pub dark_theme: ColorConfig,
+    #[serde(default)]
+    pub light_theme: ColorConfig,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct OutputConfig {
     #[serde(default)]
     pub expand: bool,
+    #[serde(default)]
+    pub pager: bool,
+    /// Automatically enable paging when output is longer than screen height
+    #[serde(default = "default_auto_pager")]
+    pub auto_pager: bool,
+    /// Threshold for auto-paging (in lines). If 0, uses terminal height
+    #[serde(default)]
+    pub auto_pager_threshold: usize,
+}
+
+fn default_auto_pager() -> bool {
+    true
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -37,6 +61,32 @@ pub struct ColorConfig {
     pub prefix: String,
     pub base: String,
     pub graph: String,
+}
+
+impl Default for ThemeConfig {
+    fn default() -> Self {
+        ThemeConfig {
+            auto_detect: true,
+            dark_theme: ColorConfig {
+                subject: "blue".to_string(),
+                predicate: "green".to_string(),
+                object: "white".to_string(),
+                literal: "red".to_string(),
+                prefix: "yellow".to_string(),
+                base: "yellow".to_string(),
+                graph: "yellow".to_string(),
+            },
+            light_theme: ColorConfig {
+                subject: "blue".to_string(),
+                predicate: "#006400".to_string(), // dark green
+                object: "black".to_string(),
+                literal: "#8B0000".to_string(), // dark red
+                prefix: "#B8860B".to_string(), // dark goldenrod
+                base: "#B8860B".to_string(), // dark goldenrod
+                graph: "#B8860B".to_string(), // dark goldenrod
+            },
+        }
+    }
 }
 
 impl Default for ColorConfig {
@@ -191,4 +241,28 @@ fn create_default_config(config_path: &PathBuf) -> Result<()> {
     })?;
 
     Ok(())
+}
+
+// Function to detect if terminal has a light background
+pub fn is_light_background() -> bool {
+    if let Ok(theme) = termbg::theme(std::time::Duration::from_millis(100)) {
+        matches!(theme, termbg::Theme::Light)
+    } else {
+        // Default to dark if detection fails
+        false
+    }
+}
+
+// Function to get the appropriate color config based on background detection
+pub fn get_effective_colors(config: &Config) -> ColorConfig {
+    if config.theme.auto_detect {
+        if is_light_background() {
+            config.theme.light_theme.clone()
+        } else {
+            config.theme.dark_theme.clone()
+        }
+    } else {
+        // Use the explicitly configured colors
+        config.colors.clone()
+    }
 }

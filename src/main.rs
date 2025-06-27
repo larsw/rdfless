@@ -6,11 +6,11 @@
 
 use anyhow::{Context, Result};
 use clap::{CommandFactory, Parser, ValueEnum};
+use rdfless::{ArgsConfig, InputFormat, detect_format_from_path, config::load_config};
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufReader, IsTerminal};
 use std::path::PathBuf;
-
-use rdfless::{config::load_config, detect_format_from_path, InputFormat};
 
 /// Define the format options for the command-line
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -38,9 +38,29 @@ struct Args {
     /// Override the input format (auto-detected from file extension by default)
     #[arg(long, value_enum)]
     format: Option<FormatArg>,
+
+    /// Enable paging for large outputs
+    #[arg(long)]
+    pager: bool,
+
+    /// Disable paging (useful when paging is enabled by default in config)
+    #[arg(long)]
+    no_pager: bool,
+
+    /// Force dark theme colors
+    #[arg(long)]
+    dark_theme: bool,
+
+    /// Force light theme colors
+    #[arg(long)]
+    light_theme: bool,
+
+    /// Disable automatic background detection
+    #[arg(long)]
+    no_auto_theme: bool,
 }
 
-impl rdfless::Args for Args {
+impl rdfless::ArgsConfig for Args {
     fn expand(&self, config: &rdfless::config::Config) -> bool {
         // If both flags are provided, compact takes precedence
         if self.compact {
@@ -50,6 +70,37 @@ impl rdfless::Args for Args {
         } else {
             // If neither flag is provided, use config value
             config.output.expand
+        }
+    }
+
+    fn use_pager(&self, config: &rdfless::config::Config) -> bool {
+        // If no_pager is specified, disable paging
+        if self.no_pager {
+            false
+        } else if self.pager {
+            true
+        } else {
+            // If neither flag is provided, use config value
+            config.output.pager
+        }
+    }
+
+    fn no_pager_explicit(&self) -> bool {
+        self.no_pager
+    }
+
+    fn get_colors(&self, config: &rdfless::config::Config) -> rdfless::config::ColorConfig {
+        // Check for explicit theme flags first
+        if self.dark_theme {
+            config.theme.dark_theme.clone()
+        } else if self.light_theme {
+            config.theme.light_theme.clone()
+        } else if self.no_auto_theme {
+            // Use explicitly configured colors without auto-detection
+            config.colors.clone()
+        } else {
+            // Use auto-detection
+            rdfless::config::get_effective_colors(config)
         }
     }
 
@@ -77,7 +128,6 @@ fn main() -> Result<()> {
 
     // Load configuration
     let config = load_config()?;
-    let colors = &config.colors;
 
     // Check if we should read from stdin or files
     if args.files.is_empty() {
@@ -85,19 +135,68 @@ fn main() -> Result<()> {
         if !io::stdin().is_terminal() {
             let stdin = io::stdin();
             let reader = BufReader::new(stdin);
-            rdfless::process_input(reader, &args, colors, &config)?;
+            
+            // Use auto-pager functionality
+            rdfless::process_input_auto_pager(reader, &args, &config)?;
         } else {
             eprintln!("No input files provided and no input piped to stdin.");
             Args::command().print_help().expect("Failed to print help");
             std::process::exit(1);
         }
     } else {
-        // Process each file
-        for file_path in &args.files {
-            let file = File::open(file_path)
-                .with_context(|| format!("Failed to open file: {}", file_path.display()))?;
+        // Process files with auto-pager
+        // For multiple files, we need to collect all content first
+        if args.files.len() == 1 {
+            // Single file - can use auto-pager directly
+            let file = File::open(&args.files[0])
+                .with_context(|| format!("Failed to open file: {}", args.files[0].display()))?;
             let reader = BufReader::new(file);
-            rdfless::process_input(reader, &args, colors, &config)?;
+            rdfless::process_input_auto_pager(reader, &args, &config)?;
+        } else {
+            // Multiple files - collect all and then decide on paging
+            let mut all_triples = Vec::new();
+            let mut all_prefixes = HashMap::new();
+            
+            for file_path in &args.files {
+                let file = File::open(file_path)
+                    .with_context(|| format!("Failed to open file: {}", file_path.display()))?;
+                let reader = BufReader::new(file);
+                
+                let format = args.format().unwrap_or(rdfless::InputFormat::Turtle);
+                let (mut triples, prefixes) = match format {
+                    rdfless::InputFormat::Turtle => rdfless::parse_turtle_for_estimation(reader)?,
+                    rdfless::InputFormat::TriG => rdfless::parse_trig_for_estimation(reader)?,
+                    rdfless::InputFormat::NTriples => rdfless::parse_ntriples_for_estimation(reader)?,
+                    rdfless::InputFormat::NQuads => rdfless::parse_nquads_for_estimation(reader)?,
+                };
+                
+                all_triples.append(&mut triples);
+                for (prefix, iri) in prefixes {
+                    all_prefixes.insert(prefix, iri);
+                }
+            }
+            
+            // Estimate total output lines
+            let should_expand = args.expand(&config);
+            let estimated_lines = rdfless::estimate_output_lines(&all_triples, &all_prefixes, should_expand);
+            
+            // Determine if we should use paging
+            let use_paging = rdfless::should_use_pager(&args, &config, estimated_lines);
+            let colors = &args.get_colors(&config);
+            
+            if use_paging && io::stdout().is_terminal() {
+                // Use pager
+                let mut output = Vec::new();
+                rdfless::render_output(&all_triples, &all_prefixes, should_expand, colors, &mut output)?;
+                let output_str = String::from_utf8(output)?;
+                
+                let pager = minus::Pager::new();
+                pager.set_text(output_str)?;
+                minus::page_all(pager)?;
+            } else {
+                // Direct output
+                rdfless::render_output(&all_triples, &all_prefixes, should_expand, colors, &mut io::stdout())?;
+            }
         }
     }
 
