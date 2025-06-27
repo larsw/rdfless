@@ -49,7 +49,7 @@ jobs:
           CHANGED_FILES=$(git diff --name-only $COMMIT_SHA~1 $COMMIT_SHA)
           
           # Files that should trigger a publish
-          RELEVANT_PATTERNS="^(src/|Cargo\.toml|Cargo\.lock|tests/)"
+          RELEVANT_PATTERNS="^(src/|Cargo\.toml|Cargo\.lock|tests/|\.cargo/)"
           
           # Files/patterns that should NOT trigger a publish
           IGNORE_PATTERNS="^(.*\.md$|samples/|\.github/workflows/ci\.yml$|doap\.ttl$|LICENSE$)"

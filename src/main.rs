@@ -3,6 +3,8 @@
 //
 // This source code is licensed under the BSD-3-Clause license found in the
 // LICENSE file in the root directory of this source tree.
+//
+// Main entry point for the rdfless CLI application
 
 use anyhow::{Context, Result};
 use clap::{CommandFactory, Parser, ValueEnum};
