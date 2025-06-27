@@ -32,7 +32,7 @@ pub struct ThemeConfig {
     pub light_theme: ColorConfig,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct OutputConfig {
     #[serde(default)]
     pub expand: bool,
@@ -99,6 +99,17 @@ impl Default for ColorConfig {
             prefix: "yellow".to_string(),
             base: "yellow".to_string(),
             graph: "yellow".to_string(),
+        }
+    }
+}
+
+impl Default for OutputConfig {
+    fn default() -> Self {
+        OutputConfig {
+            expand: false,
+            pager: false,
+            auto_pager: default_auto_pager(),
+            auto_pager_threshold: 0,
         }
     }
 }

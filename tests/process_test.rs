@@ -1,6 +1,7 @@
 use rdfless::config::{ColorConfig, Config, OutputConfig};
-use rdfless::{Args, InputFormat};
+use rdfless::{ArgsConfig, InputFormat, OwnedTriple};
 use rstest::rstest;
+use std::collections::HashMap;
 use std::io::Write;
 use std::io::{BufReader, Cursor};
 use tempfile::NamedTempFile;
@@ -11,7 +12,7 @@ struct TestArgs {
     format: Option<InputFormat>,
 }
 
-impl Args for TestArgs {
+impl ArgsConfig for TestArgs {
     fn expand(&self, config: &Config) -> bool {
         if self.compact {
             false
@@ -24,6 +25,18 @@ impl Args for TestArgs {
 
     fn format(&self) -> Option<InputFormat> {
         self.format
+    }
+
+    fn use_pager(&self, _config: &Config) -> bool {
+        false // Default to no pager for tests
+    }
+    
+    fn no_pager_explicit(&self) -> bool {
+        true // Explicitly disable paging in tests
+    }
+
+    fn get_colors(&self, config: &Config) -> rdfless::config::ColorConfig {
+        config.colors.clone()
     }
 }
 
@@ -223,7 +236,12 @@ fn test_process_input_with_config_expand() {
 
     // Config with expand=true
     let config = Config {
-        output: OutputConfig { expand: true },
+        output: OutputConfig { 
+            expand: true,
+            pager: false,
+            auto_pager: true,
+            auto_pager_threshold: 0,
+        },
         ..Default::default()
     };
 
@@ -238,7 +256,12 @@ fn test_process_input_with_config_expand() {
         format: Some(InputFormat::Turtle),
     };
     let config = Config {
-        output: OutputConfig { expand: false },
+        output: OutputConfig { 
+            expand: false,
+            pager: false,
+            auto_pager: true,
+            auto_pager_threshold: 0,
+        },
         ..Default::default()
     };
 
@@ -312,4 +335,238 @@ fn test_process_input_nquads_format() {
 
     let result = rdfless::process_input(reader, &args, &colors, &config);
     assert!(result.is_ok());
+}
+
+#[rstest]
+fn test_args_config_interface() {
+    let args = TestArgs {
+        expand: true,
+        compact: false,
+        format: Some(InputFormat::Turtle),
+    };
+    
+    let config = Config::default();
+    
+    // Test the ArgsConfig methods
+    assert!(args.expand(&config)); // expand is true in args
+    assert_eq!(args.format(), Some(InputFormat::Turtle));
+    assert!(!args.use_pager(&config)); // Disabled in test implementation
+    assert!(args.no_pager_explicit()); // Explicitly disabled in test implementation
+    
+    let colors = args.get_colors(&config);
+    assert_eq!(colors.subject, config.colors.subject);
+}
+
+#[rstest]  
+fn test_args_config_expand_precedence() {
+    // Test compact flag takes precedence
+    let args = TestArgs {
+        expand: true,
+        compact: true, // This should override expand
+        format: None,
+    };
+    
+    let mut config = Config::default();
+    config.output.expand = true;
+    
+    assert!(!args.expand(&config)); // compact overrides both args.expand and config.expand
+    
+    // Test config fallback when neither expand nor compact is set
+    let args = TestArgs {
+        expand: false,
+        compact: false,
+        format: None,
+    };
+    
+    config.output.expand = true;
+    assert!(args.expand(&config)); // Should use config value
+    
+    config.output.expand = false;  
+    assert!(!args.expand(&config)); // Should use config value
+}
+
+struct TestArgsWithPaging {
+    expand: bool,
+    compact: bool,
+    format: Option<InputFormat>,
+    use_pager: bool,
+    no_pager: bool,
+}
+
+impl ArgsConfig for TestArgsWithPaging {
+    fn expand(&self, config: &Config) -> bool {
+        if self.compact {
+            false
+        } else if self.expand {
+            true
+        } else {
+            config.output.expand
+        }
+    }
+
+    fn format(&self) -> Option<InputFormat> {
+        self.format
+    }
+
+    fn use_pager(&self, config: &Config) -> bool {
+        if self.no_pager {
+            false
+        } else if self.use_pager {
+            true
+        } else {
+            config.output.pager
+        }
+    }
+    
+    fn no_pager_explicit(&self) -> bool {
+        self.no_pager
+    }
+
+    fn get_colors(&self, config: &Config) -> rdfless::config::ColorConfig {
+        config.colors.clone()
+    }
+}
+
+#[rstest]
+fn test_args_config_paging_options() {
+    let mut config = Config::default();
+    config.output.pager = true;
+    
+    // Test explicit pager usage
+    let args = TestArgsWithPaging {
+        expand: false,
+        compact: false,
+        format: None,
+        use_pager: true,
+        no_pager: false,
+    };
+    
+    assert!(args.use_pager(&config));
+    assert!(!args.no_pager_explicit());
+    
+    // Test explicit pager disabling
+    let args = TestArgsWithPaging {
+        expand: false,
+        compact: false,
+        format: None,
+        use_pager: false,
+        no_pager: true,
+    };
+    
+    assert!(!args.use_pager(&config)); // Explicit no_pager overrides config
+    assert!(args.no_pager_explicit());
+    
+    // Test config fallback
+    let args = TestArgsWithPaging {
+        expand: false,
+        compact: false,
+        format: None,
+        use_pager: false,
+        no_pager: false,
+    };
+    
+    config.output.pager = true;
+    assert!(args.use_pager(&config)); // Uses config value
+    
+    config.output.pager = false;
+    assert!(!args.use_pager(&config)); // Uses config value
+}
+
+#[rstest]
+fn test_terminal_height_detection() {
+    let height = rdfless::get_terminal_height();
+    
+    // Should return a reasonable default even if not in a terminal
+    assert!(height > 0);
+    assert!(height <= 200); // Reasonable upper bound for most terminals
+}
+
+#[rstest]  
+fn test_output_estimation() {
+    // Create some test triples
+    let triples = vec![
+        OwnedTriple {
+            subject_type: rdfless::SubjectType::NamedNode,
+            subject_value: "https://example.org/subject1".to_string(),
+            predicate: "https://example.org/predicate1".to_string(),
+            object_type: rdfless::ObjectType::Literal,
+            object_value: "value1".to_string(),
+            object_datatype: None,
+            object_language: None,
+            graph: None,
+        },
+        OwnedTriple {
+            subject_type: rdfless::SubjectType::NamedNode,
+            subject_value: "https://example.org/subject2".to_string(),
+            predicate: "https://example.org/predicate2".to_string(),
+            object_type: rdfless::ObjectType::Literal,
+            object_value: "value2".to_string(),
+            object_datatype: None,
+            object_language: None,
+            graph: None,
+        },
+    ];
+    
+    let mut prefixes = HashMap::new();
+    prefixes.insert("ex".to_string(), "https://example.org/".to_string());
+    
+    // Test with compacted output (should include prefix lines)
+    let estimated_lines_compact = rdfless::estimate_output_lines(&triples, &prefixes, false);
+    assert!(estimated_lines_compact > 0);
+    
+    // Test with expanded output (no prefix lines)
+    let estimated_lines_expanded = rdfless::estimate_output_lines(&triples, &prefixes, true);
+    assert!(estimated_lines_expanded > 0);
+    
+    // Compact format should have more lines due to prefixes
+    assert!(estimated_lines_compact >= estimated_lines_expanded);
+}
+
+#[rstest]
+fn test_should_use_pager() {
+    let args = TestArgsWithPaging {
+        expand: false,
+        compact: false,
+        format: None,
+        use_pager: false,
+        no_pager: false,
+    };
+    
+    let mut config = Config::default();
+    
+    // Test explicit no pager
+    let args_no_pager = TestArgsWithPaging {
+        expand: false,
+        compact: false,
+        format: None,
+        use_pager: false,
+        no_pager: true,
+    };
+    
+    assert!(!rdfless::should_use_pager(&args_no_pager, &config, 100));
+    
+    // Test explicit use pager
+    let args_use_pager = TestArgsWithPaging {
+        expand: false,
+        compact: false,
+        format: None,
+        use_pager: true,
+        no_pager: false,
+    };
+    
+    assert!(rdfless::should_use_pager(&args_use_pager, &config, 100));
+    
+    // Test auto-pager logic with explicit threshold
+    config.output.auto_pager = true;
+    config.output.auto_pager_threshold = 10; // Use explicit threshold instead of terminal height
+    
+    // Should not use pager for small output
+    assert!(!rdfless::should_use_pager(&args, &config, 5));
+    
+    // Should use pager for large output
+    assert!(rdfless::should_use_pager(&args, &config, 15));
+    
+    // Test disabled auto-pager
+    config.output.auto_pager = false;
+    assert!(!rdfless::should_use_pager(&args, &config, 100)); // Should not use pager even for large output
 }
