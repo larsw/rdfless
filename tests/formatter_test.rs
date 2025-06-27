@@ -239,11 +239,11 @@ fn test_format_functions_with_theme_colors() {
     let colors = ColorConfig {
         subject: "#336699".to_string(),
         predicate: "#006400".to_string(), // dark green for light theme
-        object: "#000000".to_string(), // black for light theme  
-        literal: "#8B0000".to_string(), // dark red for light theme
-        prefix: "#B8860B".to_string(), // dark goldenrod
-        base: "#B8860B".to_string(), // dark goldenrod
-        graph: "#B8860B".to_string(), // dark goldenrod
+        object: "#000000".to_string(),    // black for light theme
+        literal: "#8B0000".to_string(),   // dark red for light theme
+        prefix: "#B8860B".to_string(),    // dark goldenrod
+        base: "#B8860B".to_string(),      // dark goldenrod
+        graph: "#B8860B".to_string(),     // dark goldenrod
     };
 
     let triple = OwnedTriple {
@@ -271,7 +271,7 @@ fn test_format_functions_with_theme_colors() {
     assert!(object_result.contains("\"test value\"@en"));
 }
 
-#[rstest]  
+#[rstest]
 fn test_format_with_graph_information() {
     let triple = OwnedTriple {
         subject_type: SubjectType::NamedNode,

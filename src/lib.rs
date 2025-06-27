@@ -35,7 +35,7 @@ pub trait ArgsConfig {
 
     // Determine if paging should be used based on args and config (explicit user choice)
     fn use_pager(&self, config: &config::Config) -> bool;
-    
+
     // Check if user explicitly disabled paging
     fn no_pager_explicit(&self) -> bool;
 
@@ -595,7 +595,8 @@ pub fn estimate_output_lines(
         // Group by subject to estimate lines per subject
         let mut subject_groups: HashMap<String, usize> = HashMap::new();
         for triple in triples_in_graph {
-            let subject_key = format!("{}:{}", 
+            let subject_key = format!(
+                "{}:{}",
                 match triple.subject_type {
                     SubjectType::NamedNode => "n",
                     SubjectType::BlankNode => "b",
@@ -610,7 +611,7 @@ pub fn estimate_output_lines(
         for (i, (_subject, predicate_count)) in subject_groups.iter().enumerate() {
             lines += 3; // Minimum lines per subject
             lines += predicate_count.saturating_sub(1) * 2; // Additional predicate-object pairs
-            
+
             if i > 0 {
                 lines += 1; // Blank line between subjects
             }
@@ -635,24 +636,24 @@ pub fn should_use_pager<A: ArgsConfig>(
     if args.no_pager_explicit() {
         return false;
     }
-    
+
     // If user explicitly enabled paging, respect that
     if args.use_pager(config) {
         return true;
     }
-    
+
     // Check if auto-paging is enabled
     if !config.output.auto_pager {
         return false;
     }
-    
+
     // Determine threshold
     let threshold = if config.output.auto_pager_threshold > 0 {
         config.output.auto_pager_threshold
     } else {
         get_terminal_height().saturating_sub(2) // Leave some space for prompt
     };
-    
+
     estimated_lines > threshold
 }
 
@@ -1006,39 +1007,45 @@ pub fn process_input_auto_pager<R: Read, A: ArgsConfig>(
     config: &config::Config,
 ) -> Result<()> {
     let colors = &args.get_colors(config);
-    
+
     // First, we need to parse the input to estimate the output size
     // We'll collect the triples and then decide whether to use paging
     let format = args.format().unwrap_or(InputFormat::Turtle);
-    
+
     let (triples, prefixes) = match format {
         InputFormat::Turtle => parse_turtle_for_estimation(reader)?,
         InputFormat::TriG => parse_trig_for_estimation(reader)?,
         InputFormat::NTriples => parse_ntriples_for_estimation(reader)?,
         InputFormat::NQuads => parse_nquads_for_estimation(reader)?,
     };
-    
+
     // Estimate output lines
     let should_expand = args.expand(config);
     let estimated_lines = estimate_output_lines(&triples, &prefixes, should_expand);
-    
+
     // Determine if we should use paging
     let use_paging = should_use_pager(args, config, estimated_lines);
-    
+
     if use_paging && std::io::IsTerminal::is_terminal(&std::io::stdout()) {
         // Use pager
         let mut output = Vec::new();
         render_output(&triples, &prefixes, should_expand, colors, &mut output)?;
         let output_str = String::from_utf8(output)?;
-        
+
         let pager = minus::Pager::new();
         pager.set_text(output_str)?;
         minus::page_all(pager)?;
     } else {
         // Direct output
-        render_output(&triples, &prefixes, should_expand, colors, &mut std::io::stdout())?;
+        render_output(
+            &triples,
+            &prefixes,
+            should_expand,
+            colors,
+            &mut std::io::stdout(),
+        )?;
     }
-    
+
     Ok(())
 }
 

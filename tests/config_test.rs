@@ -36,7 +36,7 @@ fn test_config_serialization_deserialization() {
             base: "yellow".to_string(),
             graph: "yellow".to_string(),
         },
-        output: OutputConfig { 
+        output: OutputConfig {
             expand: false,
             pager: false,
             auto_pager: true,
@@ -72,8 +72,14 @@ fn test_config_serialization_deserialization() {
     assert_eq!(deserialized_config.colors.graph, config.colors.graph);
     assert_eq!(deserialized_config.output.expand, config.output.expand);
     assert_eq!(deserialized_config.output.pager, config.output.pager);
-    assert_eq!(deserialized_config.output.auto_pager, config.output.auto_pager);
-    assert_eq!(deserialized_config.output.auto_pager_threshold, config.output.auto_pager_threshold);
+    assert_eq!(
+        deserialized_config.output.auto_pager,
+        config.output.auto_pager
+    );
+    assert_eq!(
+        deserialized_config.output.auto_pager_threshold,
+        config.output.auto_pager_threshold
+    );
 }
 
 #[rstest]
@@ -89,7 +95,7 @@ fn test_config_with_css_colors() {
             base: "#ffcc00".to_string(),
             graph: "#ffcc00".to_string(),
         },
-        output: OutputConfig { 
+        output: OutputConfig {
             expand: false,
             pager: false,
             auto_pager: true,
@@ -121,8 +127,14 @@ fn test_config_with_css_colors() {
     assert_eq!(deserialized_config.colors.graph, config.colors.graph);
     assert_eq!(deserialized_config.output.expand, config.output.expand);
     assert_eq!(deserialized_config.output.pager, config.output.pager);
-    assert_eq!(deserialized_config.output.auto_pager, config.output.auto_pager);
-    assert_eq!(deserialized_config.output.auto_pager_threshold, config.output.auto_pager_threshold);
+    assert_eq!(
+        deserialized_config.output.auto_pager,
+        config.output.auto_pager
+    );
+    assert_eq!(
+        deserialized_config.output.auto_pager_threshold,
+        config.output.auto_pager_threshold
+    );
 
     // Verify that the colors are correctly parsed
     let subject_color = string_to_color(&config.colors.subject);
@@ -160,20 +172,32 @@ fn test_config_with_paging_options() {
 
     // Verify paging options are correctly serialized/deserialized
     assert_eq!(deserialized_config.output.pager, config.output.pager);
-    assert_eq!(deserialized_config.output.auto_pager, config.output.auto_pager);
-    assert_eq!(deserialized_config.output.auto_pager_threshold, config.output.auto_pager_threshold);
+    assert_eq!(
+        deserialized_config.output.auto_pager,
+        config.output.auto_pager
+    );
+    assert_eq!(
+        deserialized_config.output.auto_pager_threshold,
+        config.output.auto_pager_threshold
+    );
 }
 
-#[rstest] 
+#[rstest]
 fn test_theme_config_default() {
     let theme_config = ThemeConfig::default();
-    
+
     // Test that auto-detection is enabled by default
     assert!(theme_config.auto_detect);
-    
+
     // Test that we have distinct light and dark themes
-    assert_ne!(theme_config.light_theme.predicate, theme_config.dark_theme.predicate);
-    assert_ne!(theme_config.light_theme.object, theme_config.dark_theme.object);
+    assert_ne!(
+        theme_config.light_theme.predicate,
+        theme_config.dark_theme.predicate
+    );
+    assert_ne!(
+        theme_config.light_theme.object,
+        theme_config.dark_theme.object
+    );
 }
 
 #[rstest]
@@ -214,18 +238,27 @@ fn test_config_serialization_with_theme() {
         toml::from_str(&toml_str).expect("Failed to deserialize config");
 
     // Verify theme settings are correctly serialized/deserialized
-    assert_eq!(deserialized_config.theme.auto_detect, config.theme.auto_detect);
-    assert_eq!(deserialized_config.theme.dark_theme.subject, config.theme.dark_theme.subject);
-    assert_eq!(deserialized_config.theme.light_theme.predicate, config.theme.light_theme.predicate);
+    assert_eq!(
+        deserialized_config.theme.auto_detect,
+        config.theme.auto_detect
+    );
+    assert_eq!(
+        deserialized_config.theme.dark_theme.subject,
+        config.theme.dark_theme.subject
+    );
+    assert_eq!(
+        deserialized_config.theme.light_theme.predicate,
+        config.theme.light_theme.predicate
+    );
 }
 
 #[rstest]
 fn test_default_auto_pager_enabled() {
     let config = Config::default();
-    
+
     // Test that auto_pager is enabled by default
     assert!(config.output.auto_pager);
-    
+
     // Test that auto_pager_threshold defaults to 0 (use terminal height)
     assert_eq!(config.output.auto_pager_threshold, 0);
 }

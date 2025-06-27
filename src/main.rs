@@ -6,7 +6,7 @@
 
 use anyhow::{Context, Result};
 use clap::{CommandFactory, Parser, ValueEnum};
-use rdfless::{ArgsConfig, InputFormat, detect_format_from_path, config::load_config};
+use rdfless::{config::load_config, detect_format_from_path, ArgsConfig, InputFormat};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufReader, IsTerminal};
@@ -135,7 +135,7 @@ fn main() -> Result<()> {
         if !io::stdin().is_terminal() {
             let stdin = io::stdin();
             let reader = BufReader::new(stdin);
-            
+
             // Use auto-pager functionality
             rdfless::process_input_auto_pager(reader, &args, &config)?;
         } else {
@@ -156,46 +156,61 @@ fn main() -> Result<()> {
             // Multiple files - collect all and then decide on paging
             let mut all_triples = Vec::new();
             let mut all_prefixes = HashMap::new();
-            
+
             for file_path in &args.files {
                 let file = File::open(file_path)
                     .with_context(|| format!("Failed to open file: {}", file_path.display()))?;
                 let reader = BufReader::new(file);
-                
+
                 let format = args.format().unwrap_or(rdfless::InputFormat::Turtle);
                 let (mut triples, prefixes) = match format {
                     rdfless::InputFormat::Turtle => rdfless::parse_turtle_for_estimation(reader)?,
                     rdfless::InputFormat::TriG => rdfless::parse_trig_for_estimation(reader)?,
-                    rdfless::InputFormat::NTriples => rdfless::parse_ntriples_for_estimation(reader)?,
+                    rdfless::InputFormat::NTriples => {
+                        rdfless::parse_ntriples_for_estimation(reader)?
+                    }
                     rdfless::InputFormat::NQuads => rdfless::parse_nquads_for_estimation(reader)?,
                 };
-                
+
                 all_triples.append(&mut triples);
                 for (prefix, iri) in prefixes {
                     all_prefixes.insert(prefix, iri);
                 }
             }
-            
+
             // Estimate total output lines
             let should_expand = args.expand(&config);
-            let estimated_lines = rdfless::estimate_output_lines(&all_triples, &all_prefixes, should_expand);
-            
+            let estimated_lines =
+                rdfless::estimate_output_lines(&all_triples, &all_prefixes, should_expand);
+
             // Determine if we should use paging
             let use_paging = rdfless::should_use_pager(&args, &config, estimated_lines);
             let colors = &args.get_colors(&config);
-            
+
             if use_paging && io::stdout().is_terminal() {
                 // Use pager
                 let mut output = Vec::new();
-                rdfless::render_output(&all_triples, &all_prefixes, should_expand, colors, &mut output)?;
+                rdfless::render_output(
+                    &all_triples,
+                    &all_prefixes,
+                    should_expand,
+                    colors,
+                    &mut output,
+                )?;
                 let output_str = String::from_utf8(output)?;
-                
+
                 let pager = minus::Pager::new();
                 pager.set_text(output_str)?;
                 minus::page_all(pager)?;
             } else {
                 // Direct output
-                rdfless::render_output(&all_triples, &all_prefixes, should_expand, colors, &mut io::stdout())?;
+                rdfless::render_output(
+                    &all_triples,
+                    &all_prefixes,
+                    should_expand,
+                    colors,
+                    &mut io::stdout(),
+                )?;
             }
         }
     }

@@ -81,9 +81,9 @@ impl Default for ThemeConfig {
                 predicate: "#006400".to_string(), // dark green
                 object: "black".to_string(),
                 literal: "#8B0000".to_string(), // dark red
-                prefix: "#B8860B".to_string(), // dark goldenrod
-                base: "#B8860B".to_string(), // dark goldenrod
-                graph: "#B8860B".to_string(), // dark goldenrod
+                prefix: "#B8860B".to_string(),  // dark goldenrod
+                base: "#B8860B".to_string(),    // dark goldenrod
+                graph: "#B8860B".to_string(),   // dark goldenrod
             },
         }
     }
