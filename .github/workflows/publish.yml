@@ -90,47 +90,47 @@ jobs:
           cargo login ${{ secrets.CRATES_IO_TOKEN }}
           cargo publish --no-verify
 
-      - name: Install Debian packaging tools
-        if: steps.check_version.outputs.should_publish == 'true'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y devscripts debhelper build-essential lintian dput gnupg
+#      - name: Install Debian packaging tools
+#        if: steps.check_version.outputs.should_publish == 'true'
+#        run: |
+#          sudo apt-get update
+#          sudo apt-get install -y devscripts debhelper build-essential lintian dput gnupg
 
-      - name: Build Debian source package
-        if: steps.check_version.outputs.should_publish == 'true'
-        run: |
-          debclean || true
-          debuild -S -sa -us -uc
+#      - name: Build Debian source package
+#        if: steps.check_version.outputs.should_publish == 'true'
+#        run: |
+#          debclean || true
+#          debuild -S -sa -us -uc
 
-      - name: Import Launchpad GPG key
-        if: steps.check_version.outputs.should_publish == 'true'
-        env:
-          LAUNCHPAD_GPG_KEY: ${{ secrets.LAUNCHPAD_GPG_KEY }}
-        run: |
-          echo "$LAUNCHPAD_GPG_KEY" | gpg --batch --import
+#      - name: Import Launchpad GPG key
+#        if: steps.check_version.outputs.should_publish == 'true'
+#        env:
+#          LAUNCHPAD_GPG_KEY: ${{ secrets.LAUNCHPAD_GPG_KEY }}
+#        run: |
+#          echo "$LAUNCHPAD_GPG_KEY" | gpg --batch --import
 
-      - name: Sign .changes and .dsc files
-        if: steps.check_version.outputs.should_publish == 'true'
-        env:
-          LAUNCHPAD_GPG_PASSPHRASE: ${{ secrets.LAUNCHPAD_GPG_PASSPHRASE }}
-          LAUNCHPAD_USERNAME: ${{ secrets.LAUNCHPAD_USERNAME }}
-        run: |
-          CHANGES_FILE=$(ls ../*.changes | head -n1)
-          debsign -k$LAUNCHPAD_USERNAME -p"gpg --batch --yes --passphrase $LAUNCHPAD_GPG_PASSPHRASE --pinentry-mode loopback --detach-sign" $CHANGES_FILE
+#      - name: Sign .changes and .dsc files
+#        if: steps.check_version.outputs.should_publish == 'true'
+#        env:
+#          LAUNCHPAD_GPG_PASSPHRASE: ${{ secrets.LAUNCHPAD_GPG_PASSPHRASE }}
+#          LAUNCHPAD_USERNAME: ${{ secrets.LAUNCHPAD_USERNAME }}
+#        run: |
+#          CHANGES_FILE=$(ls ../*.changes | head -n1)
+#          debsign -k$LAUNCHPAD_USERNAME -p"gpg --batch --yes --passphrase $LAUNCHPAD_GPG_PASSPHRASE --pinentry-mode loopback --detach-sign" $CHANGES_FILE
 
-      - name: Upload to Launchpad PPA
-        if: steps.check_version.outputs.should_publish == 'true'
-        env:
-          LAUNCHPAD_USERNAME: ${{ secrets.LAUNCHPAD_USERNAME }}
-        run: |
-          echo "[larsw42-ppa]" > ~/.dput.cf
-          echo "fqdn = ppa.launchpad.net" >> ~/.dput.cf
-          echo "incoming = ~larsw42/ubuntu/rdfless/" >> ~/.dput.cf
-          echo "login = $LAUNCHPAD_USERNAME" >> ~/.dput.cf
-          echo "method = ftp" >> ~/.dput.cf
-          echo "allow_unsigned_uploads = 0" >> ~/.dput.cf
-          CHANGES_FILE=$(ls ../*.changes | head -n1)
-          dput larsw42-ppa $CHANGES_FILE
+#      - name: Upload to Launchpad PPA
+#        if: steps.check_version.outputs.should_publish == 'true'
+#        env:
+#          LAUNCHPAD_USERNAME: ${{ secrets.LAUNCHPAD_USERNAME }}
+#        run: |
+#          echo "[larsw42-ppa]" > ~/.dput.cf
+#          echo "fqdn = ppa.launchpad.net" >> ~/.dput.cf
+#          echo "incoming = ~larsw42/ubuntu/rdfless/" >> ~/.dput.cf
+#          echo "login = $LAUNCHPAD_USERNAME" >> ~/.dput.cf
+#          echo "method = ftp" >> ~/.dput.cf
+#          echo "allow_unsigned_uploads = 0" >> ~/.dput.cf
+#          CHANGES_FILE=$(ls ../*.changes | head -n1)
+#          dput larsw42-ppa $CHANGES_FILE
 
       - name: Build Linux binary
         if: steps.check_version.outputs.should_publish == 'true'
@@ -153,11 +153,11 @@ jobs:
           upx --best --lzma target/x86_64-apple-darwin/release/rdfless || echo "UPX not found or failed, skipping compression."
           cp target/x86_64-apple-darwin/release/rdfless target/release/rdfless-macos-x86_64
 
-      - name: Find .deb package
-        id: find_deb
-        if: steps.check_version.outputs.should_publish == 'true'
-        run: |
-          echo "deb_path=$(ls target/debian/*.deb | head -n1)" >> $GITHUB_OUTPUT
+ #     - name: Find .deb package
+ #       id: find_deb
+ #       if: steps.check_version.outputs.should_publish == 'true'
+ #       run: |
+ #         echo "deb_path=$(ls target/debian/*.deb | head -n1)" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         if: steps.check_version.outputs.should_publish == 'true'
