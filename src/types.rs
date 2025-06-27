@@ -56,6 +56,9 @@ pub trait ArgsConfig {
 
     /// Get the effective color configuration
     fn get_colors(&self, config: &config::Config) -> config::ColorConfig;
+
+    /// Check if output is going to a file
+    fn is_output_to_file(&self) -> bool;
 }
 
 /// Helper function to detect format from file extension

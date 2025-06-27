@@ -5,7 +5,7 @@
 // LICENSE file in the root directory of this source tree.
 
 use anyhow::{Context, Result};
-use colored::Color;
+use colored::{Color, Colorize};
 use dirs::home_dir;
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -127,9 +127,50 @@ impl ColorConfig {
             _ => Color::White,
         }
     }
+
+    /// Create a ColorConfig with no colors (for file output)
+    pub fn no_color() -> Self {
+        ColorConfig {
+            subject: "none".to_string(),
+            predicate: "none".to_string(),
+            object: "none".to_string(),
+            literal: "none".to_string(),
+            prefix: "none".to_string(),
+            base: "none".to_string(),
+            graph: "none".to_string(),
+        }
+    }
+
+    /// Check if colors are disabled
+    pub fn is_color_disabled(&self) -> bool {
+        self.subject == "none"
+    }
+
+    /// Apply color to text conditionally
+    pub fn colorize(&self, text: &str, color_name: &str) -> String {
+        if self.is_color_disabled() {
+            text.to_string()
+        } else {
+            text.color(self.get_color(color_name)).to_string()
+        }
+    }
+
+    /// Apply bold color to text conditionally
+    pub fn colorize_bold(&self, text: &str, color_name: &str) -> String {
+        if self.is_color_disabled() {
+            text.to_string()
+        } else {
+            text.color(self.get_color(color_name)).bold().to_string()
+        }
+    }
 }
 
 pub fn string_to_color(color_name: &str) -> Color {
+    // Handle special "none" value for no color
+    if color_name == "none" {
+        return Color::White; // This won't be used when colors are disabled
+    }
+
     // Check if the color is a CSS hex color code (e.g., #336699)
     if color_name.starts_with('#') && (color_name.len() == 7 || color_name.len() == 4) {
         return parse_hex_color(color_name).unwrap_or(Color::White);

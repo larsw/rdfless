@@ -11,7 +11,6 @@ use crate::{
     utils::resolve_uri_with_prefixes,
 };
 use anyhow::Result;
-use colored::*;
 use std::collections::HashMap;
 use std::io::Write;
 
@@ -25,8 +24,8 @@ pub fn print_prefixes_to_writer<W: Write>(
         writeln!(
             writer,
             "{} {}: <{}> .",
-            "PREFIX".color(colors.get_color("prefix")),
-            prefix.color(colors.get_color("prefix")),
+            colors.colorize("PREFIX", "prefix"),
+            colors.colorize(prefix, "prefix"),
             iri
         )?;
     }
@@ -74,7 +73,7 @@ pub fn print_triples_to_writer<W: Write>(
             writeln!(
                 writer,
                 "{} {{",
-                formatted_graph.color(colors.get_color("graph"))
+                colors.colorize(&formatted_graph, "graph")
             )?;
         }
 
@@ -104,7 +103,7 @@ pub fn print_triples_to_writer<W: Write>(
                         writer,
                         "{}{} {} ;",
                         indent,
-                        subject.color(colors.get_color("subject")),
+                        colors.colorize(&subject, "subject"),
                         predicate
                     )?;
                     writeln!(writer, "{indent}    {object} .")?;
@@ -116,7 +115,7 @@ pub fn print_triples_to_writer<W: Write>(
                     writer,
                     "{}{} {} ;",
                     indent,
-                    subject.color(colors.get_color("subject")),
+                    colors.colorize(&subject, "subject"),
                     predicate
                 )?;
                 writeln!(writer, "{indent}    {object} .")?;

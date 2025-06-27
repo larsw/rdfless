@@ -6,7 +6,6 @@
 
 use crate::{config, formatter, types::ArgsConfig, utils};
 use anyhow::Result;
-use std::io::IsTerminal;
 
 /// Determine if paging should be used based on content length
 pub fn should_use_pager<A: ArgsConfig>(

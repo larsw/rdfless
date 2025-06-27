@@ -8,7 +8,7 @@ pub mod writer;
 pub mod compact;
 pub mod expanded;
 
-use crate::{config, types::OwnedTriple, utils};
+use crate::{config, types::OwnedTriple};
 use anyhow::Result;
 use std::collections::HashMap;
 use std::io::Write;

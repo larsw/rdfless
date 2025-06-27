@@ -38,6 +38,10 @@ impl ArgsConfig for TestArgs {
     fn get_colors(&self, config: &Config) -> rdfless::config::ColorConfig {
         config.colors.clone()
     }
+
+    fn is_output_to_file(&self) -> bool {
+        false // Tests don't output to files
+    }
 }
 
 // Helper function to capture stdout for testing
@@ -424,6 +428,10 @@ impl ArgsConfig for TestArgsWithPaging {
 
     fn get_colors(&self, config: &Config) -> rdfless::config::ColorConfig {
         config.colors.clone()
+    }
+
+    fn is_output_to_file(&self) -> bool {
+        false // Tests don't output to files
     }
 }
 

@@ -1,0 +1,184 @@
+.TH RDFLESS 1 "June 2025" "rdfless 0.2.6" "User Commands"
+.SH NAME
+rdfless \- a colorful pretty printer for RDF data with ANSI colors
+.SH SYNOPSIS
+.B rdfless
+[\fIOPTION\fR]... [\fIFILE\fR]...
+.SH DESCRIPTION
+.B rdfless
+is a command-line tool for pretty-printing RDF data with syntax highlighting and ANSI colors. It supports multiple RDF formats including Turtle, TriG, N-Triples, and N-Quads. The tool automatically detects the input format from file extensions and provides options for customizing the output format and appearance.
+
+When no input files are specified, 
+.B rdfless
+reads from standard input. Output is written to standard output unless the
+.B \-o
+option is used to specify an output file.
+
+.SH OPTIONS
+.TP
+.B \-h, \-\-help
+Print help information and exit.
+.TP
+.B \-V, \-\-version
+Print version information and exit.
+.TP
+.B \-\-expand
+Expand prefixes instead of showing PREFIX declarations. When this option is used, all URIs are displayed in their full form rather than using namespace prefixes.
+.TP
+.B \-\-compact
+Compact mode (opposite of \-\-expand). Show PREFIX declarations and use prefixes to shorten URIs. This is the default behavior.
+.TP
+.B \-\-format \fIFORMAT\fR
+Override the input format detection. By default, the format is auto-detected from the file extension. Possible values are:
+.RS
+.IP \[bu] 2
+.B turtle
+\- Turtle format (.ttl files)
+.IP \[bu] 2
+.B trig
+\- TriG format (.trig files)
+.RE
+.TP
+.B \-\-pager
+Enable paging for large outputs using an interactive pager.
+.TP
+.B \-\-no\-pager
+Disable paging even if it would normally be enabled by configuration or auto-detection.
+.TP
+.B \-o, \-\-output \fIFILE\fR
+Write output to the specified file instead of standard output. When writing to a file, ANSI colors are automatically disabled unless explicitly forced with theme options.
+.TP
+.B \-\-dark\-theme
+Force dark theme colors suitable for dark terminal backgrounds.
+.TP
+.B \-\-light\-theme
+Force light theme colors suitable for light terminal backgrounds.
+.TP
+.B \-\-no\-auto\-theme
+Disable automatic background detection and use the explicitly configured colors from the configuration file.
+
+.SH SUPPORTED FORMATS
+.B rdfless
+supports the following RDF serialization formats:
+
+.TP
+.B Turtle (.ttl)
+Terse RDF Triple Language - a compact, human-readable syntax for RDF.
+.TP
+.B TriG (.trig)
+An extension of Turtle that supports named graphs (quads).
+.TP
+.B N-Triples (.nt)
+A line-based, plain text format for encoding RDF triples.
+.TP
+.B N-Quads (.nq)
+An extension of N-Triples that supports named graphs (quads).
+
+Format detection is based on file extensions. If no format is specified and the file extension is unrecognized, Turtle format is assumed.
+
+.SH CONFIGURATION
+.B rdfless
+can be configured using a TOML configuration file. The configuration file is located at:
+.IP \[bu] 2
+.B Linux/macOS:
+.I ~/.config/rdfless/config.toml
+.IP \[bu] 2
+.B Windows:
+.I %APPDATA%\\rdfless\\config.toml
+
+See
+.BR rdfless-config (5)
+for detailed information about the configuration file format.
+
+.SH COLOR OUTPUT
+.B rdfless
+provides syntax highlighting with different colors for:
+.IP \[bu] 2
+.B Subjects
+\- RDF resource subjects
+.IP \[bu] 2
+.B Predicates
+\- RDF properties
+.IP \[bu] 2
+.B Objects
+\- RDF resource objects
+.IP \[bu] 2
+.B Literals
+\- String literals, numbers, and typed literals
+.IP \[bu] 2
+.B Prefixes
+\- Namespace prefix declarations
+.IP \[bu] 2
+.B Graphs
+\- Named graph identifiers (in TriG format)
+
+Colors can be customized through the configuration file and support both named colors and hex color codes.
+
+.SH AUTO-PAGING
+.B rdfless
+automatically enables paging for large outputs when:
+.IP \[bu] 2
+The output exceeds the terminal height
+.IP \[bu] 2
+Auto-paging is enabled in configuration (default: true)
+.IP \[bu] 2
+Output is going to a terminal (not redirected to a file or pipe)
+.IP \[bu] 2
+No explicit paging option is specified
+
+Auto-paging can be configured or disabled through the configuration file.
+
+.SH EXAMPLES
+.TP
+.B rdfless data.ttl
+Pretty-print a Turtle file with default formatting and colors.
+.TP
+.B rdfless \-\-expand data.ttl
+Print the file with all prefixes expanded to full URIs.
+.TP
+.B rdfless \-\-format turtle data.rdf
+Force interpretation of data.rdf as Turtle format.
+.TP
+.B rdfless data.ttl \-o formatted.ttl
+Save the formatted output to a file (without ANSI colors).
+.TP
+.B rdfless \-\-dark\-theme \-o colored.ttl data.ttl
+Save formatted output with dark theme colors to a file.
+.TP
+.B rdfless \-\-no\-pager large_file.ttl
+Display a large file without using a pager.
+.TP
+.B cat data.ttl | rdfless
+Read RDF data from standard input and pretty-print it.
+.TP
+.B rdfless file1.ttl file2.ttl
+Process multiple files and concatenate their output.
+
+.SH EXIT STATUS
+.B rdfless
+exits with status 0 on success, and >0 if an error occurred.
+
+.SH FILES
+.TP
+.I ~/.config/rdfless/config.toml
+User configuration file (Linux/macOS)
+.TP
+.I %APPDATA%\\rdfless\\config.toml
+User configuration file (Windows)
+
+.SH SEE ALSO
+.BR rdfless-config (5)
+
+.SH BUGS
+Report bugs to: https://github.com/larsw/rdfless/issues
+
+.SH AUTHOR
+Written by Lars Wilhelmsen.
+
+.SH COPYRIGHT
+Copyright \(co 2025 Lars Wilhelmsen.
+.br
+License BSD-3-Clause: https://opensource.org/licenses/BSD-3-Clause
+.br
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.

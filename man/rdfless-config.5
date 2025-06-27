@@ -1,0 +1,254 @@
+.TH RDFLESS-CONFIG 5 "June 2025" "rdfless 0.2.6" "File Formats"
+.SH NAME
+rdfless-config \- configuration file for rdfless
+.SH SYNOPSIS
+.I ~/.config/rdfless/config.toml
+.br
+.I %APPDATA%\\rdfless\\config.toml
+.SH DESCRIPTION
+.B rdfless
+uses a TOML configuration file to customize its behavior and appearance. The configuration file is optional; if it doesn't exist,
+.B rdfless
+will use built-in defaults.
+
+The configuration file supports three main sections:
+.BR [colors] ,
+.BR [output] ,
+and
+.BR [theme] .
+
+.SH CONFIGURATION SECTIONS
+
+.SS [colors]
+Defines the default color scheme used for syntax highlighting. Each color can be specified as:
+.IP \[bu] 2
+A named color (e.g., "red", "blue", "green")
+.IP \[bu] 2
+A bright color (e.g., "bright_red", "bright_blue")
+.IP \[bu] 2
+A hex color code (e.g., "#FF0000", "#336699")
+
+Available color settings:
+.TP
+.B subject
+Color for RDF subjects (default: "blue")
+.TP
+.B predicate
+Color for RDF predicates/properties (default: "green")
+.TP
+.B object
+Color for RDF objects (default: "white")
+.TP
+.B literal
+Color for literal values (default: "red")
+.TP
+.B prefix
+Color for namespace prefixes (default: "yellow")
+.TP
+.B base
+Color for base URI declarations (default: "yellow")
+.TP
+.B graph
+Color for named graph identifiers (default: "yellow")
+
+.SS [output]
+Controls output formatting and paging behavior:
+.TP
+.B expand
+Boolean value controlling whether prefixes are expanded by default (default: false)
+.TP
+.B pager
+Boolean value controlling whether paging is enabled by default (default: false)
+.TP
+.B auto_pager
+Boolean value controlling automatic paging for large outputs (default: true)
+.TP
+.B auto_pager_threshold
+Integer value setting the line threshold for auto-paging. If 0, uses terminal height (default: 0)
+
+.SS [theme]
+Controls theme-specific color configurations and automatic theme detection:
+.TP
+.B auto_detect
+Boolean value controlling automatic terminal background detection (default: true)
+
+.SS [theme.dark_theme]
+Color configuration used when a dark terminal background is detected or when
+.B \-\-dark\-theme
+is specified:
+.TP
+.B subject
+Default: "blue"
+.TP
+.B predicate
+Default: "green"
+.TP
+.B object
+Default: "white"
+.TP
+.B literal
+Default: "red"
+.TP
+.B prefix
+Default: "yellow"
+.TP
+.B base
+Default: "yellow"
+.TP
+.B graph
+Default: "yellow"
+
+.SS [theme.light_theme]
+Color configuration used when a light terminal background is detected or when
+.B \-\-light\-theme
+is specified:
+.TP
+.B subject
+Default: "blue"
+.TP
+.B predicate
+Default: "#006400" (dark green)
+.TP
+.B object
+Default: "black"
+.TP
+.B literal
+Default: "#8B0000" (dark red)
+.TP
+.B prefix
+Default: "#B8860B" (dark goldenrod)
+.TP
+.B base
+Default: "#B8860B" (dark goldenrod)
+.TP
+.B graph
+Default: "#B8860B" (dark goldenrod)
+
+.SH NAMED COLORS
+The following named colors are supported:
+.IP \[bu] 2
+Basic colors: black, red, green, yellow, blue, magenta, cyan, white
+.IP \[bu] 2
+Bright colors: bright_black, bright_red, bright_green, bright_yellow, bright_blue, bright_magenta, bright_cyan, bright_white
+
+.SH HEX COLORS
+Hex color codes can be specified in the following formats:
+.IP \[bu] 2
+6-digit format: "#RRGGBB" (e.g., "#FF0000" for red)
+.IP \[bu] 2
+3-digit format: "#RGB" (e.g., "#F00" for red)
+
+.SH THEME DETECTION
+When
+.B theme.auto_detect
+is enabled (default),
+.B rdfless
+attempts to detect the terminal background color and automatically selects appropriate colors:
+.IP \[bu] 2
+Dark backgrounds use the
+.B theme.dark_theme
+configuration
+.IP \[bu] 2
+Light backgrounds use the
+.B theme.light_theme
+configuration
+.IP \[bu] 2
+If detection fails, falls back to the default
+.B [colors]
+configuration
+
+Theme detection can be overridden using the
+.BR \-\-dark\-theme ,
+.BR \-\-light\-theme ,
+or
+.B \-\-no\-auto\-theme
+command-line options.
+
+.SH EXAMPLE CONFIGURATION
+.EX
+# Example rdfless configuration file
+
+[colors]
+subject = "blue"
+predicate = "green"
+object = "white"
+literal = "#FF6B6B"
+prefix = "yellow"
+base = "yellow"
+graph = "magenta"
+
+[output]
+expand = false
+pager = false
+auto_pager = true
+auto_pager_threshold = 50
+
+[theme]
+auto_detect = true
+
+[theme.dark_theme]
+subject = "bright_blue"
+predicate = "bright_green"
+object = "white"
+literal = "bright_red"
+prefix = "bright_yellow"
+base = "bright_yellow"
+graph = "bright_magenta"
+
+[theme.light_theme]
+subject = "#0066CC"
+predicate = "#006400"
+object = "black"
+literal = "#CC0000"
+prefix = "#B8860B"
+base = "#B8860B"
+graph = "#8B008B"
+.EE
+
+.SH FILE LOCATION
+The configuration file is located at:
+.IP \[bu] 2
+.B Linux/macOS:
+.I ~/.config/rdfless/config.toml
+.IP \[bu] 2
+.B Windows:
+.I %APPDATA%\\rdfless\\config.toml
+
+The directory is created automatically if it doesn't exist when
+.B rdfless
+is first run.
+
+.SH PRECEDENCE
+Configuration values are resolved in the following order (highest to lowest precedence):
+.IP 1. 3
+Command-line options (e.g.,
+.BR \-\-expand ,
+.BR \-\-dark\-theme )
+.IP 2. 3
+Configuration file values
+.IP 3. 3
+Built-in defaults
+
+.SH ERROR HANDLING
+If the configuration file contains syntax errors or invalid values:
+.IP \[bu] 2
+Invalid TOML syntax will cause
+.B rdfless
+to report an error and exit
+.IP \[bu] 2
+Invalid color names will fall back to white
+.IP \[bu] 2
+Invalid boolean or numeric values will use defaults
+
+.SH SEE ALSO
+.BR rdfless (1)
+
+TOML specification: https://toml.io/
+
+.SH AUTHOR
+Written by Lars Wilhelmsen.
+
+.SH COPYRIGHT
+Copyright \(co 2025 Lars Wilhelmsen.
+.br
+License BSD-3-Clause: https://opensource.org/licenses/BSD-3-Clause

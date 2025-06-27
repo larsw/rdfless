@@ -6,7 +6,6 @@
 
 use crate::{config, types::OwnedTriple, utils::resolve_uri_with_prefixes};
 use anyhow::Result;
-use colored::*;
 use std::collections::HashMap;
 use std::io::Write;
 
@@ -30,9 +29,8 @@ pub fn format_predicate(
     prefixes: Option<&HashMap<String, String>>,
     colors: &config::ColorConfig,
 ) -> String {
-    resolve_uri_with_prefixes(&triple.predicate, prefixes)
-        .color(colors.get_color("predicate"))
-        .to_string()
+    let predicate_text = resolve_uri_with_prefixes(&triple.predicate, prefixes);
+    colors.colorize(&predicate_text, "predicate")
 }
 
 /// Format an owned object
@@ -43,20 +41,17 @@ pub fn format_object(
 ) -> String {
     match triple.object_type {
         crate::types::ObjectType::NamedNode => {
-            resolve_uri_with_prefixes(&triple.object_value, prefixes)
-                .color(colors.get_color("object"))
-                .to_string()
+            let object_text = resolve_uri_with_prefixes(&triple.object_value, prefixes);
+            colors.colorize(&object_text, "object")
         }
-        crate::types::ObjectType::BlankNode => format!("_:{}", triple.object_value)
-            .color(colors.get_color("object"))
-            .to_string(),
+        crate::types::ObjectType::BlankNode => {
+            let blank_text = format!("_:{}", triple.object_value);
+            colors.colorize(&blank_text, "object")
+        }
         crate::types::ObjectType::Literal => {
-            let literal_color = colors.get_color("literal");
-
             if let Some(language) = &triple.object_language {
-                format!("\"{}\"@{}", triple.object_value, language)
-                    .color(literal_color)
-                    .to_string()
+                let literal_text = format!("\"{}\"@{}", triple.object_value, language);
+                colors.colorize(&literal_text, "literal")
             } else if let Some(datatype) = &triple.object_datatype {
                 // In compact mode (prefixes is Some), don't expand basic data types
                 // In expanded mode (prefixes is None), always expand data types
@@ -76,36 +71,33 @@ pub fn format_object(
 
                 if is_compact_mode && is_basic_datatype {
                     // In compact mode, don't expand basic data types
-                    match datatype.as_str() {
+                    let literal_text = match datatype.as_str() {
                         "http://www.w3.org/2001/XMLSchema#integer"
                         | "http://www.w3.org/2001/XMLSchema#decimal"
                         | "http://www.w3.org/2001/XMLSchema#float"
                         | "http://www.w3.org/2001/XMLSchema#double" => {
                             // Output numeric types without quotes
-                            triple.object_value.to_string().color(literal_color).to_string()
+                            triple.object_value.to_string()
                         }
                         "http://www.w3.org/2001/XMLSchema#boolean" => {
                             // Output boolean values without quotes
-                            triple.object_value.to_string().color(literal_color).to_string()
+                            triple.object_value.to_string()
                         }
                         _ => {
                             // Keep other types (like strings, dates, etc.) in quotes
                             format!("\"{}\"", triple.object_value)
-                                .color(literal_color)
-                                .to_string()
                         }
-                    }
+                    };
+                    colors.colorize(&literal_text, "literal")
                 } else {
                     // In expanded mode or for non-basic data types, show the full datatype
                     let datatype_str = resolve_uri_with_prefixes(datatype, prefixes);
-                    format!("\"{}\"^^{}", triple.object_value, datatype_str)
-                        .color(literal_color)
-                        .to_string()
+                    let literal_text = format!("\"{}\"^^{}", triple.object_value, datatype_str);
+                    colors.colorize(&literal_text, "literal")
                 }
             } else {
-                format!("\"{}\"", triple.object_value)
-                    .color(literal_color)
-                    .to_string()
+                let literal_text = format!("\"{}\"", triple.object_value);
+                colors.colorize(&literal_text, "literal")
             }
         }
     }
