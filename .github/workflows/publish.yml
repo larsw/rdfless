@@ -12,6 +12,9 @@ jobs:
     name: Publish to crates.io
     runs-on: ubuntu-latest
     environment: default
+    outputs:
+      should_publish: ${{ steps.check_version.outputs.should_publish }}
+      new_version: ${{ steps.bump_version.outputs.new_version }}
     # Only run if CI workflow completed successfully and the triggering event was a push to main
     if: |
       github.event.workflow_run.conclusion == 'success' &&
@@ -170,29 +173,62 @@ jobs:
 #          CHANGES_FILE=$(ls ../*.changes | head -n1)
 #          dput larsw42-ppa $CHANGES_FILE
 
-      - name: Build Linux binary
-        if: steps.check_version.outputs.should_publish == 'true'
-        run: just dist-linux
+  build-cross-platform:
+    name: Build cross-platform binaries
+    runs-on: ${{ matrix.os }}
+    if: needs.publish.outputs.should_publish == 'true'
+    needs: publish
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-pc-windows-gnu
+            binary-name: rdfless.exe
+            dist-name: rdfless-windows-x86_64.exe
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            binary-name: rdfless
+            dist-name: rdfless-macos-x86_64
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Install Just
+        uses: taiki-e/install-action@v2
+        with:
+          tool: just
 
-      - name: Install cross-compilation targets
-        if: steps.check_version.outputs.should_publish == 'true'
-        run: |
-          rustup target add x86_64-pc-windows-gnu
-          rustup target add x86_64-apple-darwin
-
-      - name: Install UPX
-        if: steps.check_version.outputs.should_publish == 'true'
+      - name: Install Windows cross-compilation toolchain (Ubuntu only)
+        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install -y upx-ucl
+          sudo apt-get install -y gcc-mingw-w64-x86-64
 
-      - name: Build Windows binary
-        if: steps.check_version.outputs.should_publish == 'true'
-        run: just dist-windows
+      - name: Install target
+        run: rustup target add ${{ matrix.target }}
 
-      - name: Build MacOS binary
-        if: steps.check_version.outputs.should_publish == 'true'
-        run: just dist-macos
+      - name: Install UPX
+        run: |
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            sudo apt-get install -y upx-ucl
+          elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            brew install upx
+          fi
+
+      - name: Build binary
+        run: |
+          if [[ "${{ matrix.target }}" == "x86_64-pc-windows-gnu" ]]; then
+            just dist-windows
+          elif [[ "${{ matrix.target }}" == "x86_64-apple-darwin" ]]; then
+            just build
+            cp target/release/rdfless target/release/rdfless-macos-x86_64
+          fi
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.dist-name }}
+          path: target/release/${{ matrix.dist-name }}
 
  #     - name: Find .deb package
  #       id: find_deb
@@ -200,16 +236,41 @@ jobs:
  #       run: |
  #         echo "deb_path=$(ls target/debian/*.deb | head -n1)" >> $GITHUB_OUTPUT
 
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    if: needs.publish.outputs.should_publish == 'true'
+    needs: [publish, build-cross-platform]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Install Just
+        uses: taiki-e/install-action@v2
+        with:
+          tool: just
+      
+      - name: Install UPX
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y upx-ucl
+
+      - name: Build Linux binary
+        run: just dist-linux
+      
+      - name: Download cross-platform artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
       - name: Create GitHub Release
-        if: steps.check_version.outputs.should_publish == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.bump_version.outputs.new_version }}
-          name: Release v${{ steps.bump_version.outputs.new_version }}
+          tag_name: v${{ needs.publish.outputs.new_version }}
+          name: Release v${{ needs.publish.outputs.new_version }}
           body: |
-            Automated release of rdfless v${{ steps.bump_version.outputs.new_version }}
+            Automated release of rdfless v${{ needs.publish.outputs.new_version }}
           files: |
             target/release/rdfless-linux-x86_64
-            target/release/rdfless-windows-x86_64.exe
-            target/release/rdfless-macos-x86_64
-            ${{ steps.find_deb.outputs.deb_path }}
+            ./artifacts/rdfless-windows-x86_64.exe/rdfless-windows-x86_64.exe
+            ./artifacts/rdfless-macos-x86_64/rdfless-macos-x86_64
