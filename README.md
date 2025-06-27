@@ -12,9 +12,33 @@ A colorful pretty printer for RDF data with ANSI colors.
 
 Key features:
 - Colorized output for different RDF components (subjects, predicates, objects, literals)
+- Multiple themes
+- Intelligent theme switching based on background color (dark/light)
 - Support for reading from files or stdin (piped input)
 - Option to expand prefixes or display PREFIX declarations
 - Customizable colors through a configuration file
+- Pager (minus-based) enabling scrolling up/down in content.
+
+### Usage
+
+```
+Usage: rdfless [OPTIONS] [FILE]...
+
+Arguments:
+  [FILE]...  Input files (Turtle or TriG format)
+
+Options:
+      --expand           Expand prefixes instead of showing PREFIX declarations
+      --compact          Compact mode (opposite of 'expand')
+      --format <FORMAT>  Override the input format (auto-detected from file extension by default) [possible values: turtle, trig]
+      --pager            Enable paging for large outputs
+      --no-pager         Disable paging (useful when paging is enabled by default in config)
+      --dark-theme       Force dark theme colors
+      --light-theme      Force light theme colors
+      --no-auto-theme    Disable automatic background detection
+  -h, --help             Print help
+  -V, --version          Print version
+```
 
 ### Supported Formats
 
@@ -26,6 +50,8 @@ Key features:
 ## Installation
 
 ### Debian/Ubuntu from PPA
+
+*Work in progress*
 
 ```bash
 sudo add-apt-repository ppa:larsw/rdfless
@@ -139,6 +165,7 @@ expand = false
 ## Example
 
 Input:
+
 ```turtle
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
