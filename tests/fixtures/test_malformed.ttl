@@ -1,0 +1,21 @@
+@prefix ex: <https://example.org/> .
+
+# This is a well-formed triple
+ex:subject ex:predicate "valid object" .
+
+# This is malformed - missing closing angle bracket
+<https://example.org/bad_subject ex:predicate "bad triple" .
+
+# This has an invalid prefix reference
+invalid:subject ex:predicate "another bad triple" .
+
+# This is well-formed again
+ex:another_subject ex:another_predicate "another valid object" .
+
+# Random non-RDF content that should be ignored or cause errors
+This is just plain text that is not RDF
+Some more random content
+{ "json": "object" }
+
+# Another well-formed triple
+ex:final_subject ex:final_predicate "final object" .

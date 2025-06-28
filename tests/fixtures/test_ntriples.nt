@@ -1,0 +1,4 @@
+<https://example.org/subject> <https://example.org/predicate> "valid object" .
+<https://example.org/another_subject> <https://example.org/another_predicate> "another valid object" .
+# This is a comment in N-Triples
+<https://example.org/final_subject> <https://example.org/final_predicate> "final object" .

@@ -1,0 +1,10 @@
+@prefix ex: <https://example.org/> .
+
+# This is a well-formed triple
+ex:subject ex:predicate "valid object" .
+
+# This has an undefined prefix reference
+undefined:subject ex:predicate "bad triple" .
+
+# This is well-formed again
+ex:another_subject ex:another_predicate "another valid object" .

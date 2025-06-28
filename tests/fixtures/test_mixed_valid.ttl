@@ -1,0 +1,13 @@
+@prefix ex: <https://example.org/> .
+
+ex:subject1 ex:predicate1 "valid object 1" .
+
+ex:subject2 ex:predicate2 "valid object 2" .
+
+# This will cause an error because it's missing a closing angle bracket
+# <https://example.org/bad_subject ex:predicate "bad triple" .
+
+ex:subject3 ex:predicate3 "valid object 3" .
+
+# Another valid triple
+ex:subject4 ex:predicate4 "valid object 4" .

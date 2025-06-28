@@ -42,6 +42,10 @@ impl ArgsConfig for TestArgs {
     fn is_output_to_file(&self) -> bool {
         false // Tests don't output to files
     }
+
+    fn continue_on_error(&self) -> bool {
+        false // Default to strict parsing in tests
+    }
 }
 
 // Helper function to capture stdout for testing
@@ -432,6 +436,10 @@ impl ArgsConfig for TestArgsWithPaging {
 
     fn is_output_to_file(&self) -> bool {
         false // Tests don't output to files
+    }
+
+    fn continue_on_error(&self) -> bool {
+        false // Default to strict parsing in tests
     }
 }
 

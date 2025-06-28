@@ -20,6 +20,8 @@ pub use formatter::{estimate_output_lines, render_output};
 pub use pager::{process_with_auto_pager, should_use_pager};
 pub use parser::common::{quad_to_owned, triple_to_owned};
 pub use parser::parse_for_estimation;
+pub use parser::parse_robust;
+pub use parser::robust::{ParseError, ParseResult};
 pub use types::{
     detect_format_from_path, ArgsConfig, InputFormat, ObjectType, OwnedTriple, SubjectType,
 };

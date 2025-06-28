@@ -59,6 +59,9 @@ pub trait ArgsConfig {
 
     /// Check if output is going to a file
     fn is_output_to_file(&self) -> bool;
+
+    /// Check if parsing should continue on errors
+    fn continue_on_error(&self) -> bool;
 }
 
 /// Helper function to detect format from file extension

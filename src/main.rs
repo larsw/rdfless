@@ -61,6 +61,10 @@ struct Args {
     #[arg(long)]
     no_auto_theme: bool,
 
+    /// Continue parsing even when encountering errors (skip invalid triples)
+    #[arg(long)]
+    continue_on_error: bool,
+
     /// Output file (write to file instead of stdout)
     #[arg(short = 'o', long)]
     output: Option<PathBuf>,
@@ -120,6 +124,10 @@ impl rdfless::ArgsConfig for Args {
         self.output.is_some()
     }
 
+    fn continue_on_error(&self) -> bool {
+        self.continue_on_error
+    }
+
     fn format(&self) -> Option<InputFormat> {
         // If 'format' is explicitly specified, use it
         if let Some(format_arg) = self.format {
@@ -144,6 +152,37 @@ fn main() -> Result<()> {
 
     // Load configuration
     let config = load_config()?;
+
+    // Helper function to parse input with robust error handling
+    fn parse_input_generic<R: std::io::Read>(
+        reader: BufReader<R>,
+        format: rdfless::InputFormat,
+        continue_on_error: bool,
+    ) -> Result<(Vec<rdfless::OwnedTriple>, HashMap<String, String>)> {
+        if continue_on_error {
+            let parse_result = rdfless::parse_robust(reader, format, true)?;
+
+            // Report errors to stderr if any
+            if parse_result.has_errors() {
+                eprintln!(
+                    "Warning: {} parse errors encountered:",
+                    parse_result.error_count()
+                );
+                for error in &parse_result.errors {
+                    eprintln!("  Line {}: {}", error.line, error.message);
+                }
+                eprintln!(
+                    "Successfully parsed {} triples",
+                    parse_result.triple_count()
+                );
+            }
+
+            Ok((parse_result.triples, parse_result.prefixes))
+        } else {
+            // Use standard parsing
+            rdfless::parse_for_estimation(reader, format)
+        }
+    }
 
     // Helper function to process and output data
     let process_and_output = |triples: &[rdfless::OwnedTriple],
@@ -194,12 +233,8 @@ fn main() -> Result<()> {
             let reader = BufReader::new(stdin);
 
             let format = args.format().unwrap_or(rdfless::InputFormat::Turtle);
-            let (triples, prefixes) = match format {
-                rdfless::InputFormat::Turtle => rdfless::parse_turtle_for_estimation(reader)?,
-                rdfless::InputFormat::TriG => rdfless::parse_trig_for_estimation(reader)?,
-                rdfless::InputFormat::NTriples => rdfless::parse_ntriples_for_estimation(reader)?,
-                rdfless::InputFormat::NQuads => rdfless::parse_nquads_for_estimation(reader)?,
-            };
+            let (triples, prefixes) =
+                parse_input_generic(reader, format, args.continue_on_error())?;
 
             process_and_output(&triples, &prefixes)?;
         } else {
@@ -218,12 +253,8 @@ fn main() -> Result<()> {
             let reader = BufReader::new(file);
 
             let format = args.format().unwrap_or(rdfless::InputFormat::Turtle);
-            let (mut triples, prefixes) = match format {
-                rdfless::InputFormat::Turtle => rdfless::parse_turtle_for_estimation(reader)?,
-                rdfless::InputFormat::TriG => rdfless::parse_trig_for_estimation(reader)?,
-                rdfless::InputFormat::NTriples => rdfless::parse_ntriples_for_estimation(reader)?,
-                rdfless::InputFormat::NQuads => rdfless::parse_nquads_for_estimation(reader)?,
-            };
+            let (mut triples, prefixes) =
+                parse_input_generic(reader, format, args.continue_on_error())?;
 
             all_triples.append(&mut triples);
             for (prefix, iri) in prefixes {

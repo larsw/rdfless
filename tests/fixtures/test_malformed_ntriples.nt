@@ -1,0 +1,3 @@
+<https://example.org/subject> <https://example.org/predicate> "valid object" .
+This is not a valid N-Triple line
+<https://example.org/another_subject> <https://example.org/another_predicate> "another valid object" .

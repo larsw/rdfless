@@ -1,0 +1,19 @@
+@prefix ex: <https://example.org/> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+
+# Valid data
+ex:alice foaf:name "Alice" .
+ex:alice foaf:age 30 .
+
+# This line has a syntax error (missing closing angle bracket)
+<https://bad.example/resource foaf:name "Invalid" .
+
+# Valid data continues
+ex:bob foaf:name "Bob" .
+
+# Another syntax error (undefined prefix)
+unknown:charlie foaf:name "Charlie" .
+
+# More valid data
+ex:carol foaf:name "Carol" .
+ex:carol foaf:knows ex:alice .
