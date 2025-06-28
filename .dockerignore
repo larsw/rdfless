@@ -1,0 +1,39 @@
+# Git and version control
+.git
+.gitignore
+
+# Build artifacts
+target/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Documentation and assets (not needed for runtime)
+README.md
+LICENSE
+CONTRIBUTING.md
+CICD_SETUP.md
+doap.ttl
+assets/
+man/
+
+# CI/CD files
+.github/
+scripts/
+
+# Development tools
+justfile
+Makefile
+
+# Test artifacts
+test_*.ttl
+test_*.nt
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db

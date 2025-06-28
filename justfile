@@ -3,6 +3,7 @@
 # Variables
 binary_name := "rdfless"
 target_dir := "target/release"
+docker_image := "larsw/rdfless"
 
 # Linux
 linux_dist_name := "rdfless-linux-x86_64"
@@ -38,6 +39,23 @@ clippy:
 # Build release binary
 build:
     cargo build --release
+
+# Build Docker image
+docker-build tag="latest":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Building Docker image: {{docker_image}}:{{tag}}"
+    docker build -t {{docker_image}}:{{tag}} .
+    echo "Docker image built successfully: {{docker_image}}:{{tag}}"
+
+# Build Docker image and run a test
+docker-test tag="latest":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    just docker-build {{tag}}
+    echo "Testing Docker image..."
+    docker run --rm {{docker_image}}:{{tag}} rdfless --version
+    echo "Docker image test completed successfully"
 
 # Build Linux distribution
 dist-linux: fmt clippy build
