@@ -188,10 +188,12 @@ jobs:
             target: x86_64-pc-windows-gnu
             binary-name: rdfless.exe
             dist-name: rdfless-windows-x86_64.exe
+            platform: windows
           - os: macos-latest
             target: x86_64-apple-darwin
             binary-name: rdfless
             dist-name: rdfless-macos-x86_64
+            platform: macos
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -227,10 +229,21 @@ jobs:
             cp target/release/rdfless target/release/rdfless-macos-x86_64
           fi
 
+      - name: Set artifact name
+        id: set_artifact_name
+        run: |
+          VERSION=${{ needs.publish.outputs.new_version }}
+          PLATFORM=${{ matrix.platform }}
+          if [ "$PLATFORM" = "windows" ]; then
+            echo "artifact_name=rdfless-${VERSION}-windows-x86_64.exe" >> $GITHUB_OUTPUT
+          else
+            echo "artifact_name=rdfless-${VERSION}-${PLATFORM}-x86_64" >> $GITHUB_OUTPUT
+          fi
+
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.dist-name }}
+          name: ${{ steps.set_artifact_name.outputs.artifact_name }}
           path: target/release/${{ matrix.dist-name }}
 
  #     - name: Find .deb package
@@ -268,6 +281,20 @@ jobs:
         with:
           path: ./artifacts
 
+      - name: Prepare release artifacts with version
+        run: |
+          VERSION=${{ needs.publish.outputs.new_version }}
+          mkdir -p ./release-artifacts
+          
+          # Copy and rename Linux binary
+          cp target/release/rdfless-linux-x86_64 ./release-artifacts/rdfless-${VERSION}-linux-x86_64
+          
+          # Copy and rename Windows binary
+          cp "./artifacts/rdfless-${VERSION}-windows-x86_64.exe/rdfless-windows-x86_64.exe" "./release-artifacts/rdfless-${VERSION}-windows-x86_64.exe"
+          
+          # Copy and rename macOS binary
+          cp "./artifacts/rdfless-${VERSION}-macos-x86_64/rdfless-macos-x86_64" "./release-artifacts/rdfless-${VERSION}-macos-x86_64"
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -276,6 +303,6 @@ jobs:
           body: |
             Automated release of rdfless v${{ needs.publish.outputs.new_version }}
           files: |
-            target/release/rdfless-linux-x86_64
-            ./artifacts/rdfless-windows-x86_64.exe/rdfless-windows-x86_64.exe
-            ./artifacts/rdfless-macos-x86_64/rdfless-macos-x86_64
+            ./release-artifacts/rdfless-${{ needs.publish.outputs.new_version }}-linux-x86_64
+            ./release-artifacts/rdfless-${{ needs.publish.outputs.new_version }}-windows-x86_64.exe
+            ./release-artifacts/rdfless-${{ needs.publish.outputs.new_version }}-macos-x86_64
