@@ -8,6 +8,7 @@ use anyhow::Result;
 use std::io::{BufReader, Read};
 
 pub mod config;
+pub mod filter;
 pub mod formatter;
 pub mod pager;
 pub mod parser;
@@ -15,6 +16,7 @@ pub mod types;
 pub mod utils;
 
 // Re-export commonly used types
+pub use filter::TripleFilter;
 pub use formatter::writer::{format_object, format_predicate, format_subject};
 pub use formatter::{estimate_output_lines, render_output};
 pub use pager::{process_with_auto_pager, should_use_pager};

@@ -1,0 +1,11 @@
+@prefix ex: <https://example.org/> .
+
+# Valid triple
+ex:subject1 ex:predicate1 "valid value" .
+
+# Invalid triple (missing semicolon)
+ex:subject2 ex:predicate2 "invalid value"
+ex:subject3 ex:predicate3 "another value" .
+
+# Valid triple
+ex:subject4 ex:predicate4 "final value" .

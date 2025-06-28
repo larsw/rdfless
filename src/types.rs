@@ -15,13 +15,13 @@ pub enum InputFormat {
     NQuads,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum SubjectType {
     NamedNode,
     BlankNode,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum ObjectType {
     NamedNode,
     BlankNode,
@@ -62,6 +62,15 @@ pub trait ArgsConfig {
 
     /// Check if parsing should continue on errors
     fn continue_on_error(&self) -> bool;
+
+    /// Get filter criteria for subject
+    fn filter_subject(&self) -> Option<&str>;
+
+    /// Get filter criteria for predicate
+    fn filter_predicate(&self) -> Option<&str>;
+
+    /// Get filter criteria for object
+    fn filter_object(&self) -> Option<&str>;
 }
 
 /// Helper function to detect format from file extension

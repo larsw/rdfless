@@ -65,6 +65,18 @@ struct Args {
     #[arg(long)]
     continue_on_error: bool,
 
+    /// Filter by subject (IRI or prefixed name)
+    #[arg(long, alias = "fs")]
+    filter_subject: Option<String>,
+
+    /// Filter by predicate (IRI or prefixed name)  
+    #[arg(long, alias = "fp")]
+    filter_predicate: Option<String>,
+
+    /// Filter by object (IRI, prefixed name, or literal value)
+    #[arg(long, alias = "fo")]
+    filter_object: Option<String>,
+
     /// Output file (write to file instead of stdout)
     #[arg(short = 'o', long)]
     output: Option<PathBuf>,
@@ -128,6 +140,18 @@ impl rdfless::ArgsConfig for Args {
         self.continue_on_error
     }
 
+    fn filter_subject(&self) -> Option<&str> {
+        self.filter_subject.as_deref()
+    }
+
+    fn filter_predicate(&self) -> Option<&str> {
+        self.filter_predicate.as_deref()
+    }
+
+    fn filter_object(&self) -> Option<&str> {
+        self.filter_object.as_deref()
+    }
+
     fn format(&self) -> Option<InputFormat> {
         // If 'format' is explicitly specified, use it
         if let Some(format_arg) = self.format {
@@ -185,45 +209,67 @@ fn main() -> Result<()> {
     }
 
     // Helper function to process and output data
-    let process_and_output = |triples: &[rdfless::OwnedTriple],
-                              prefixes: &HashMap<String, String>|
-     -> Result<()> {
-        let colors = &args.get_colors(&config);
-        let should_expand = args.expand(&config);
+    let process_and_output =
+        |triples: &[rdfless::OwnedTriple], prefixes: &HashMap<String, String>| -> Result<()> {
+            let colors = &args.get_colors(&config);
+            let should_expand = args.expand(&config);
 
-        if let Some(output_path) = &args.output {
-            // Write to file
-            let mut file = File::create(output_path).with_context(|| {
-                format!("Failed to create output file: {}", output_path.display())
-            })?;
-            rdfless::render_output(triples, prefixes, should_expand, colors, &mut file)?;
-        } else {
-            // Write to stdout (with potential paging)
-            let estimated_lines = rdfless::estimate_output_lines(triples, prefixes, should_expand);
-            let use_paging = rdfless::should_use_pager(&args, &config, estimated_lines);
+            // Apply filtering if any filters are specified
+            let filter = rdfless::TripleFilter::new(
+                args.filter_subject(),
+                args.filter_predicate(),
+                args.filter_object(),
+            );
 
-            if use_paging && io::stdout().is_terminal() {
-                // Use pager
-                let mut output = Vec::new();
-                rdfless::render_output(triples, prefixes, should_expand, colors, &mut output)?;
-                let output_str = String::from_utf8(output)?;
+            let filtered_triples = filter.filter_triples(triples, prefixes);
+            let triples_to_process = &filtered_triples;
 
-                let pager = minus::Pager::new();
-                pager.set_text(output_str)?;
-                minus::page_all(pager)?;
-            } else {
-                // Direct output to stdout
+            if let Some(output_path) = &args.output {
+                // Write to file
+                let mut file = File::create(output_path).with_context(|| {
+                    format!("Failed to create output file: {}", output_path.display())
+                })?;
                 rdfless::render_output(
-                    triples,
+                    triples_to_process,
                     prefixes,
                     should_expand,
                     colors,
-                    &mut io::stdout(),
+                    &mut file,
                 )?;
+            } else {
+                // Write to stdout (with potential paging)
+                let estimated_lines =
+                    rdfless::estimate_output_lines(triples_to_process, prefixes, should_expand);
+                let use_paging = rdfless::should_use_pager(&args, &config, estimated_lines);
+
+                if use_paging && io::stdout().is_terminal() {
+                    // Use pager
+                    let mut output = Vec::new();
+                    rdfless::render_output(
+                        triples_to_process,
+                        prefixes,
+                        should_expand,
+                        colors,
+                        &mut output,
+                    )?;
+                    let output_str = String::from_utf8(output)?;
+
+                    let pager = minus::Pager::new();
+                    pager.set_text(output_str)?;
+                    minus::page_all(pager)?;
+                } else {
+                    // Direct output to stdout
+                    rdfless::render_output(
+                        triples_to_process,
+                        prefixes,
+                        should_expand,
+                        colors,
+                        &mut io::stdout(),
+                    )?;
+                }
             }
-        }
-        Ok(())
-    };
+            Ok(())
+        };
 
     // Check if we should read from stdin or files
     if args.files.is_empty() {

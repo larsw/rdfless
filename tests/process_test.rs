@@ -46,6 +46,18 @@ impl ArgsConfig for TestArgs {
     fn continue_on_error(&self) -> bool {
         false // Default to strict parsing in tests
     }
+
+    fn filter_subject(&self) -> Option<&str> {
+        None // No filtering in tests by default
+    }
+
+    fn filter_predicate(&self) -> Option<&str> {
+        None // No filtering in tests by default
+    }
+
+    fn filter_object(&self) -> Option<&str> {
+        None // No filtering in tests by default
+    }
 }
 
 // Helper function to capture stdout for testing
@@ -440,6 +452,18 @@ impl ArgsConfig for TestArgsWithPaging {
 
     fn continue_on_error(&self) -> bool {
         false // Default to strict parsing in tests
+    }
+
+    fn filter_subject(&self) -> Option<&str> {
+        None // No filtering in tests by default
+    }
+
+    fn filter_predicate(&self) -> Option<&str> {
+        None // No filtering in tests by default
+    }
+
+    fn filter_object(&self) -> Option<&str> {
+        None // No filtering in tests by default
     }
 }
 

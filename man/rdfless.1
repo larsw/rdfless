@@ -1,4 +1,4 @@
-.TH RDFLESS 1 "June 2025" "rdfless 0.2.6" "User Commands"
+.TH RDFLESS 1 "June 2025" "rdfless 0.2.8" "User Commands"
 .SH NAME
 rdfless \- a colorful pretty printer for RDF data with ANSI colors
 .SH SYNOPSIS
@@ -8,10 +8,12 @@ rdfless \- a colorful pretty printer for RDF data with ANSI colors
 .B rdfless
 is a command-line tool for pretty-printing RDF data with syntax highlighting and ANSI colors. It supports multiple RDF formats including Turtle, TriG, N-Triples, and N-Quads. The tool automatically detects the input format from file extensions and provides options for customizing the output format and appearance.
 
+The tool includes robust error handling capabilities and can continue parsing even when encountering malformed RDF data. It also provides flexible filtering options to display only specific triples matching subject, predicate, or object criteria.
+
 When no input files are specified, 
 .B rdfless
 reads from standard input. Output is written to standard output unless the
-.B \-o
+.B \-O
 option is used to specify an output file.
 
 .SH OPTIONS
@@ -47,6 +49,18 @@ Disable paging even if it would normally be enabled by configuration or auto-det
 .TP
 .B \-o, \-\-output \fIFILE\fR
 Write output to the specified file instead of standard output. When writing to a file, ANSI colors are automatically disabled unless explicitly forced with theme options.
+.TP
+.B \-\-continue\-on\-error
+Continue parsing even when encountering errors in the RDF data. Invalid triples are skipped, and parsing continues with the next valid statement. Error information is reported to stderr.
+.TP
+.B \-\-filter\-subject \fISUBJECT\fR
+Filter RDF triples to show only those with the specified subject. The subject can be an IRI (e.g., <http://example.org/person>) or a prefixed name (e.g., ex:person).
+.TP
+.B \-\-filter\-predicate \fIPREDICATE\fR
+Filter RDF triples to show only those with the specified predicate. The predicate can be an IRI (e.g., <http://xmlns.com/foaf/0.1/name>) or a prefixed name (e.g., foaf:name).
+.TP
+.B \-\-filter\-object \fIOBJECT\fR
+Filter RDF triples to show only those with the specified object. The object can be an IRI, a prefixed name, or a literal value (e.g., "John Doe").
 .TP
 .B \-\-dark\-theme
 Force dark theme colors suitable for dark terminal backgrounds.
@@ -153,10 +167,24 @@ Read RDF data from standard input and pretty-print it.
 .TP
 .B rdfless file1.ttl file2.ttl
 Process multiple files and concatenate their output.
+.TP
+.B rdfless \-\-continue\-on\-error malformed.ttl
+Parse a file with potential errors, skipping invalid triples and continuing with valid ones.
+.TP
+.B rdfless \-\-filter\-subject "ex:john" data.ttl
+Show only triples where the subject is ex:john.
+.TP
+.B rdfless \-\-filter\-predicate "foaf:name" \-\-expand data.ttl
+Show only triples with foaf:name predicate and expand all prefixes.
+.TP
+.B rdfless \-\-filter\-object "John Doe" \-\-no\-pager data.ttl
+Show only triples with "John Doe" as the object, without using a pager.
 
 .SH EXIT STATUS
 .B rdfless
-exits with status 0 on success, and >0 if an error occurred.
+exits with status 0 on success, and >0 if an error occurred. When the
+.B \-\-continue\-on\-error
+option is used, parsing errors in individual triples do not cause the program to exit with an error status; only fatal errors that prevent processing will result in a non-zero exit status.
 
 .SH FILES
 .TP

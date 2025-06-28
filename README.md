@@ -17,7 +17,9 @@ Key features:
 - Support for reading from files or stdin (piped input)
 - Option to expand prefixes or display PREFIX declarations
 - Customizable colors through a configuration file
-- Pager (minus-based) enabling scrolling up/down in content.
+- Pager (minus-based) enabling scrolling up/down in content
+- Robust error handling with continue-on-error option
+- Flexible filtering by subject, predicate, or object
 
 ### Usage
 
@@ -28,16 +30,21 @@ Arguments:
   [FILE]...  Input files (Turtle or TriG format)
 
 Options:
-      --expand           Expand prefixes instead of showing PREFIX declarations
-      --compact          Compact mode (opposite of 'expand')
-      --format <FORMAT>  Override the input format (auto-detected from file extension by default) [possible values: turtle, trig]
-      --pager            Enable paging for large outputs
-      --no-pager         Disable paging (useful when paging is enabled by default in config)
-      --dark-theme       Force dark theme colors
-      --light-theme      Force light theme colors
-      --no-auto-theme    Disable automatic background detection
-  -h, --help             Print help
-  -V, --version          Print version
+      --expand                              Expand prefixes instead of showing PREFIX declarations
+      --compact                             Compact mode (opposite of 'expand')
+      --format <FORMAT>                     Override the input format (auto-detected from file extension by default) [possible values: turtle, trig]
+      --pager                               Enable paging for large outputs
+      --no-pager                            Disable paging (useful when paging is enabled by default in config)
+      --dark-theme                          Force dark theme colors
+      --light-theme                         Force light theme colors
+      --no-auto-theme                       Disable automatic background detection
+      --continue-on-error                   Continue parsing even when encountering errors (skip invalid triples)
+      --filter-subject <FILTER_SUBJECT>     Filter by subject (IRI or prefixed name)
+      --filter-predicate <FILTER_PREDICATE> Filter by predicate (IRI or prefixed name)  
+      --filter-object <FILTER_OBJECT>       Filter by object (IRI, prefixed name, or literal value)
+  -o, --output <OUTPUT>                     Output file (write to file instead of stdout)
+  -h, --help                                Print help
+  -V, --version                             Print version
 ```
 
 ### Supported Formats
@@ -147,6 +154,25 @@ rdfless --format turtle file.rdf
 rdfless --format trig file.rdf
 rdfless --format ntriples file.rdf
 rdfless --format nquads file.rdf
+
+# Continue parsing even if there are errors in the RDF file
+rdfless --continue-on-error malformed_file.ttl
+
+# Filter RDF triples by subject
+rdfless --filter-subject "ex:john" file.ttl
+rdfless --filter-subject "http://example.org/person1" file.ttl
+
+# Filter RDF triples by predicate
+rdfless --filter-predicate "foaf:name" file.ttl
+rdfless --filter-predicate "http://xmlns.com/foaf/0.1/name" file.ttl
+
+# Filter RDF triples by object (IRI, prefixed name, or literal)
+rdfless --filter-object "ex:Person" file.ttl
+rdfless --filter-object "John Doe" file.ttl
+rdfless --filter-object "http://example.org/Person" file.ttl
+
+# Combine filtering with other options
+rdfless --expand --filter-subject "ex:john" --no-pager file.ttl
 ```
 
 ## Configuration
