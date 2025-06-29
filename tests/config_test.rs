@@ -1,5 +1,5 @@
 use colored::Color;
-use rdfless::config::{string_to_color, ColorConfig, Config, OutputConfig, ThemeConfig};
+use rdfless::{string_to_color, ColorConfig, Config, OutputConfig, ThemeConfig};
 use rstest::rstest;
 
 #[rstest]

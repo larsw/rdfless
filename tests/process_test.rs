@@ -1,5 +1,4 @@
-use rdfless::config::{ColorConfig, Config, OutputConfig};
-use rdfless::{ArgsConfig, InputFormat, OwnedTriple};
+use rdfless::{ColorConfig, Config, OutputConfig, ArgsConfig, InputFormat, OwnedTriple};
 use rstest::rstest;
 use std::collections::HashMap;
 use std::io::Write;
@@ -32,10 +31,10 @@ impl ArgsConfig for TestArgs {
     }
 
     fn no_pager_explicit(&self) -> bool {
-        true // Explicitly disable paging in tests
+        true // Test explicitly disables paging
     }
 
-    fn get_colors(&self, config: &Config) -> rdfless::config::ColorConfig {
+    fn get_colors(&self, config: &Config) -> ColorConfig {
         config.colors.clone()
     }
 
@@ -442,7 +441,7 @@ impl ArgsConfig for TestArgsWithPaging {
         self.no_pager
     }
 
-    fn get_colors(&self, config: &Config) -> rdfless::config::ColorConfig {
+    fn get_colors(&self, config: &Config) -> ColorConfig {
         config.colors.clone()
     }
 

@@ -1,4 +1,4 @@
-use rdfless::config::ColorConfig;
+use rdfless::ColorConfig;
 use rstest::rstest;
 use std::collections::HashMap;
 

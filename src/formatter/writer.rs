@@ -5,9 +5,7 @@
 // LICENSE file in the root directory of this source tree.
 
 use crate::{config, types::OwnedTriple, utils::resolve_uri_with_prefixes};
-use anyhow::Result;
 use std::collections::HashMap;
-use std::io::Write;
 
 /// Format an owned subject
 pub fn format_subject(
@@ -101,10 +99,4 @@ pub fn format_object(
             }
         }
     }
-}
-
-/// Generic writer for formatted output
-pub fn write_formatted_output<W: Write>(writer: &mut W, content: &str) -> Result<()> {
-    writeln!(writer, "{content}")?;
-    Ok(())
 }

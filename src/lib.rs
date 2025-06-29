@@ -4,49 +4,44 @@
 // This source code is licensed under the BSD-3-Clause license found in the
 // LICENSE file in the root directory of this source tree.
 
-use anyhow::Result;
-use std::io::{BufReader, Read};
+//! # rdfless
+//!
+//! A command-line tool for parsing, filtering, and formatting RDF data with colored output.
+//! This crate is primarily intended as a CLI application, not as a reusable library.
 
-pub mod config;
-pub mod filter;
-pub mod formatter;
-pub mod pager;
-pub mod parser;
-pub mod types;
-pub mod utils;
+// Internal modules - not exposed as public API
+pub(crate) mod config;
+pub(crate) mod filter;
+pub(crate) mod formatter;
+pub(crate) mod pager;
+pub(crate) mod parser;
+pub(crate) mod types;
+pub(crate) mod utils;
 
-// Re-export commonly used types
+// Minimal public API - only what's needed by main.rs and tests
+pub use config::{load_config, Config, ColorConfig, OutputConfig, ThemeConfig, string_to_color, get_effective_colors};
 pub use filter::TripleFilter;
-pub use formatter::writer::{format_object, format_predicate, format_subject};
 pub use formatter::{estimate_output_lines, render_output};
-pub use pager::{process_with_auto_pager, should_use_pager};
+pub use formatter::writer::{format_object, format_predicate, format_subject};
+pub use pager::should_use_pager;
+pub use parser::{parse_for_estimation, parse_robust};
 pub use parser::common::{quad_to_owned, triple_to_owned};
-pub use parser::parse_for_estimation;
-pub use parser::parse_robust;
 pub use parser::robust::{ParseError, ParseResult};
-pub use types::{
-    detect_format_from_path, ArgsConfig, InputFormat, ObjectType, OwnedTriple, SubjectType,
-};
+pub use types::{detect_format_from_path, ArgsConfig, InputFormat, OwnedTriple, ObjectType, SubjectType};
 pub use utils::get_terminal_height;
 
-// Keep the old function names for backward compatibility
-pub use parser::nquads::parse_for_estimation as parse_nquads_for_estimation;
-pub use parser::ntriples::parse_for_estimation as parse_ntriples_for_estimation;
-pub use parser::trig::parse_for_estimation as parse_trig_for_estimation;
-pub use parser::turtle::parse_for_estimation as parse_turtle_for_estimation;
-
-// Legacy function names for backward compatibility
+// Legacy function aliases for tests
 pub use format_object as format_owned_object;
 pub use format_predicate as format_owned_predicate;
 pub use format_subject as format_owned_subject;
 
-// Legacy process_input function for tests
-pub fn process_input<R: Read, A: ArgsConfig>(
-    reader: BufReader<R>,
+// Test-only function for legacy test compatibility
+pub fn process_input<R: std::io::Read, A: ArgsConfig>(
+    reader: std::io::BufReader<R>,
     args: &A,
     colors: &config::ColorConfig,
     config: &config::Config,
-) -> Result<String> {
+) -> anyhow::Result<String> {
     let format = args.format().unwrap_or(InputFormat::Turtle);
     let (triples, prefixes) = parse_for_estimation(reader, format)?;
 
@@ -60,15 +55,4 @@ pub fn process_input<R: Read, A: ArgsConfig>(
     )?;
 
     Ok(String::from_utf8(output)?)
-}
-
-// Legacy functions that are no longer needed but kept for compatibility
-pub fn process_input_auto_pager<R: Read, A: ArgsConfig>(
-    reader: BufReader<R>,
-    args: &A,
-    config: &config::Config,
-) -> Result<()> {
-    let format = args.format().unwrap_or(InputFormat::Turtle);
-    let (triples, prefixes) = parse_for_estimation(reader, format)?;
-    process_with_auto_pager(&triples, &prefixes, args, config)
 }

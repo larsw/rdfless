@@ -10,7 +10,6 @@ use dirs::home_dir;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
-use toml;
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Config {

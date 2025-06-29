@@ -8,7 +8,7 @@
 
 use anyhow::{Context, Result};
 use clap::{CommandFactory, Parser, ValueEnum};
-use rdfless::{config::load_config, detect_format_from_path, ArgsConfig, InputFormat};
+use rdfless::{load_config, detect_format_from_path, ArgsConfig, InputFormat, Config, ColorConfig, get_effective_colors};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufReader, IsTerminal};
@@ -83,7 +83,7 @@ struct Args {
 }
 
 impl rdfless::ArgsConfig for Args {
-    fn expand(&self, config: &rdfless::config::Config) -> bool {
+    fn expand(&self, config: &Config) -> bool {
         // If both flags are provided, compact takes precedence
         if self.compact {
             false
@@ -95,7 +95,7 @@ impl rdfless::ArgsConfig for Args {
         }
     }
 
-    fn use_pager(&self, config: &rdfless::config::Config) -> bool {
+    fn use_pager(&self, config: &Config) -> bool {
         // If no_pager is specified, disable paging
         if self.no_pager {
             false
@@ -111,11 +111,11 @@ impl rdfless::ArgsConfig for Args {
         self.no_pager
     }
 
-    fn get_colors(&self, config: &rdfless::config::Config) -> rdfless::config::ColorConfig {
+    fn get_colors(&self, config: &Config) -> ColorConfig {
         // If outputting to a file, disable colors unless explicitly forced with theme flags
         if self.is_output_to_file() && !self.dark_theme && !self.light_theme {
             // Return a "no color" configuration
-            return rdfless::config::ColorConfig::no_color();
+            return ColorConfig::no_color();
         }
 
         // Check for explicit theme flags first
@@ -128,7 +128,7 @@ impl rdfless::ArgsConfig for Args {
             config.colors.clone()
         } else {
             // Use auto-detection
-            rdfless::config::get_effective_colors(config)
+            get_effective_colors(config)
         }
     }
 
