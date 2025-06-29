@@ -56,15 +56,24 @@ Options:
 
 ## Installation
 
-### Debian/Ubuntu from PPA
+### Quick Install (Linux)
 
-*Work in progress*
+Install the latest version with a single command:
 
 ```bash
-sudo add-apt-repository ppa:larsw/rdfless
-sudo apt update
-sudo apt install rdfless
+curl -sSL https://raw.githubusercontent.com/larsw/rdfless/main/install.sh | bash
 ```
+
+This will download and install the latest Linux binary to `~/.local/bin` and optionally add it to your PATH.
+
+### Manual Download
+
+Download the latest release for your platform from the [GitHub Releases](https://github.com/larsw/rdfless/releases/latest) page:
+
+- **Linux**: `rdfless-VERSION-linux-x86_64`
+- **Windows**: `rdfless-VERSION-windows-x86_64.exe`  
+- **macOS**: `rdfless-VERSION-macos-x86_64`
+- **Debian/Ubuntu**: `rdfless_VERSION_amd64.deb`
 
 ### Using Cargo
 
@@ -82,7 +91,7 @@ cargo build --release
 
 The binary will be available at `target/release/rdfless`.
 
-#### Using Just (Recommended)
+#### Using Just
 
 For a complete development workflow with formatting, linting, testing, and building:
 
@@ -104,16 +113,6 @@ just dist
 
 # See all available commands
 just list
-```
-
-#### Using Make (Legacy)
-
-You can also use the traditional Makefile:
-
-```bash
-make build
-sudo make install
-make dist
 ```
 
 #### Build Optimizations
