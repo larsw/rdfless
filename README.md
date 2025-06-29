@@ -124,6 +124,51 @@ Release builds automatically include the following optimizations:
 
 These optimizations help create a more compact executable without affecting functionality.
 
+## Shell Completion
+
+`rdfless` supports shell completion for bash, zsh, fish, elvish, and PowerShell. You can generate completion scripts using the `--completion` flag:
+
+### Bash
+
+```bash
+# Generate completion script
+rdfless --completion bash > ~/.local/share/bash-completion/completions/rdfless
+
+# Or for system-wide installation (requires sudo)
+sudo rdfless --completion bash > /etc/bash_completion.d/rdfless
+```
+
+### Zsh
+
+```bash
+# Generate completion script (make sure ~/.zfunc is in your fpath)
+mkdir -p ~/.zfunc
+rdfless --completion zsh > ~/.zfunc/_rdfless
+
+# Add to ~/.zshrc if not already present:
+# fpath=(~/.zfunc $fpath)
+# autoload -U compinit && compinit
+```
+
+### Fish
+
+```bash
+# Generate completion script
+rdfless --completion fish > ~/.config/fish/completions/rdfless.fish
+```
+
+### Other Shells
+
+```bash
+# Generate for elvish
+rdfless --completion elvish
+
+# Generate for PowerShell  
+rdfless --completion powershell
+```
+
+After installing completions, restart your shell or source the appropriate configuration file.
+
 ## Usage
 
 ```bash

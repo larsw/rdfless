@@ -8,6 +8,7 @@
 
 use anyhow::{Context, Result};
 use clap::{CommandFactory, Parser, ValueEnum};
+use clap_complete::{generate, Shell};
 use rdfless::{
     detect_format_from_path, get_effective_colors, load_config, ArgsConfig, ColorConfig, Config,
     InputFormat,
@@ -83,6 +84,10 @@ struct Args {
     /// Output file (write to file instead of stdout)
     #[arg(short = 'O', long)]
     output: Option<PathBuf>,
+
+    /// Generate shell completion script for bash, zsh, fish, elvish, or powershell
+    #[arg(long, value_enum)]
+    completion: Option<Shell>,
 }
 
 impl rdfless::ArgsConfig for Args {
@@ -176,6 +181,13 @@ impl rdfless::ArgsConfig for Args {
 
 fn main() -> Result<()> {
     let args = Args::parse();
+
+    // Handle shell completion generation
+    if let Some(shell) = args.completion {
+        let mut cmd = Args::command();
+        generate(shell, &mut cmd, "rdfless", &mut io::stdout());
+        return Ok(());
+    }
 
     // Load configuration
     let config = load_config()?;

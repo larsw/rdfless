@@ -15,6 +15,7 @@ rio_api = "0.8.5"
 rio_turtle = "0.8.5"
 colored = "3.0.0"
 clap = { version = "4.5.40", features = ["derive"] }
+clap_complete = "4.5.40"
 anyhow = "1.0.98"
 serde = { version = "1.0", features = ["derive"] }
 toml = "0.8.12"
