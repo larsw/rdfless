@@ -8,7 +8,10 @@
 
 use anyhow::{Context, Result};
 use clap::{CommandFactory, Parser, ValueEnum};
-use rdfless::{load_config, detect_format_from_path, ArgsConfig, InputFormat, Config, ColorConfig, get_effective_colors};
+use rdfless::{
+    detect_format_from_path, get_effective_colors, load_config, ArgsConfig, ColorConfig, Config,
+    InputFormat,
+};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufReader, IsTerminal};
@@ -66,19 +69,19 @@ struct Args {
     continue_on_error: bool,
 
     /// Filter by subject (IRI or prefixed name)
-    #[arg(long, alias = "fs")]
-    filter_subject: Option<String>,
+    #[arg(long, short = 's')]
+    subject: Option<String>,
 
     /// Filter by predicate (IRI or prefixed name)  
-    #[arg(long, alias = "fp")]
-    filter_predicate: Option<String>,
+    #[arg(long, short = 'p')]
+    predicate: Option<String>,
 
     /// Filter by object (IRI, prefixed name, or literal value)
-    #[arg(long, alias = "fo")]
-    filter_object: Option<String>,
+    #[arg(long, short = 'o')]
+    object: Option<String>,
 
     /// Output file (write to file instead of stdout)
-    #[arg(short = 'o', long)]
+    #[arg(short = 'O', long)]
     output: Option<PathBuf>,
 }
 
@@ -141,15 +144,15 @@ impl rdfless::ArgsConfig for Args {
     }
 
     fn filter_subject(&self) -> Option<&str> {
-        self.filter_subject.as_deref()
+        self.subject.as_deref()
     }
 
     fn filter_predicate(&self) -> Option<&str> {
-        self.filter_predicate.as_deref()
+        self.predicate.as_deref()
     }
 
     fn filter_object(&self) -> Option<&str> {
-        self.filter_object.as_deref()
+        self.object.as_deref()
     }
 
     fn format(&self) -> Option<InputFormat> {

@@ -176,6 +176,39 @@ jobs:
 #          CHANGES_FILE=$(ls ../*.changes | head -n1)
 #          dput larsw42-ppa $CHANGES_FILE
 
+  build-debian:
+    name: Build Debian Package
+    runs-on: ubuntu-latest
+    if: needs.publish.outputs.should_publish == 'true'
+    needs: publish
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      
+      - name: Install cargo-deb
+        run: cargo install cargo-deb
+        
+      - name: Build Debian package
+        run: cargo deb
+        
+      - name: Set artifact name
+        id: set_artifact_name
+        run: |
+          VERSION=${{ needs.publish.outputs.new_version }}
+          echo "artifact_name=rdfless_${VERSION}_amd64.deb" >> $GITHUB_OUTPUT
+          
+      - name: Rename Debian package
+        run: |
+          VERSION=${{ needs.publish.outputs.new_version }}
+          mv target/debian/*.deb "rdfless_${VERSION}_amd64.deb"
+          
+      - name: Upload Debian package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.set_artifact_name.outputs.artifact_name }}
+          path: "rdfless_${{ needs.publish.outputs.new_version }}_amd64.deb"
+
   build-cross-platform:
     name: Build cross-platform binaries
     runs-on: ${{ matrix.os }}
@@ -256,7 +289,7 @@ jobs:
     name: Create GitHub Release
     runs-on: ubuntu-latest
     if: needs.publish.outputs.should_publish == 'true'
-    needs: [publish, build-cross-platform]
+    needs: [publish, build-cross-platform, build-debian]
     permissions:
       contents: write
     steps:
@@ -294,6 +327,9 @@ jobs:
           
           # Copy and rename macOS binary
           cp "./artifacts/rdfless-${VERSION}-macos-x86_64/rdfless-macos-x86_64" "./release-artifacts/rdfless-${VERSION}-macos-x86_64"
+          
+          # Copy Debian package
+          cp "./artifacts/rdfless_${VERSION}_amd64.deb/rdfless_${VERSION}_amd64.deb" "./release-artifacts/rdfless_${VERSION}_amd64.deb"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -306,3 +342,4 @@ jobs:
             ./release-artifacts/rdfless-${{ needs.publish.outputs.new_version }}-linux-x86_64
             ./release-artifacts/rdfless-${{ needs.publish.outputs.new_version }}-windows-x86_64.exe
             ./release-artifacts/rdfless-${{ needs.publish.outputs.new_version }}-macos-x86_64
+            ./release-artifacts/rdfless_${{ needs.publish.outputs.new_version }}_amd64.deb

@@ -1,4 +1,4 @@
-use rdfless::{ColorConfig, Config, OutputConfig, ArgsConfig, InputFormat, OwnedTriple};
+use rdfless::{ArgsConfig, ColorConfig, Config, InputFormat, OutputConfig, OwnedTriple};
 use rstest::rstest;
 use std::collections::HashMap;
 use std::io::Write;

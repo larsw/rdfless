@@ -30,3 +30,21 @@ tempfile = "3.20.0"
 [profile.release]
 strip = "debuginfo"
 debug = "none"
+
+[package.metadata.deb]
+maintainer = "Lars Wilhelmsen"
+copyright = "2025, Lars Wilhelmsen <lars@wilhelmsen.org>"
+license-file = ["LICENSE", "4"]
+extended-description = """\
+A command-line tool for pretty-printing RDF data with syntax highlighting.
+Supports Turtle, TriG, N-Triples, and N-Quads formats with configurable
+color schemes and automatic pagination for large outputs."""
+depends = "$auto"
+section = "utils"
+priority = "optional"
+assets = [
+    ["target/release/rdfless", "usr/bin/", "755"],
+    ["man/rdfless.1", "usr/share/man/man1/", "644"],
+    ["man/rdfless-config.5", "usr/share/man/man5/", "644"],
+    ["README.md", "usr/share/doc/rdfless/", "644"],
+]

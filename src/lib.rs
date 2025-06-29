@@ -19,15 +19,20 @@ pub(crate) mod types;
 pub(crate) mod utils;
 
 // Minimal public API - only what's needed by main.rs and tests
-pub use config::{load_config, Config, ColorConfig, OutputConfig, ThemeConfig, string_to_color, get_effective_colors};
+pub use config::{
+    get_effective_colors, load_config, string_to_color, ColorConfig, Config, OutputConfig,
+    ThemeConfig,
+};
 pub use filter::TripleFilter;
-pub use formatter::{estimate_output_lines, render_output};
 pub use formatter::writer::{format_object, format_predicate, format_subject};
+pub use formatter::{estimate_output_lines, render_output};
 pub use pager::should_use_pager;
-pub use parser::{parse_for_estimation, parse_robust};
 pub use parser::common::{quad_to_owned, triple_to_owned};
 pub use parser::robust::{ParseError, ParseResult};
-pub use types::{detect_format_from_path, ArgsConfig, InputFormat, OwnedTriple, ObjectType, SubjectType};
+pub use parser::{parse_for_estimation, parse_robust};
+pub use types::{
+    detect_format_from_path, ArgsConfig, InputFormat, ObjectType, OwnedTriple, SubjectType,
+};
 pub use utils::get_terminal_height;
 
 // Legacy function aliases for tests
