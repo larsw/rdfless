@@ -236,7 +236,9 @@ fn print_keybindings() {
     println!("  Ctrl+Arrow L/R      Move cursor word by word");
     println!("  Home/End            Move cursor to beginning/end of search query");
     println!();
-    println!("Note: [n] means you can precede the key with an integer to repeat the action n times.");
+    println!(
+        "Note: [n] means you can precede the key with an integer to repeat the action n times."
+    );
     println!();
     println!("For more detailed information, see PAGER_KEYBINDINGS.md in the repository.");
 }
