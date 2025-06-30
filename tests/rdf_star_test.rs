@@ -21,7 +21,7 @@ ex:alice foaf:name "Alice" .
     let result = parse_for_estimation(reader, InputFormat::Turtle);
 
     if let Err(e) = &result {
-        eprintln!("Parse error: {}", e);
+        eprintln!("Parse error: {e}");
     }
 
     assert!(result.is_ok());
