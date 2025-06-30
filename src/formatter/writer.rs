@@ -18,6 +18,10 @@ pub fn format_subject(
             resolve_uri_with_prefixes(&triple.subject_value, prefixes)
         }
         crate::types::SubjectType::BlankNode => format!("_:{}", triple.subject_value),
+        crate::types::SubjectType::Triple => {
+            // RDF-star: embedded triple as subject
+            triple.subject_value.clone() // Already formatted in triple_to_owned
+        }
     }
 }
 
@@ -97,6 +101,10 @@ pub fn format_object(
                 let literal_text = format!("\"{}\"", triple.object_value);
                 colors.colorize(&literal_text, "literal")
             }
+        }
+        crate::types::ObjectType::Triple => {
+            // RDF-star: embedded triple as object
+            colors.colorize(&triple.object_value, "object")
         }
     }
 }

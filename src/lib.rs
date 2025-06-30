@@ -27,7 +27,7 @@ pub use filter::TripleFilter;
 pub use formatter::writer::{format_object, format_predicate, format_subject};
 pub use formatter::{estimate_output_lines, render_output};
 pub use pager::should_use_pager;
-pub use parser::common::{quad_to_owned, triple_to_owned};
+pub use parser::common::{extract_prefixes, quad_to_owned, triple_to_owned};
 pub use parser::robust::{ParseError, ParseResult};
 pub use parser::{parse_for_estimation, parse_robust};
 pub use types::{

@@ -11,8 +11,8 @@ keywords = ["rdf", "turtle", "ntriples", "nquads", "pretty-printer"]
 categories = ["command-line-utilities", "text-processing"]
 
 [dependencies]
-rio_api = "0.8.5"
-rio_turtle = "0.8.5"
+oxttl = { version = "0.1.8", features = ["rdf-star"] }
+oxrdf = { version = "0.2.4", features = ["rdf-star"] }
 colored = "3.0.0"
 clap = { version = "4.5.40", features = ["derive"] }
 clap_complete = "4.5.40"

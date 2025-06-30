@@ -32,3 +32,14 @@ pub fn get_terminal_height() -> usize {
         24 // Default fallback
     }
 }
+
+/// Get terminal width for line wrapping decisions
+pub fn get_terminal_width() -> usize {
+    use terminal_size::{terminal_size, Height, Width};
+
+    if let Some((Width(width), Height(_))) = terminal_size() {
+        width as usize
+    } else {
+        80 // Default fallback
+    }
+}

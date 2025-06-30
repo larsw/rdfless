@@ -1,0 +1,3 @@
+VERSION "1.2"
+@prefix ex: <http://example.org/> .
+ex:subject ex:predicate "object" .

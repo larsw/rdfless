@@ -17,6 +17,8 @@ fn create_test_triple(
         object_datatype: None,
         object_language: None,
         graph: None,
+        subject_triple: None,
+        object_triple: None,
     }
 }
 

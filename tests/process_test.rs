@@ -533,6 +533,8 @@ fn test_output_estimation() {
             object_datatype: None,
             object_language: None,
             graph: None,
+            subject_triple: None,
+            object_triple: None,
         },
         OwnedTriple {
             subject_type: rdfless::SubjectType::NamedNode,
@@ -543,6 +545,8 @@ fn test_output_estimation() {
             object_datatype: None,
             object_language: None,
             graph: None,
+            subject_triple: None,
+            object_triple: None,
         },
     ];
 

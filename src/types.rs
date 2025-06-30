@@ -19,6 +19,7 @@ pub enum InputFormat {
 pub enum SubjectType {
     NamedNode,
     BlankNode,
+    Triple, // RDF-star: embedded triple as subject
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -26,6 +27,7 @@ pub enum ObjectType {
     NamedNode,
     BlankNode,
     Literal,
+    Triple, // RDF-star: embedded triple as object
 }
 
 #[derive(Debug)]
@@ -38,6 +40,9 @@ pub struct OwnedTriple {
     pub object_datatype: Option<String>,
     pub object_language: Option<String>,
     pub graph: Option<String>,
+    // RDF-star support: embedded triples
+    pub subject_triple: Option<Box<OwnedTriple>>, // For embedded triple as subject
+    pub object_triple: Option<Box<OwnedTriple>>,  // For embedded triple as object
 }
 
 /// Define a trait for the Args interface

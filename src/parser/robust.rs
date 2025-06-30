@@ -7,11 +7,14 @@
 use crate::parser::common::{quad_to_owned, triple_to_owned};
 use crate::types::OwnedTriple;
 use anyhow::Result;
-use rio_api::model::{Quad, Triple};
-use rio_api::parser::{QuadsParser, TriplesParser};
-use rio_turtle::{NQuadsParser, NTriplesParser, TriGParser, TurtleError, TurtleParser};
+use oxttl::{NQuadsParser, NTriplesParser, TriGParser, TurtleParser};
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader, Read};
+
+type ParseFragmentResult = std::result::Result<
+    (Vec<OwnedTriple>, HashMap<String, String>),
+    Box<dyn std::error::Error + Send + Sync>,
+>;
 
 #[derive(Debug)]
 pub struct ParseResult {
@@ -64,25 +67,23 @@ pub fn parse_turtle_robust<R: Read>(
         parse_turtle_line_by_line(reader)
     } else {
         // Use the standard parser for strict mode
-        let mut parser = TurtleParser::new(reader, None);
+        let parser = TurtleParser::new().for_reader(reader);
         let mut result = ParseResult::new();
 
-        let mut callback = |triple: Triple| -> std::result::Result<(), TurtleError> {
-            let owned_triple = triple_to_owned(&triple);
-            result.triples.push(owned_triple);
-            Ok(())
-        };
-
-        match parser.parse_all(&mut callback) {
-            Ok(_) => {
-                // Get prefixes from parser
-                for (prefix, iri) in parser.prefixes().iter() {
-                    result.prefixes.insert(prefix.to_string(), iri.to_string());
+        for triple_result in parser {
+            match triple_result {
+                Ok(triple) => {
+                    let owned_triple = triple_to_owned(&triple);
+                    result.triples.push(owned_triple);
                 }
-                Ok(result)
+                Err(e) => return Err(anyhow::anyhow!("{}", e)),
             }
-            Err(e) => Err(anyhow::anyhow!("{}", e)),
         }
+
+        // Note: oxttl doesn't currently provide access to parsed prefixes in the same way as rio_turtle
+        // This is a limitation we'll need to accept for now
+
+        Ok(result)
     }
 }
 
@@ -160,25 +161,19 @@ fn parse_turtle_line_by_line<R: Read>(reader: BufReader<R>) -> Result<ParseResul
     Ok(result)
 }
 
-fn try_parse_turtle_fragment(
-    input: &str,
-) -> std::result::Result<(Vec<OwnedTriple>, HashMap<String, String>), TurtleError> {
+fn try_parse_turtle_fragment(input: &str) -> ParseFragmentResult {
     let reader = BufReader::new(input.as_bytes());
-    let mut parser = TurtleParser::new(reader, None);
+    let parser = TurtleParser::new().for_reader(reader);
     let mut triples = Vec::new();
 
-    let mut callback = |triple: Triple| -> std::result::Result<(), TurtleError> {
+    for triple_result in parser {
+        let triple = triple_result?;
         let owned_triple = triple_to_owned(&triple);
         triples.push(owned_triple);
-        Ok(())
-    };
-
-    parser.parse_all(&mut callback)?;
-
-    let mut prefixes = HashMap::new();
-    for (prefix, iri) in parser.prefixes().iter() {
-        prefixes.insert(prefix.to_string(), iri.to_string());
     }
+
+    // Note: oxttl doesn't currently provide access to parsed prefixes in the same way as rio_turtle
+    let prefixes = HashMap::new();
 
     Ok((triples, prefixes))
 }
@@ -192,25 +187,23 @@ pub fn parse_trig_robust<R: Read>(
         parse_trig_line_by_line(reader)
     } else {
         // Use the standard parser for strict mode
-        let mut parser = TriGParser::new(reader, None);
+        let parser = TriGParser::new().for_reader(reader);
         let mut result = ParseResult::new();
 
-        let mut callback = |quad: Quad| -> std::result::Result<(), TurtleError> {
-            let owned_triple = quad_to_owned(&quad);
-            result.triples.push(owned_triple);
-            Ok(())
-        };
-
-        match parser.parse_all(&mut callback) {
-            Ok(_) => {
-                // Get prefixes from parser
-                for (prefix, iri) in parser.prefixes().iter() {
-                    result.prefixes.insert(prefix.to_string(), iri.to_string());
+        for quad_result in parser {
+            match quad_result {
+                Ok(quad) => {
+                    let owned_triple = quad_to_owned(&quad);
+                    result.triples.push(owned_triple);
                 }
-                Ok(result)
+                Err(e) => return Err(anyhow::anyhow!("{}", e)),
             }
-            Err(e) => Err(anyhow::anyhow!("{}", e)),
         }
+
+        // Note: oxttl doesn't currently provide access to parsed prefixes in the same way as rio_turtle
+        // This is a limitation we'll need to accept for now
+
+        Ok(result)
     }
 }
 
@@ -292,25 +285,19 @@ fn parse_trig_line_by_line<R: Read>(reader: BufReader<R>) -> Result<ParseResult>
     Ok(result)
 }
 
-fn try_parse_trig_fragment(
-    input: &str,
-) -> std::result::Result<(Vec<OwnedTriple>, HashMap<String, String>), TurtleError> {
+fn try_parse_trig_fragment(input: &str) -> ParseFragmentResult {
     let reader = BufReader::new(input.as_bytes());
-    let mut parser = TriGParser::new(reader, None);
+    let parser = TriGParser::new().for_reader(reader);
     let mut triples = Vec::new();
 
-    let mut callback = |quad: Quad| -> std::result::Result<(), TurtleError> {
+    for quad_result in parser {
+        let quad = quad_result?;
         let owned_triple = quad_to_owned(&quad);
         triples.push(owned_triple);
-        Ok(())
-    };
-
-    parser.parse_all(&mut callback)?;
-
-    let mut prefixes = HashMap::new();
-    for (prefix, iri) in parser.prefixes().iter() {
-        prefixes.insert(prefix.to_string(), iri.to_string());
     }
+
+    // Note: oxttl doesn't currently provide access to parsed prefixes in the same way as rio_turtle
+    let prefixes = HashMap::new();
 
     Ok((triples, prefixes))
 }
@@ -324,19 +311,20 @@ pub fn parse_ntriples_robust<R: Read>(
         parse_ntriples_line_by_line(reader)
     } else {
         // Use the standard parser for strict mode
-        let mut parser = NTriplesParser::new(reader);
+        let parser = NTriplesParser::new().for_reader(reader);
         let mut result = ParseResult::new();
 
-        let mut callback = |triple: Triple| -> std::result::Result<(), TurtleError> {
-            let owned_triple = triple_to_owned(&triple);
-            result.triples.push(owned_triple);
-            Ok(())
-        };
-
-        match parser.parse_all(&mut callback) {
-            Ok(_) => Ok(result),
-            Err(e) => Err(anyhow::anyhow!("{}", e)),
+        for triple_result in parser {
+            match triple_result {
+                Ok(triple) => {
+                    let owned_triple = triple_to_owned(&triple);
+                    result.triples.push(owned_triple);
+                }
+                Err(e) => return Err(anyhow::anyhow!("{}", e)),
+            }
         }
+
+        Ok(result)
     }
 }
 
@@ -371,25 +359,18 @@ fn parse_ntriples_line_by_line<R: Read>(reader: BufReader<R>) -> Result<ParseRes
     Ok(result)
 }
 
-fn try_parse_ntriples_line(line: &str) -> std::result::Result<OwnedTriple, TurtleError> {
+fn try_parse_ntriples_line(
+    line: &str,
+) -> std::result::Result<OwnedTriple, Box<dyn std::error::Error + Send + Sync>> {
     let reader = BufReader::new(line.as_bytes());
-    let mut parser = NTriplesParser::new(reader);
-    let mut triple_result = None;
+    let mut parser = NTriplesParser::new().for_reader(reader);
 
-    let mut callback = |triple: Triple| -> std::result::Result<(), TurtleError> {
-        triple_result = Some(triple_to_owned(&triple));
-        Ok(())
-    };
+    if let Some(triple_result) = parser.next() {
+        let triple = triple_result?;
+        return Ok(triple_to_owned(&triple));
+    }
 
-    parser.parse_all(&mut callback)?;
-
-    triple_result.ok_or_else(|| {
-        let io_error = std::io::Error::new(
-            std::io::ErrorKind::InvalidData,
-            "No valid triple found in line",
-        );
-        TurtleError::from(io_error)
-    })
+    Err("No valid triple found in line".into())
 }
 
 /// Parse N-Quads input with robust error handling
@@ -401,19 +382,20 @@ pub fn parse_nquads_robust<R: Read>(
         parse_nquads_line_by_line(reader)
     } else {
         // Use the standard parser for strict mode
-        let mut parser = NQuadsParser::new(reader);
+        let parser = NQuadsParser::new().for_reader(reader);
         let mut result = ParseResult::new();
 
-        let mut callback = |quad: Quad| -> std::result::Result<(), TurtleError> {
-            let owned_triple = quad_to_owned(&quad);
-            result.triples.push(owned_triple);
-            Ok(())
-        };
-
-        match parser.parse_all(&mut callback) {
-            Ok(_) => Ok(result),
-            Err(e) => Err(anyhow::anyhow!("{}", e)),
+        for quad_result in parser {
+            match quad_result {
+                Ok(quad) => {
+                    let owned_triple = quad_to_owned(&quad);
+                    result.triples.push(owned_triple);
+                }
+                Err(e) => return Err(anyhow::anyhow!("{}", e)),
+            }
         }
+
+        Ok(result)
     }
 }
 
@@ -448,23 +430,16 @@ fn parse_nquads_line_by_line<R: Read>(reader: BufReader<R>) -> Result<ParseResul
     Ok(result)
 }
 
-fn try_parse_nquads_line(line: &str) -> std::result::Result<OwnedTriple, TurtleError> {
+fn try_parse_nquads_line(
+    line: &str,
+) -> std::result::Result<OwnedTriple, Box<dyn std::error::Error + Send + Sync>> {
     let reader = BufReader::new(line.as_bytes());
-    let mut parser = NQuadsParser::new(reader);
-    let mut triple_result = None;
+    let mut parser = NQuadsParser::new().for_reader(reader);
 
-    let mut callback = |quad: Quad| -> std::result::Result<(), TurtleError> {
-        triple_result = Some(quad_to_owned(&quad));
-        Ok(())
-    };
+    if let Some(quad_result) = parser.next() {
+        let quad = quad_result?;
+        return Ok(quad_to_owned(&quad));
+    }
 
-    parser.parse_all(&mut callback)?;
-
-    triple_result.ok_or_else(|| {
-        let io_error = std::io::Error::new(
-            std::io::ErrorKind::InvalidData,
-            "No valid quad found in line",
-        );
-        TurtleError::from(io_error)
-    })
+    Err("No valid quad found in line".into())
 }

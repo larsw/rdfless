@@ -7,9 +7,7 @@
 use crate::parser::common::quad_to_owned;
 use crate::types::OwnedTriple;
 use anyhow::Result;
-use rio_api::model::Quad;
-use rio_api::parser::QuadsParser;
-use rio_turtle::{NQuadsParser, TurtleError};
+use oxttl::NQuadsParser;
 use std::collections::HashMap;
 use std::io::{BufReader, Read};
 
@@ -17,18 +15,15 @@ use std::io::{BufReader, Read};
 pub fn parse_for_estimation<R: Read>(
     reader: BufReader<R>,
 ) -> Result<(Vec<OwnedTriple>, HashMap<String, String>)> {
-    let mut parser = NQuadsParser::new(reader);
+    let parser = NQuadsParser::new().for_reader(reader);
     let mut triples = Vec::new();
 
     // Process each quad
-    let mut callback = |quad: Quad| -> std::result::Result<(), TurtleError> {
+    for result in parser {
+        let quad = result?;
         let owned_triple = quad_to_owned(&quad);
         triples.push(owned_triple);
-        Ok(())
-    };
-
-    // Parse all quads
-    parser.parse_all(&mut callback)?;
+    }
 
     // N-Quads doesn't have prefixes
     Ok((triples, HashMap::new()))

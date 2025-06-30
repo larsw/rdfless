@@ -178,6 +178,8 @@ impl Clone for OwnedTriple {
             object_datatype: self.object_datatype.clone(),
             object_language: self.object_language.clone(),
             graph: self.graph.clone(),
+            subject_triple: self.subject_triple.clone(),
+            object_triple: self.object_triple.clone(),
         }
     }
 }
@@ -197,6 +199,8 @@ mod tests {
             object_datatype: None,
             object_language: None,
             graph: None,
+            subject_triple: None,
+            object_triple: None,
         }
     }
 

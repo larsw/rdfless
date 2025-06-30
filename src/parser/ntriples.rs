@@ -7,9 +7,7 @@
 use crate::parser::common::triple_to_owned;
 use crate::types::OwnedTriple;
 use anyhow::Result;
-use rio_api::model::Triple;
-use rio_api::parser::TriplesParser;
-use rio_turtle::{NTriplesParser, TurtleError};
+use oxttl::NTriplesParser;
 use std::collections::HashMap;
 use std::io::{BufReader, Read};
 
@@ -17,18 +15,15 @@ use std::io::{BufReader, Read};
 pub fn parse_for_estimation<R: Read>(
     reader: BufReader<R>,
 ) -> Result<(Vec<OwnedTriple>, HashMap<String, String>)> {
-    let mut parser = NTriplesParser::new(reader);
+    let parser = NTriplesParser::new().for_reader(reader);
     let mut triples = Vec::new();
 
     // Process each triple
-    let mut callback = |triple: Triple| -> std::result::Result<(), TurtleError> {
+    for result in parser {
+        let triple = result?;
         let owned_triple = triple_to_owned(&triple);
         triples.push(owned_triple);
-        Ok(())
-    };
-
-    // Parse all triples
-    parser.parse_all(&mut callback)?;
+    }
 
     // N-Triples doesn't have prefixes
     Ok((triples, HashMap::new()))

@@ -1,0 +1,2 @@
+@prefix ex: <http://example.org/> .
+<< ex:alice ex:name "Alice" >> ex:certainty 0.9 .

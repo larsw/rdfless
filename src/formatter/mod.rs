@@ -69,6 +69,7 @@ pub fn estimate_output_lines(
                 match triple.subject_type {
                     crate::types::SubjectType::NamedNode => "n",
                     crate::types::SubjectType::BlankNode => "b",
+                    crate::types::SubjectType::Triple => "t", // RDF-star embedded triple
                 },
                 triple.subject_value
             );

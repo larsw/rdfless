@@ -17,6 +17,8 @@ fn test_format_owned_subject_with_prefix() {
         object_datatype: None,
         object_language: None,
         graph: None,
+        subject_triple: None,
+        object_triple: None,
     };
 
     let mut prefixes = HashMap::new();
@@ -39,6 +41,8 @@ fn test_format_owned_subject_without_prefix() {
         object_datatype: None,
         object_language: None,
         graph: None,
+        subject_triple: None,
+        object_triple: None,
     };
 
     let colors = ColorConfig::default();
@@ -58,6 +62,8 @@ fn test_format_owned_subject_blank_node() {
         object_datatype: None,
         object_language: None,
         graph: None,
+        subject_triple: None,
+        object_triple: None,
     };
 
     let colors = ColorConfig::default();
@@ -77,6 +83,8 @@ fn test_format_owned_predicate_with_prefix() {
         object_datatype: None,
         object_language: None,
         graph: None,
+        subject_triple: None,
+        object_triple: None,
     };
 
     let mut prefixes = HashMap::new();
@@ -101,6 +109,8 @@ fn test_format_owned_object_named_node_with_prefix() {
         object_datatype: None,
         object_language: None,
         graph: None,
+        subject_triple: None,
+        object_triple: None,
     };
 
     let mut prefixes = HashMap::new();
@@ -125,6 +135,8 @@ fn test_format_owned_object_blank_node() {
         object_datatype: None,
         object_language: None,
         graph: None,
+        subject_triple: None,
+        object_triple: None,
     };
 
     let colors = ColorConfig::default();
@@ -146,6 +158,8 @@ fn test_format_owned_object_simple_literal() {
         object_datatype: None,
         object_language: None,
         graph: None,
+        subject_triple: None,
+        object_triple: None,
     };
 
     let colors = ColorConfig::default();
@@ -167,6 +181,8 @@ fn test_format_owned_object_language_tagged_literal() {
         object_datatype: None,
         object_language: Some("en".to_string()),
         graph: None,
+        subject_triple: None,
+        object_triple: None,
     };
 
     let colors = ColorConfig::default();
@@ -188,6 +204,8 @@ fn test_format_owned_object_typed_literal() {
         object_datatype: Some("http://www.w3.org/2001/XMLSchema#integer".to_string()),
         object_language: None,
         graph: None,
+        subject_triple: None,
+        object_triple: None,
     };
 
     let mut prefixes = HashMap::new();
@@ -216,6 +234,8 @@ fn test_format_owned_object_boolean_literal() {
         object_datatype: Some("http://www.w3.org/2001/XMLSchema#boolean".to_string()),
         object_language: None,
         graph: None,
+        subject_triple: None,
+        object_triple: None,
     };
 
     let mut prefixes = HashMap::new();
@@ -255,6 +275,8 @@ fn test_format_functions_with_theme_colors() {
         object_datatype: None,
         object_language: Some("en".to_string()),
         graph: None,
+        subject_triple: None,
+        object_triple: None,
     };
 
     let mut prefixes = HashMap::new();
@@ -282,6 +304,8 @@ fn test_format_with_graph_information() {
         object_datatype: None,
         object_language: None,
         graph: Some("https://example.org/graph".to_string()),
+        subject_triple: None,
+        object_triple: None,
     };
 
     let colors = ColorConfig::default();
