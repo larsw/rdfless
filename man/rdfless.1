@@ -70,6 +70,9 @@ Force light theme colors suitable for light terminal backgrounds.
 .TP
 .B \-\-no\-auto\-theme
 Disable automatic background detection and use the explicitly configured colors from the configuration file.
+.TP
+.B \-k, \-\-keybindings
+Print pager keybindings help and exit.
 
 .SH SUPPORTED FORMATS
 .B rdfless
@@ -142,6 +145,96 @@ No explicit paging option is specified
 
 Auto-paging can be configured or disabled through the configuration file.
 
+.SH PAGER KEYBINDINGS
+When paging is enabled,
+.B rdfless
+uses the minus pager which provides powerful navigation and search capabilities. The complete list of keybindings can be displayed using the
+.B \-\-keybindings
+option. Key bindings include:
+
+.TP
+.B Navigation
+.TP
+.B Ctrl+C, q
+Quit the pager
+.TP
+.B [n] Arrow Up, k
+Scroll up by n line(s) (default: 1)
+.TP
+.B [n] Arrow Down, j
+Scroll down by n line(s) (default: 1)
+.TP
+.B [n] Arrow Left, h
+Scroll left by n line(s) (default: 1)
+.TP
+.B [n] Arrow Right, l
+Scroll right by n line(s) (default: 1)
+.TP
+.B Page Up
+Scroll up by entire page
+.TP
+.B Page Down
+Scroll down by entire page
+.TP
+.B [n] Enter
+Scroll down by n line(s)
+.TP
+.B Space
+Scroll down by one page
+.TP
+.B Ctrl+U, u
+Scroll up by half a screen
+.TP
+.B Ctrl+D, d
+Scroll down by half a screen
+.TP
+.B g
+Go to the very top of the output
+.TP
+.B [n] G
+Go to the very bottom (or line n if specified)
+
+.TP
+.B Display Options
+.TP
+.B Ctrl+h
+Turn off line wrapping and allow horizontal scrolling
+.TP
+.B Ctrl+L
+Toggle line numbers if not forced enabled/disabled
+.TP
+.B Ctrl+f
+Toggle follow-mode
+
+.TP
+.B Search
+.TP
+.B /
+Start forward search
+.TP
+.B ?
+Start backward search
+.TP
+.B Esc
+Cancel search input
+.TP
+.B n
+Go to the next search match
+.TP
+.B p
+Go to the previous search match
+
+.TP
+.B Mouse
+.TP
+.B Mouse scroll Up
+Scroll up by 5 lines
+.TP
+.B Mouse scroll Down
+Scroll down by 5 lines
+
+Note: [n] means you can precede the key with an integer to repeat the action n times.
+
 .SH EXAMPLES
 .TP
 .B rdfless data.ttl
@@ -179,6 +272,9 @@ Show only triples with foaf:name predicate and expand all prefixes.
 .TP
 .B rdfless \-\-filter\-object "John Doe" \-\-no\-pager data.ttl
 Show only triples with "John Doe" as the object, without using a pager.
+.TP
+.B rdfless \-\-keybindings
+Display all available pager keybindings and exit.
 
 .SH EXIT STATUS
 .B rdfless

@@ -267,6 +267,18 @@ graph = "#ffcc00"
 expand = false
 ```
 
+## Pager Keybindings
+
+When paging is enabled (either through the `--pager` flag or configuration), `rdfless` uses the `minus` pager which provides powerful navigation and search capabilities. For a complete list of available keybindings and shortcuts, see [PAGER_KEYBINDINGS.md](PAGER_KEYBINDINGS.md).
+
+Key highlights:
+- **Ctrl+C/q**: Quit the pager
+- **Arrow keys/j/k**: Scroll up/down line by line
+- **Page Up/Down**: Scroll by full pages
+- **g/G**: Go to top/bottom
+- **/ and ?**: Forward and backward search
+- **n/p**: Navigate between search matches
+
 ## Example
 
 Input:

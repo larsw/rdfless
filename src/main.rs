@@ -93,6 +93,10 @@ struct Args {
     /// Generate shell completion script for bash, zsh, fish, elvish, or powershell
     #[arg(long, value_enum)]
     completion: Option<Shell>,
+
+    /// Print pager keybindings and exit
+    #[arg(long, short = 'k')]
+    keybindings: bool,
 }
 
 impl rdfless::ArgsConfig for Args {
@@ -186,6 +190,57 @@ impl rdfless::ArgsConfig for Args {
     }
 }
 
+/// Print the pager keybindings help
+fn print_keybindings() {
+    println!("rdfless pager keybindings");
+    println!();
+    println!("When paging is enabled, rdfless uses the minus pager which provides");
+    println!("powerful navigation and search capabilities. Here are the key bindings:");
+    println!();
+    println!("Navigation:");
+    println!("  Ctrl+C/q            Quit the pager");
+    println!("  [n] Arrow Up/k      Scroll up by n line(s) (default: 1)");
+    println!("  [n] Arrow Down/j    Scroll down by n line(s) (default: 1)");
+    println!("  [n] Arrow Left/h    Scroll left by n line(s) (default: 1)");
+    println!("  [n] Arrow Right/l   Scroll right by n line(s) (default: 1)");
+    println!("  Page Up             Scroll up by entire page");
+    println!("  Page Down           Scroll down by entire page");
+    println!("  [n] Enter           Scroll down by n line(s)");
+    println!("  Space               Scroll down by one page");
+    println!("  Ctrl+U/u            Scroll up by half a screen");
+    println!("  Ctrl+D/d            Scroll down by half a screen");
+    println!("  g                   Go to the very top of the output");
+    println!("  [n] G               Go to the very bottom (or line n if specified)");
+    println!();
+    println!("Display:");
+    println!("  Ctrl+h              Turn off line wrapping and allow horizontal scrolling");
+    println!("  Ctrl+L              Toggle line numbers if not forced enabled/disabled");
+    println!("  Ctrl+f              Toggle follow-mode");
+    println!();
+    println!("Search:");
+    println!("  /                   Start forward search");
+    println!("  ?                   Start backward search");
+    println!("  Esc                 Cancel search input");
+    println!("  n                   Go to the next search match");
+    println!("  p                   Go to the previous search match");
+    println!();
+    println!("Mouse:");
+    println!("  Mouse scroll Up     Scroll up by 5 lines");
+    println!("  Mouse scroll Down   Scroll down by 5 lines");
+    println!();
+    println!("Search Prompt:");
+    println!("  Enter               Confirm the search query");
+    println!("  Backspace           Remove the character before the cursor");
+    println!("  Delete              Remove the character under the cursor");
+    println!("  Arrow Left/Right    Move cursor within search query");
+    println!("  Ctrl+Arrow L/R      Move cursor word by word");
+    println!("  Home/End            Move cursor to beginning/end of search query");
+    println!();
+    println!("Note: [n] means you can precede the key with an integer to repeat the action n times.");
+    println!();
+    println!("For more detailed information, see PAGER_KEYBINDINGS.md in the repository.");
+}
+
 fn main() -> Result<()> {
     let args = Args::parse();
 
@@ -193,6 +248,12 @@ fn main() -> Result<()> {
     if let Some(shell) = args.completion {
         let mut cmd = Args::command();
         generate(shell, &mut cmd, "rdfless", &mut io::stdout());
+        return Ok(());
+    }
+
+    // Handle keybindings display
+    if args.keybindings {
+        print_keybindings();
         return Ok(());
     }
 
