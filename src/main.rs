@@ -23,13 +23,17 @@ use std::path::PathBuf;
 enum FormatArg {
     Turtle,
     Trig,
+    #[value(name = "ntriples")]
+    NTriples,
+    #[value(name = "nquads")]
+    NQuads,
 }
 
 /// A pretty printer for RDF data with ANSI colors
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    /// Input files (Turtle or TriG format)
+    /// Input files (Turtle, TriG, N-Triples, or N-Quads format)
     #[arg(name = "FILE")]
     files: Vec<PathBuf>,
 
@@ -42,6 +46,7 @@ struct Args {
     compact: bool,
 
     /// Override the input format (auto-detected from file extension by default)
+    /// Supported formats: turtle, trig, ntriples, nquads
     #[arg(long, value_enum)]
     format: Option<FormatArg>,
 
@@ -166,6 +171,8 @@ impl rdfless::ArgsConfig for Args {
             return Some(match format_arg {
                 FormatArg::Turtle => InputFormat::Turtle,
                 FormatArg::Trig => InputFormat::TriG,
+                FormatArg::NTriples => InputFormat::NTriples,
+                FormatArg::NQuads => InputFormat::NQuads,
             });
         }
 

@@ -1,0 +1,8 @@
+{
+    "recommendations": [
+        "rust-lang.rust-analyzer",
+        "serayuzgur.crates",
+        "bungcip.better-toml",
+        "stardog-union.stardog-turtle"
+    ]
+}

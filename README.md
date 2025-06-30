@@ -27,30 +27,31 @@ Key features:
 Usage: rdfless [OPTIONS] [FILE]...
 
 Arguments:
-  [FILE]...  Input files (Turtle or TriG format)
+  [FILE]...  Input files (Turtle, TriG, N-Triples, or N-Quads format)
 
 Options:
-      --expand                              Expand prefixes instead of showing PREFIX declarations
-      --compact                             Compact mode (opposite of 'expand')
-      --format <FORMAT>                     Override the input format (auto-detected from file extension by default) [possible values: turtle, trig]
-      --pager                               Enable paging for large outputs
-      --no-pager                            Disable paging (useful when paging is enabled by default in config)
-      --dark-theme                          Force dark theme colors
-      --light-theme                         Force light theme colors
-      --no-auto-theme                       Disable automatic background detection
-      --continue-on-error                   Continue parsing even when encountering errors (skip invalid triples)
-      --filter-subject <FILTER_SUBJECT>     Filter by subject (IRI or prefixed name)
-      --filter-predicate <FILTER_PREDICATE> Filter by predicate (IRI or prefixed name)  
-      --filter-object <FILTER_OBJECT>       Filter by object (IRI, prefixed name, or literal value)
-  -o, --output <OUTPUT>                     Output file (write to file instead of stdout)
-  -h, --help                                Print help
-  -V, --version                             Print version
+      --expand                   Expand prefixes instead of showing PREFIX declarations
+      --compact                  Compact mode (opposite of 'expand')
+      --format <FORMAT>          Override the input format (auto-detected from file extension by default) Supported formats: turtle, trig, ntriples, nquads [possible values: turtle, trig, ntriples, nquads]
+      --pager                    Enable paging for large outputs
+      --no-pager                 Disable paging (useful when paging is enabled by default in config)
+      --dark-theme               Force dark theme colors
+      --light-theme              Force light theme colors
+      --no-auto-theme            Disable automatic background detection
+      --continue-on-error        Continue parsing even when encountering errors (skip invalid triples)
+  -s, --subject <SUBJECT>        Filter by subject (IRI or prefixed name)
+  -p, --predicate <PREDICATE>    Filter by predicate (IRI or prefixed name)
+  -o, --object <OBJECT>          Filter by object (IRI, prefixed name, or literal value)
+  -O, --output <OUTPUT>          Output file (write to file instead of stdout)
+      --completion <COMPLETION>  Generate shell completion script for bash, zsh, fish, elvish, or powershell [possible values: bash, elvish, fish, powershell, zsh]
+  -h, --help                     Print help
+  -V, --version                  Print version
 ```
 
 ### Supported Formats
 
-- Turtle / Turtle-*
-- TriG / TriG-*
+- Turtle / Turtle-star
+- TriG / TriG-star
 - N-Triples (NT)
 - N-Quads (NQ)
 
