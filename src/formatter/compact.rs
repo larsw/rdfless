@@ -45,7 +45,7 @@ pub fn print_prefixes_to_writer<W: Write>(
         writeln!(
             writer,
             "{} {}: <{}> .",
-            colors.colorize("PREFIX", "prefix"),
+            colors.colorize("@prefix", "prefix"),
             colors.colorize(prefix, "prefix"),
             iri
         )?;
