@@ -153,6 +153,32 @@ jobs:
             echo "version=$CURRENT" >> $GITHUB_OUTPUT
           fi
 
+      - name: Sync DOAP revision with version
+        id: sync_doap
+        if: steps.compute_outputs.outputs.build_binaries == 'true'
+        run: |
+          set -euo pipefail
+          V="${{ steps.determine_version.outputs.version }}"
+          if [ -z "$V" ]; then
+            echo "No version determined" >&2
+            exit 1
+          fi
+          if [ ! -f doap.ttl ]; then
+            echo "doap.ttl not found; skipping"
+            echo "changed=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          CURRENT=$(grep -E 'doap:revision\s+"' doap.ttl | sed -E 's/.*doap:revision\s+"([^"]+)".*/\1/' || true)
+          if [ "$CURRENT" = "$V" ]; then
+            echo "DOAP revision already $V; no change"
+            echo "changed=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          # Update the doap:revision value to match the determined version
+          sed -i -E 's/(doap:revision\s+\")([^\"]+)(\"\s*;)/\1'"$V"'\3/' doap.ttl
+          echo "Updated doap:revision: $CURRENT -> $V"
+          echo "changed=true" >> $GITHUB_OUTPUT
+
       - name: Check if version exists on crates.io
         id: check_crate
         if: steps.compute_outputs.outputs.build_binaries == 'true'
@@ -180,11 +206,19 @@ jobs:
         run: |
           NEW_VERSION=${{ steps.determine_version.outputs.version }}
 
-          git add Cargo.toml Cargo.lock
+          git add Cargo.toml Cargo.lock doap.ttl || true
           git commit -m "Bump version to $NEW_VERSION [skip ci]"
           git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
           git push origin main
           git push origin "v$NEW_VERSION"
+
+      - name: Commit DOAP revision update (no crates publish)
+        if: steps.compute_outputs.outputs.build_binaries == 'true' && steps.check_crate.outputs.publish_crate != 'true' && steps.sync_doap.outputs.changed == 'true'
+        run: |
+          NEW_VERSION=${{ steps.determine_version.outputs.version }}
+          git add doap.ttl
+          git commit -m "chore(doap): set doap:revision to $NEW_VERSION [skip ci]"
+          git push origin main
 
       - name: Publish to crates.io
         if: steps.check_crate.outputs.publish_crate == 'true'
