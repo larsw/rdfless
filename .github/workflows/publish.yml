@@ -178,9 +178,16 @@ jobs:
 
   build-debian:
     name: Build Debian Package
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     if: needs.publish.outputs.should_publish == 'true'
     needs: publish
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            glibc: "2.39"
+          - os: ubuntu-22.04
+            glibc: "2.35"
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -196,18 +203,20 @@ jobs:
         id: set_artifact_name
         run: |
           VERSION=${{ needs.publish.outputs.new_version }}
-          echo "artifact_name=rdfless_${VERSION}_amd64.deb" >> $GITHUB_OUTPUT
+          GLIBC=${{ matrix.glibc }}
+          echo "artifact_name=rdfless_${VERSION}_amd64-glibc-${GLIBC}.deb" >> $GITHUB_OUTPUT
           
       - name: Rename Debian package
         run: |
           VERSION=${{ needs.publish.outputs.new_version }}
-          mv target/debian/*.deb "rdfless_${VERSION}_amd64.deb"
+          GLIBC=${{ matrix.glibc }}
+          mv target/debian/*.deb "rdfless_${VERSION}_amd64-glibc-${GLIBC}.deb"
           
       - name: Upload Debian package artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.set_artifact_name.outputs.artifact_name }}
-          path: "rdfless_${{ needs.publish.outputs.new_version }}_amd64.deb"
+          path: "rdfless_${{ needs.publish.outputs.new_version }}_amd64-glibc-${{ matrix.glibc }}.deb"
 
   build-cross-platform:
     name: Build cross-platform binaries
@@ -328,8 +337,9 @@ jobs:
           # Copy and rename macOS binary
           cp "./artifacts/rdfless-${VERSION}-macos-x86_64/rdfless-macos-x86_64" "./release-artifacts/rdfless-${VERSION}-macos-x86_64"
           
-          # Copy Debian package
-          cp "./artifacts/rdfless_${VERSION}_amd64.deb/rdfless_${VERSION}_amd64.deb" "./release-artifacts/rdfless_${VERSION}_amd64.deb"
+          # Copy Debian packages for both glibc versions
+          cp "./artifacts/rdfless_${VERSION}_amd64-glibc-2.39.deb/rdfless_${VERSION}_amd64-glibc-2.39.deb" "./release-artifacts/rdfless_${VERSION}_amd64-glibc-2.39.deb"
+          cp "./artifacts/rdfless_${VERSION}_amd64-glibc-2.35.deb/rdfless_${VERSION}_amd64-glibc-2.35.deb" "./release-artifacts/rdfless_${VERSION}_amd64-glibc-2.35.deb"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -342,4 +352,5 @@ jobs:
             ./release-artifacts/rdfless-${{ needs.publish.outputs.new_version }}-linux-x86_64
             ./release-artifacts/rdfless-${{ needs.publish.outputs.new_version }}-windows-x86_64.exe
             ./release-artifacts/rdfless-${{ needs.publish.outputs.new_version }}-macos-x86_64
-            ./release-artifacts/rdfless_${{ needs.publish.outputs.new_version }}_amd64.deb
+            ./release-artifacts/rdfless_${{ needs.publish.outputs.new_version }}_amd64-glibc-2.39.deb
+            ./release-artifacts/rdfless_${{ needs.publish.outputs.new_version }}_amd64-glibc-2.35.deb
