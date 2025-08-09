@@ -141,6 +141,7 @@ jobs:
             echo "version=$NEW" >> $GITHUB_OUTPUT
           else
             echo "version=$CURRENT" >> $GITHUB_OUTPUT
+          fi
 
       - name: Check if version exists on crates.io
         id: check_crate
