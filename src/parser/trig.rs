@@ -20,10 +20,8 @@ pub fn parse_for_estimation<R: Read>(
     reader.read_to_end(&mut content)?; // Extract prefixes first
     let prefixes = extract_prefixes(Cursor::new(&content));
 
-    // Then parse quads with RDF-star support
-    let parser = TriGParser::new()
-        .with_quoted_triples() // Enable RDF-star support
-        .for_reader(Cursor::new(&content));
+    // Then parse quads (RDF 1.2 quoted triples enabled by feature)
+    let parser = TriGParser::new().for_reader(Cursor::new(&content));
     let mut triples = Vec::new();
 
     // Process each quad

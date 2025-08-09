@@ -5,23 +5,18 @@
 // LICENSE file in the root directory of this source tree.
 
 use crate::types::{ObjectType, OwnedTriple, SubjectType};
-use oxrdf::{vocab::xsd, Quad, Subject, Term, Triple};
+use oxrdf::{vocab::xsd, NamedOrBlankNode, Quad, Term, Triple};
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader, Read};
 
 /// Convert a Triple to an OwnedTriple (oxrdf version with RDF-star support)
 pub fn triple_to_owned(triple: &Triple) -> OwnedTriple {
     let (subject_type, subject_value, subject_triple) = match &triple.subject {
-        Subject::NamedNode(node) => (SubjectType::NamedNode, node.as_str().to_string(), None),
-        Subject::BlankNode(node) => (SubjectType::BlankNode, node.as_str().to_string(), None),
-        Subject::Triple(embedded_triple) => {
-            // RDF-star: embedded triple as subject
-            let owned_embedded = Box::new(triple_to_owned(embedded_triple));
-            (
-                SubjectType::Triple,
-                format!("<< {} >>", format_embedded_triple(&owned_embedded)),
-                Some(owned_embedded),
-            )
+        NamedOrBlankNode::NamedNode(node) => {
+            (SubjectType::NamedNode, node.as_str().to_string(), None)
+        }
+        NamedOrBlankNode::BlankNode(node) => {
+            (SubjectType::BlankNode, node.as_str().to_string(), None)
         }
     };
 

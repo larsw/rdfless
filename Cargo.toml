@@ -1,6 +1,6 @@
 [package]
 name = "rdfless"
-version = "0.2.21"
+version = "0.3.0"
 edition = "2021"
 description = "A colorful pretty printer for RDF (Turtle/TriG/N-Triples/N-Quads) with ANSI colors"
 authors = ["Lars Wilhelmsen"]
@@ -11,8 +11,8 @@ keywords = ["rdf", "turtle", "ntriples", "nquads", "pretty-printer"]
 categories = ["command-line-utilities", "text-processing"]
 
 [dependencies]
-oxttl = { version = "0.1.8", features = ["rdf-star"] }
-oxrdf = { version = "0.2.4", features = ["rdf-star"] }
+oxttl = { version = "0.2.0-beta.2", features = ["rdf-12"] }
+oxrdf = { version = "0.3.0-beta.2", features = ["rdf-12"] }
 colored = "3.0.0"
 clap = { version = "4.5.43", features = ["derive"] }
 clap_complete = "4.5.56"

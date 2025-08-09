@@ -27,8 +27,9 @@ ex:alice foaf:name "Alice" .
     assert!(result.is_ok());
     let (triples, prefixes) = result.unwrap();
 
-    // Check that we parsed the expected number of triples
-    assert_eq!(triples.len(), 2);
+    // With RDF 1.2, quoted triple usage is represented via a reifier blank node + rdf:reifies
+    // Hence we expect 3 triples: the base triple, the reifier mapping, and the linking triple
+    assert_eq!(triples.len(), 3);
 
     // Check that we extracted the expected prefixes
     assert_eq!(prefixes.len(), 2);
@@ -41,25 +42,26 @@ ex:alice foaf:name "Alice" .
         Some(&"http://xmlns.com/foaf/0.1/".to_string())
     );
 
-    // Find the RDF-star triple (the one with embedded triple as subject)
-    let rdf_star_triple = triples
-        .iter()
-        .find(|t| t.subject_type == rdfless::SubjectType::Triple);
-    assert!(rdf_star_triple.is_some());
+    // Find the rdf:reifies mapping triple _:r rdf:reifies << ex:alice foaf:name "Alice" >>
+    let reifies_iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#reifies";
+    let reifies = triples.iter().find(|t| t.predicate == reifies_iri);
+    assert!(reifies.is_some());
+    let reifies = reifies.unwrap();
+    assert_eq!(reifies.subject_type, rdfless::SubjectType::BlankNode);
+    assert_eq!(reifies.object_type, rdfless::ObjectType::Triple);
+    let embedded = reifies.object_triple.as_ref().unwrap();
+    assert_eq!(embedded.subject_value, "https://example.org/alice");
+    assert_eq!(embedded.predicate, "http://xmlns.com/foaf/0.1/name");
+    assert_eq!(embedded.object_value, "Alice");
 
-    let rdf_star_triple = rdf_star_triple.unwrap();
-    assert_eq!(rdf_star_triple.predicate, "https://example.org/source");
-    assert_eq!(
-        rdf_star_triple.object_value,
-        "https://example.org/wikipedia"
-    );
-
-    // Verify that the embedded triple information is preserved
-    assert!(rdf_star_triple.subject_triple.is_some());
-    let embedded_triple = rdf_star_triple.subject_triple.as_ref().unwrap();
-    assert_eq!(embedded_triple.subject_value, "https://example.org/alice");
-    assert_eq!(embedded_triple.predicate, "http://xmlns.com/foaf/0.1/name");
-    assert_eq!(embedded_triple.object_value, "Alice");
+    // And the linking triple uses the same reifier as subject: _:r ex:source ex:wikipedia
+    let link = triples.iter().find(|t| {
+        t.subject_type == rdfless::SubjectType::BlankNode
+            && t.subject_value == reifies.subject_value
+            && t.predicate == "https://example.org/source"
+            && t.object_value == "https://example.org/wikipedia"
+    });
+    assert!(link.is_some());
 }
 
 #[test]
@@ -80,17 +82,16 @@ fn test_rdf_star_trig_parsing() {
     assert!(result.is_ok());
     let (triples, prefixes) = result.unwrap();
 
-    // Check that we parsed the expected number of triples
-    assert_eq!(triples.len(), 2);
+    // Expect 3 triples with RDF 1.2 reification mapping
+    assert_eq!(triples.len(), 3);
 
     // Check that we extracted the expected prefixes
     assert_eq!(prefixes.len(), 2);
 
-    // Find the RDF-star triple
-    let rdf_star_triple = triples
-        .iter()
-        .find(|t| t.subject_type == rdfless::SubjectType::Triple);
-    assert!(rdf_star_triple.is_some());
+    // Find reifier mapping
+    let reifies_iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#reifies";
+    let reifies = triples.iter().find(|t| t.predicate == reifies_iri);
+    assert!(reifies.is_some());
 }
 
 #[test]
@@ -109,26 +110,24 @@ ex:statement ex:about << ex:alice foaf:name "Alice" >> .
     assert!(result.is_ok());
     let (triples, _) = result.unwrap();
 
-    // Check that we parsed the expected number of triples
-    assert_eq!(triples.len(), 2);
+    // Expect 3 triples with RDF 1.2 reification mapping
+    assert_eq!(triples.len(), 3);
 
-    // Find the RDF-star triple (the one with embedded triple as object)
-    let rdf_star_triple = triples
-        .iter()
-        .find(|t| t.object_type == rdfless::ObjectType::Triple);
-    assert!(rdf_star_triple.is_some());
+    // Find the rdf:reifies mapping triple _:r rdf:reifies << ex:alice foaf:name "Alice" >>
+    let reifies_iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#reifies";
+    let reifies = triples.iter().find(|t| t.predicate == reifies_iri).unwrap();
+    assert_eq!(reifies.object_type, rdfless::ObjectType::Triple);
+    let embedded = reifies.object_triple.as_ref().unwrap();
+    assert_eq!(embedded.subject_value, "https://example.org/alice");
+    assert_eq!(embedded.predicate, "http://xmlns.com/foaf/0.1/name");
+    assert_eq!(embedded.object_value, "Alice");
 
-    let rdf_star_triple = rdf_star_triple.unwrap();
-    assert_eq!(
-        rdf_star_triple.subject_value,
-        "https://example.org/statement"
-    );
-    assert_eq!(rdf_star_triple.predicate, "https://example.org/about");
-
-    // Verify that the embedded triple information is preserved
-    assert!(rdf_star_triple.object_triple.is_some());
-    let embedded_triple = rdf_star_triple.object_triple.as_ref().unwrap();
-    assert_eq!(embedded_triple.subject_value, "https://example.org/alice");
-    assert_eq!(embedded_triple.predicate, "http://xmlns.com/foaf/0.1/name");
-    assert_eq!(embedded_triple.object_value, "Alice");
+    // And the main triple points to the reifier as object: ex:statement ex:about _:r
+    let link = triples.iter().find(|t| {
+        t.subject_value == "https://example.org/statement"
+            && t.predicate == "https://example.org/about"
+            && t.object_type == rdfless::ObjectType::BlankNode
+            && t.object_value == reifies.subject_value
+    });
+    assert!(link.is_some());
 }

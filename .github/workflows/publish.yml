@@ -16,8 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     environment: default
     outputs:
+      # Respect either the crates.io check outcome or the presence of a release tag
       should_publish: ${{ steps.check_version.outputs.should_publish }}
-      new_version: ${{ steps.bump_version.outputs.new_version }}
+      # Propagate whichever path determined the version (bumped or tagged)
+      new_version: ${{ steps.bump_version.outputs.new_version || steps.use_version_from_tag.outputs.new_version }}
     # Only run if CI workflow completed successfully and the triggering event was a push to main
     if: |
       github.event.workflow_run.conclusion == 'success' &&
@@ -41,6 +43,23 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
+
+      - name: Detect release tag on triggering commit
+        id: detect_release_tag
+        run: |
+          COMMIT_SHA="${{ github.event.workflow_run.head_sha }}"
+          # Look for a semver tag pointing at the triggering commit
+          TAG=$(git tag --points-at "$COMMIT_SHA" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1 || true)
+          if [ -n "$TAG" ]; then
+            VERSION="${TAG#v}"
+            echo "Found release tag: $TAG (version: $VERSION)"
+            echo "release_tag=$TAG" >> $GITHUB_OUTPUT
+            echo "release_version=$VERSION" >> $GITHUB_OUTPUT
+            echo "use_tag_version=true" >> $GITHUB_OUTPUT
+          else
+            echo "No release tag found on commit $COMMIT_SHA"
+            echo "use_tag_version=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Check if publish is needed
         id: check_publish_needed
@@ -77,7 +96,7 @@ jobs:
 
       - name: Bump version
         id: bump_version
-        if: steps.check_publish_needed.outputs.should_publish == 'true'
+        if: steps.check_publish_needed.outputs.should_publish == 'true' && steps.detect_release_tag.outputs.use_tag_version != 'true'
         run: |
           # Get the current version from Cargo.toml
           CURRENT_VERSION=$(grep -m 1 '^version = ' Cargo.toml | cut -d '"' -f 2)
@@ -99,11 +118,25 @@ jobs:
 
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
+      - name: Use version from tag
+        id: use_version_from_tag
+        if: steps.detect_release_tag.outputs.use_tag_version == 'true'
+        run: |
+          TAG_VERSION=${{ steps.detect_release_tag.outputs.release_version }}
+          CURRENT_VERSION=$(grep -m 1 '^version = ' Cargo.toml | cut -d '"' -f 2)
+          echo "Current version: $CURRENT_VERSION (tag: $TAG_VERSION)"
+          if [ "$CURRENT_VERSION" != "$TAG_VERSION" ]; then
+            echo "Tag version ($TAG_VERSION) does not match Cargo.toml version ($CURRENT_VERSION)."
+            echo "Please ensure Cargo.toml version matches the tag."
+            exit 1
+          fi
+          echo "new_version=$TAG_VERSION" >> $GITHUB_OUTPUT
+
       - name: Check if version exists on crates.io
         id: check_version
-        if: steps.check_publish_needed.outputs.should_publish == 'true'
+        if: steps.check_publish_needed.outputs.should_publish == 'true' || steps.detect_release_tag.outputs.use_tag_version == 'true'
         run: |
-          NEW_VERSION=${{ steps.bump_version.outputs.new_version }}
+          NEW_VERSION=${{ steps.bump_version.outputs.new_version || steps.use_version_from_tag.outputs.new_version }}
 
           # Check if this version already exists on crates.io
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://crates.io/api/v1/crates/rdfless/$NEW_VERSION)
@@ -118,7 +151,7 @@ jobs:
           fi
 
       - name: Commit and tag new version
-        if: steps.check_version.outputs.should_publish == 'true'
+        if: steps.check_version.outputs.should_publish == 'true' && steps.detect_release_tag.outputs.use_tag_version != 'true'
         run: |
           NEW_VERSION=${{ steps.bump_version.outputs.new_version }}
 

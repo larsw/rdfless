@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.22] - 2025-08-09
+
+## [0.3.0] - 2025-08-09
+
+### Added
+- RDF 1.2 annotation syntax support in tests (named reifier `~` with `{| ... |}` blocks) for Turtle and TriG.
+
+### Changed
+- Publish workflow now respects annotated release tags (vX.Y.Z); if a tag is present on the CI commit and matches Cargo.toml, it publishes that exact version without bumping.
+- Bumped crate version to 0.3.0.
+
+### Notes
+- Quoted triple usage emits `rdf:reifies` mapping (RDF 1.2 semantics). TriG tests confirm graph propagation for annotation triples.
+
+### Changed
+- Upgrade to oxttl 0.2.0-beta.2 and oxrdf 0.3.0-beta.2 with `rdf-12` feature to enable RDF 1.2.
+- Switch from deprecated `Subject` to `NamedOrBlankNode` in internal conversion.
+- Remove `.with_quoted_triples()` calls (RDF 1.2 is feature-gated now).
+
+### Added
+- Support for RDF 1.2 VERSION/@version directives in Turtle/TriG.
+- Support for RDF 1.2 quoted triples with reification mapping via `rdf:reifies`.
+- Tests for VERSION/@version and parenthesized triple terms `<<( ... )>>`.
+
+### Notes
+- RDF-star behavior now follows RDF 1.2: using `<< s p o >>` in subject/object positions emits an intermediate reifier node and an `rdf:reifies` triple; tests updated accordingly.
+
 ## [0.2.14] - 2025-06-30
 
 ### Added
