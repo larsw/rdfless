@@ -311,6 +311,24 @@ Compact Mode | Expanded Mode
 :----------:|:------------:
 ![TriG Compact](assets/sample-trig-compact.png) | ![TriG Expanded](assets/sample-trig-expanded.png)
 
+### Regenerate screenshots
+
+To refresh the images under `assets/` after UI or color changes:
+
+```bash
+just screenshots
+```
+
+Requirements (Linux):
+- GTK and VTE GI bindings for Python: `sudo apt-get install -y python3-gi gir1.2-gtk-3.0 gir1.2-vte-2.91`
+- A graphical session (the script opens a small window briefly to capture the screenshot)
+
+This runs `scripts/update_screenshots.py`, which uses `scripts/terminal_screenshot.py` to render:
+- `assets/sample-ttl-compact.png`
+- `assets/sample-ttl-expanded.png`
+- `assets/sample-trig-compact.png`
+- `assets/sample-trig-expanded.png`
+
 ## License
 
 This project is licensed under the BSD-3-Clause License - see the LICENSE file for details.

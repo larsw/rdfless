@@ -175,3 +175,9 @@ check-tools:
     fi
     
     echo "Tool check complete!"
+
+# Generate README screenshots (requires GTK/VTE GI bindings)
+screenshots: build
+    #!/usr/bin/env bash
+    set -euo pipefail
+    python3 scripts/update_screenshots.py
