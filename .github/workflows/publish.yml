@@ -3,30 +3,38 @@ name: Publish
 on:
   workflow_run:
     workflows: ["CI"]
-    types:
-      - completed
-    branches: [ main ]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to build binaries for (e.g., 0.3.0). Must match Cargo.toml."
+        required: false
+        type: string
+      skip_crates:
+        description: "Skip publishing to crates.io"
+        required: false
+        default: true
+        type: boolean
 
 permissions:
   contents: write
 
 jobs:
   publish:
-    name: Publish to crates.io
+    name: Prepare release and crates publish
     runs-on: ubuntu-latest
     environment: default
+    if: >
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main') ||
+      (github.event_name == 'workflow_dispatch')
     outputs:
-      # Respect either the crates.io check outcome or the presence of a release tag
-      should_publish: ${{ steps.check_version.outputs.should_publish }}
-      # Propagate whichever path determined the version (bumped or tagged)
-      new_version: ${{ steps.bump_version.outputs.new_version || steps.use_version_from_tag.outputs.new_version }}
-    # Only run if CI workflow completed successfully and the triggering event was a push to main
-    if: |
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'push' &&
-      github.event.workflow_run.head_branch == 'main'
-    permissions:
-      contents: write
+      build_binaries: ${{ steps.compute_outputs.outputs.build_binaries }}
+      version: ${{ steps.determine_version.outputs.version }}
+      publish_crate: ${{ steps.check_crate.outputs.publish_crate }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -34,38 +42,39 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
-      - name: Install Just
-        uses: taiki-e/install-action@v2
-        with:
-          tool: just
-
       - name: Setup Git
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
 
       - name: Detect release tag on triggering commit
-        id: detect_release_tag
+        id: detect_tag
         run: |
-          COMMIT_SHA="${{ github.event.workflow_run.head_sha }}"
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            COMMIT_SHA="${{ github.event.workflow_run.head_sha }}"
+          else
+            COMMIT_SHA=$(git rev-parse HEAD)
+          fi
           # Look for a semver tag pointing at the triggering commit
           TAG=$(git tag --points-at "$COMMIT_SHA" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1 || true)
           if [ -n "$TAG" ]; then
-            VERSION="${TAG#v}"
-            echo "Found release tag: $TAG (version: $VERSION)"
-            echo "release_tag=$TAG" >> $GITHUB_OUTPUT
-            echo "release_version=$VERSION" >> $GITHUB_OUTPUT
-            echo "use_tag_version=true" >> $GITHUB_OUTPUT
+            echo "Found release tag: $TAG"
+            echo "tag=$TAG" >> $GITHUB_OUTPUT
+            echo "use_tag=true" >> $GITHUB_OUTPUT
           else
             echo "No release tag found on commit $COMMIT_SHA"
-            echo "use_tag_version=false" >> $GITHUB_OUTPUT
+            echo "use_tag=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Check if publish is needed
-        id: check_publish_needed
+      - name: Check if publish is needed (code changes)
+        id: check_needed
         run: |
-          # Get the commit SHA from the workflow_run event
-          COMMIT_SHA="${{ github.event.workflow_run.head_sha }}"
+          # Get the commit SHA depending on event
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            COMMIT_SHA="${{ github.event.workflow_run.head_sha }}"
+          else
+            COMMIT_SHA=$(git rev-parse HEAD)
+          fi
           
           # Check if any relevant files changed in the triggering commit
           CHANGED_FILES=$(git diff --name-only $COMMIT_SHA~1 $COMMIT_SHA)
@@ -94,66 +103,71 @@ jobs:
           echo "should_publish=$SHOULD_PUBLISH" >> $GITHUB_OUTPUT
           echo "Should publish: $SHOULD_PUBLISH"
 
-      - name: Bump version
-        id: bump_version
-        if: steps.check_publish_needed.outputs.should_publish == 'true' && steps.detect_release_tag.outputs.use_tag_version != 'true'
+      - name: Compute outputs (build_binaries)
+        id: compute_outputs
         run: |
-          # Get the current version from Cargo.toml
-          CURRENT_VERSION=$(grep -m 1 '^version = ' Cargo.toml | cut -d '"' -f 2)
-          echo "Current version: $CURRENT_VERSION"
-
-          # Parse the version components
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
-
-          # Increment the patch version
-          NEW_PATCH=$((PATCH + 1))
-          NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
-          echo "New version: $NEW_VERSION"
-
-          # Update the version in Cargo.toml
-          sed -i "s/^version = \"$CURRENT_VERSION\"/version = \"$NEW_VERSION\"/" Cargo.toml
-
-          # Also update Cargo.lock
-          cargo update -p rdfless
-
-          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
-
-      - name: Use version from tag
-        id: use_version_from_tag
-        if: steps.detect_release_tag.outputs.use_tag_version == 'true'
-        run: |
-          TAG_VERSION=${{ steps.detect_release_tag.outputs.release_version }}
-          CURRENT_VERSION=$(grep -m 1 '^version = ' Cargo.toml | cut -d '"' -f 2)
-          echo "Current version: $CURRENT_VERSION (tag: $TAG_VERSION)"
-          if [ "$CURRENT_VERSION" != "$TAG_VERSION" ]; then
-            echo "Tag version ($TAG_VERSION) does not match Cargo.toml version ($CURRENT_VERSION)."
-            echo "Please ensure Cargo.toml version matches the tag."
-            exit 1
+          SHOULD_PUBLISH='${{ steps.check_needed.outputs.should_publish }}'
+          USE_TAG='${{ steps.detect_tag.outputs.use_tag }}'
+          INPUT_VERSION='${{ inputs.version }}'
+          if [ "$SHOULD_PUBLISH" = "true" ] || [ "$USE_TAG" = "true" ] || [ -n "$INPUT_VERSION" ]; then
+            echo "build_binaries=true" >> $GITHUB_OUTPUT
+          else
+            echo "build_binaries=false" >> $GITHUB_OUTPUT
           fi
-          echo "new_version=$TAG_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Determine version
+        id: determine_version
+        run: |
+          CURRENT=$(grep -m 1 '^version = ' Cargo.toml | cut -d '"' -f 2)
+          if [ -n "${{ inputs.version }}" ]; then
+            V="${{ inputs.version }}"
+            if [ "$CURRENT" != "$V" ]; then
+              echo "Input version ($V) does not match Cargo.toml version ($CURRENT)."; exit 1
+            fi
+            echo "version=$V" >> $GITHUB_OUTPUT
+          elif [ "${{ steps.detect_tag.outputs.use_tag }}" = "true" ]; then
+            TAG="${{ steps.detect_tag.outputs.tag }}"
+            V="${TAG#v}"
+            if [ "$CURRENT" != "$V" ]; then
+              echo "Tag version ($V) does not match Cargo.toml version ($CURRENT)."; exit 1
+            fi
+            echo "version=$V" >> $GITHUB_OUTPUT
+          elif [ "${{ steps.check_needed.outputs.should_publish }}" = "true" ]; then
+            IFS='.' read -r MA MI PA <<< "$CURRENT"
+            PA=$((PA+1))
+            NEW="$MA.$MI.$PA"
+            sed -i "s/^version = \"$CURRENT\"/version = \"$NEW\"/" Cargo.toml
+            cargo update -p rdfless
+            echo "version=$NEW" >> $GITHUB_OUTPUT
+          else
+            echo "version=$CURRENT" >> $GITHUB_OUTPUT
 
       - name: Check if version exists on crates.io
-        id: check_version
-        if: steps.check_publish_needed.outputs.should_publish == 'true' || steps.detect_release_tag.outputs.use_tag_version == 'true'
+        id: check_crate
+        if: steps.compute_outputs.outputs.build_binaries == 'true'
         run: |
-          NEW_VERSION=${{ steps.bump_version.outputs.new_version || steps.use_version_from_tag.outputs.new_version }}
+          NEW_VERSION=${{ steps.determine_version.outputs.version }}
+          if [ "${{ inputs.skip_crates }}" = "true" ]; then
+            echo "skip_crates input is true; will not publish crate"
+            echo "publish_crate=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
 
           # Check if this version already exists on crates.io
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://crates.io/api/v1/crates/rdfless/$NEW_VERSION)
 
           if [ "$HTTP_STATUS" = "200" ]; then
-            echo "Version $NEW_VERSION already exists on crates.io."
-            echo "should_publish=false" >> $GITHUB_OUTPUT
-            exit 1
+            echo "Version $NEW_VERSION already exists on crates.io. Will skip crates publish but continue building binaries."
+            echo "publish_crate=false" >> $GITHUB_OUTPUT
           else
-            echo "Version $NEW_VERSION is new and can be published."
-            echo "should_publish=true" >> $GITHUB_OUTPUT
+            echo "Version $NEW_VERSION is new and can be published to crates.io."
+            echo "publish_crate=true" >> $GITHUB_OUTPUT
           fi
 
       - name: Commit and tag new version
-        if: steps.check_version.outputs.should_publish == 'true' && steps.detect_release_tag.outputs.use_tag_version != 'true'
+        if: steps.check_crate.outputs.publish_crate == 'true' && steps.detect_tag.outputs.use_tag != 'true'
         run: |
-          NEW_VERSION=${{ steps.bump_version.outputs.new_version }}
+          NEW_VERSION=${{ steps.determine_version.outputs.version }}
 
           git add Cargo.toml Cargo.lock
           git commit -m "Bump version to $NEW_VERSION [skip ci]"
@@ -162,7 +176,7 @@ jobs:
           git push origin "v$NEW_VERSION"
 
       - name: Publish to crates.io
-        if: steps.check_version.outputs.should_publish == 'true'
+        if: steps.check_crate.outputs.publish_crate == 'true'
         run: |
           cargo login ${{ secrets.CRATES_IO_TOKEN }}
           cargo publish --no-verify
@@ -210,52 +224,41 @@ jobs:
 #          dput larsw42-ppa $CHANGES_FILE
 
   build-debian:
-    name: Build Debian Package
-    runs-on: ${{ matrix.os }}
-    if: needs.publish.outputs.should_publish == 'true'
+    name: Build Debian Packages (Docker)
+    runs-on: ubuntu-latest
     needs: publish
+    if: needs.publish.outputs.build_binaries == 'true'
     strategy:
       matrix:
-        include:
-          - os: ubuntu-24.04
-            glibc: "2.39"
-          - os: ubuntu-22.04
-            glibc: "2.35"
+        ubuntu: ['22.04', '20.04']
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      
-      - name: Install cargo-deb
-        run: cargo install cargo-deb
-        
-      - name: Build Debian package
-        run: cargo deb
-        
-      - name: Set artifact name
-        id: set_artifact_name
+      - name: Build .deb in Ubuntu ${{ matrix.ubuntu }}
         run: |
-          VERSION=${{ needs.publish.outputs.new_version }}
-          GLIBC=${{ matrix.glibc }}
-          echo "artifact_name=rdfless_${VERSION}_amd64-glibc-${GLIBC}.deb" >> $GITHUB_OUTPUT
-          
-      - name: Rename Debian package
-        run: |
-          VERSION=${{ needs.publish.outputs.new_version }}
-          GLIBC=${{ matrix.glibc }}
-          mv target/debian/*.deb "rdfless_${VERSION}_amd64-glibc-${GLIBC}.deb"
-          
-      - name: Upload Debian package artifact
-        uses: actions/upload-artifact@v4
+          set -eux
+          VERSION="${{ needs.publish.outputs.version }}"
+          UBUNTU="${{ matrix.ubuntu }}"
+          docker run --rm -v "$PWD":/work -w /work ubuntu:${UBUNTU} bash -lc '
+            set -eux
+            apt-get update
+            DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+              curl ca-certificates build-essential pkg-config libssl-dev git perl make gcc g++ cmake
+            curl -fsSL https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+            . "$HOME/.cargo/env"
+            cargo install cargo-deb
+            cargo deb
+          '
+          mv target/debian/*.deb "rdfless_${VERSION}_amd64-ubuntu-${UBUNTU}.deb"
+      - uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.set_artifact_name.outputs.artifact_name }}
-          path: "rdfless_${{ needs.publish.outputs.new_version }}_amd64-glibc-${{ matrix.glibc }}.deb"
+          name: rdfless_${{ needs.publish.outputs.version }}_amd64-ubuntu-${{ matrix.ubuntu }}.deb
+          path: rdfless_${{ needs.publish.outputs.version }}_amd64-ubuntu-${{ matrix.ubuntu }}.deb
 
   build-cross-platform:
     name: Build cross-platform binaries
     runs-on: ${{ matrix.os }}
-    if: needs.publish.outputs.should_publish == 'true'
     needs: publish
+    if: needs.publish.outputs.build_binaries == 'true'
     strategy:
       matrix:
         include:
@@ -307,7 +310,7 @@ jobs:
       - name: Set artifact name
         id: set_artifact_name
         run: |
-          VERSION=${{ needs.publish.outputs.new_version }}
+          VERSION=${{ needs.publish.outputs.version }}
           PLATFORM=${{ matrix.platform }}
           if [ "$PLATFORM" = "windows" ]; then
             echo "artifact_name=rdfless-${VERSION}-windows-x86_64.exe" >> $GITHUB_OUTPUT
@@ -330,8 +333,8 @@ jobs:
   create-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    if: needs.publish.outputs.should_publish == 'true'
     needs: [publish, build-cross-platform, build-debian]
+    if: needs.publish.outputs.build_binaries == 'true'
     permissions:
       contents: write
     steps:
@@ -358,7 +361,7 @@ jobs:
 
       - name: Prepare release artifacts with version
         run: |
-          VERSION=${{ needs.publish.outputs.new_version }}
+          VERSION=${{ needs.publish.outputs.version }}
           mkdir -p ./release-artifacts
           
           # Copy and rename Linux binary
@@ -370,20 +373,20 @@ jobs:
           # Copy and rename macOS binary
           cp "./artifacts/rdfless-${VERSION}-macos-x86_64/rdfless-macos-x86_64" "./release-artifacts/rdfless-${VERSION}-macos-x86_64"
           
-          # Copy Debian packages for both glibc versions
-          cp "./artifacts/rdfless_${VERSION}_amd64-glibc-2.39.deb/rdfless_${VERSION}_amd64-glibc-2.39.deb" "./release-artifacts/rdfless_${VERSION}_amd64-glibc-2.39.deb"
-          cp "./artifacts/rdfless_${VERSION}_amd64-glibc-2.35.deb/rdfless_${VERSION}_amd64-glibc-2.35.deb" "./release-artifacts/rdfless_${VERSION}_amd64-glibc-2.35.deb"
+          # Copy Debian packages for Ubuntu 22.04 and 20.04
+          cp "./artifacts/rdfless_${VERSION}_amd64-ubuntu-22.04.deb/rdfless_${VERSION}_amd64-ubuntu-22.04.deb" "./release-artifacts/rdfless_${VERSION}_amd64-ubuntu-22.04.deb"
+          cp "./artifacts/rdfless_${VERSION}_amd64-ubuntu-20.04.deb/rdfless_${VERSION}_amd64-ubuntu-20.04.deb" "./release-artifacts/rdfless_${VERSION}_amd64-ubuntu-20.04.deb"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ needs.publish.outputs.new_version }}
-          name: Release v${{ needs.publish.outputs.new_version }}
+          tag_name: v${{ needs.publish.outputs.version }}
+          name: Release v${{ needs.publish.outputs.version }}
           body: |
-            Automated release of rdfless v${{ needs.publish.outputs.new_version }}
+            Automated release of rdfless v${{ needs.publish.outputs.version }}
           files: |
-            ./release-artifacts/rdfless-${{ needs.publish.outputs.new_version }}-linux-x86_64
-            ./release-artifacts/rdfless-${{ needs.publish.outputs.new_version }}-windows-x86_64.exe
-            ./release-artifacts/rdfless-${{ needs.publish.outputs.new_version }}-macos-x86_64
-            ./release-artifacts/rdfless_${{ needs.publish.outputs.new_version }}_amd64-glibc-2.39.deb
-            ./release-artifacts/rdfless_${{ needs.publish.outputs.new_version }}_amd64-glibc-2.35.deb
+            ./release-artifacts/rdfless-${{ needs.publish.outputs.version }}-linux-x86_64
+            ./release-artifacts/rdfless-${{ needs.publish.outputs.version }}-windows-x86_64.exe
+            ./release-artifacts/rdfless-${{ needs.publish.outputs.version }}-macos-x86_64
+            ./release-artifacts/rdfless_${{ needs.publish.outputs.version }}_amd64-ubuntu-22.04.deb
+            ./release-artifacts/rdfless_${{ needs.publish.outputs.version }}_amd64-ubuntu-20.04.deb
