@@ -259,7 +259,9 @@ jobs:
             cargo install cargo-deb
             cargo deb
           '
-          mv target/debian/*.deb "rdfless_${VERSION}_amd64-ubuntu-${UBUNTU}.deb"
+          # The deb file is created inside the container and may be owned by root.
+          # Copying avoids permission errors from moving a file out of a root-owned directory.
+          cp target/debian/*.deb "rdfless_${VERSION}_amd64-ubuntu-${UBUNTU}.deb"
       - uses: actions/upload-artifact@v4
         with:
           name: rdfless_${{ needs.publish.outputs.version }}_amd64-ubuntu-${{ matrix.ubuntu }}.deb
