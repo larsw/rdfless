@@ -106,9 +106,19 @@ jobs:
       - name: Compute outputs (build_binaries)
         id: compute_outputs
         run: |
+          EVENT_NAME='${{ github.event_name }}'
           SHOULD_PUBLISH='${{ steps.check_needed.outputs.should_publish }}'
           USE_TAG='${{ steps.detect_tag.outputs.use_tag }}'
           INPUT_VERSION='${{ inputs.version }}'
+
+          # If this workflow was triggered manually, always build binaries.
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "Manual dispatch detected; forcing build_binaries=true"
+            echo "build_binaries=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Otherwise, build binaries when relevant changes, a tag is present, or a version was provided.
           if [ "$SHOULD_PUBLISH" = "true" ] || [ "$USE_TAG" = "true" ] || [ -n "$INPUT_VERSION" ]; then
             echo "build_binaries=true" >> $GITHUB_OUTPUT
           else
