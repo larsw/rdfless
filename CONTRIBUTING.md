@@ -107,3 +107,34 @@ For the CD workflow to publish to crates.io, a repository secret named `CRATES_I
 ## Questions?
 
 If you have any questions about contributing, please open an issue in the repository.
+
+## Regenerating screenshots
+
+To refresh the images under `assets/` after UI or color changes, use the Just recipe:
+
+```bash
+just screenshots
+```
+
+This runs `scripts/update_screenshots.py`, which uses `scripts/terminal_screenshot.py` to render:
+- `assets/sample-ttl-compact.png`
+- `assets/sample-ttl-expanded.png`
+- `assets/sample-trig-compact.png`
+- `assets/sample-trig-expanded.png`
+- `assets/sample-nt.png`
+- `assets/sample-nq.png`
+
+Requirements (Linux):
+- GTK and VTE GI bindings for Python: `sudo apt-get install -y python3-gi gir1.2-gtk-3.0 gir1.2-vte-2.91`
+- A graphical session (the script opens a small window briefly to capture the screenshot)
+
+Optional environment overrides for terminal appearance:
+
+```bash
+RDFLESS_SS_FONT="FiraCode Nerd Font Mono 12" \
+RDFLESS_SS_FG="#E0E0E0" \
+RDFLESS_SS_BG="#101010" \
+just screenshots
+```
+
+The generator forces a deterministic rdfless theme by writing a temporary config (disabling auto-detection) and passing `--no-auto-theme` during rendering.

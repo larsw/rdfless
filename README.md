@@ -311,23 +311,15 @@ Compact Mode | Expanded Mode
 :----------:|:------------:
 ![TriG Compact](assets/sample-trig-compact.png) | ![TriG Expanded](assets/sample-trig-expanded.png)
 
-### Regenerate screenshots
+### N-Triples (NT)
 
-To refresh the images under `assets/` after UI or color changes:
+![N-Triples](assets/sample-nt.png)
 
-```bash
-just screenshots
-```
+### N-Quads (NQ)
 
-Requirements (Linux):
-- GTK and VTE GI bindings for Python: `sudo apt-get install -y python3-gi gir1.2-gtk-3.0 gir1.2-vte-2.91`
-- A graphical session (the script opens a small window briefly to capture the screenshot)
+![N-Quads](assets/sample-nq.png)
 
-This runs `scripts/update_screenshots.py`, which uses `scripts/terminal_screenshot.py` to render:
-- `assets/sample-ttl-compact.png`
-- `assets/sample-ttl-expanded.png`
-- `assets/sample-trig-compact.png`
-- `assets/sample-trig-expanded.png`
+For how to regenerate these screenshots, see the Contributors guide.
 
 ## License
 
