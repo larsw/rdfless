@@ -8,7 +8,7 @@ A colorful pretty printer for RDF data with ANSI colors.
 
 ## Description
 
-`rdfless` is a command-line tool that reads RDF data in various formats (Turtle, TriG, N-Triples, N-Quads) and pretty-prints it with syntax highlighting. It's designed to make RDF data more readable in terminal environments. RDF 1.2 features are supported when available in upstream parsers (quoted triples, VERSION/@version).
+`rdfless` is a command-line tool that reads RDF data in Turtle, TriG, N-Triples, and N-Quads and pretty-prints it with syntax highlighting. It's designed to make RDF data more readable in terminal environments. RDF 1.2 for Turtle and TriG is supported, including quoted triples, triple terms, annotation syntax (~ with {| |}), and VERSION/@version directives.
 
 Key features:
 - Colorized output for different RDF components (subjects, predicates, objects, literals)
