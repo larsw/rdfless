@@ -179,6 +179,32 @@ jobs:
           echo "Updated doap:revision: $CURRENT -> $V"
           echo "changed=true" >> $GITHUB_OUTPUT
 
+      - name: Update Dockerfile version label
+        id: update_dockerfile
+        if: steps.compute_outputs.outputs.build_binaries == 'true'
+        run: |
+          set -euo pipefail
+          V="${{ steps.determine_version.outputs.version }}"
+          if [ -z "$V" ]; then
+            echo "No version determined" >&2
+            exit 1
+          fi
+          if [ ! -f Dockerfile ]; then
+            echo "Dockerfile not found; skipping"
+            echo "changed=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          CURRENT=$(grep -E 'org\.opencontainers\.image\.version=' Dockerfile | sed -E 's/.*org\.opencontainers\.image\.version="([^"]+)".*/\1/' || true)
+          if [ "$CURRENT" = "$V" ]; then
+            echo "Dockerfile version already $V; no change"
+            echo "changed=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          # Update the org.opencontainers.image.version label to match the determined version
+          sed -i -E 's/(org\.opencontainers\.image\.version=")([^"]+)(")/\1'"$V"'\3/' Dockerfile
+          echo "Updated Dockerfile version: $CURRENT -> $V"
+          echo "changed=true" >> $GITHUB_OUTPUT
+
       - name: Check if version exists on crates.io
         id: check_crate
         if: steps.compute_outputs.outputs.build_binaries == 'true'
@@ -206,18 +232,18 @@ jobs:
         run: |
           NEW_VERSION=${{ steps.determine_version.outputs.version }}
 
-          git add Cargo.toml Cargo.lock doap.ttl || true
+          git add Cargo.toml Cargo.lock doap.ttl Dockerfile || true
           git commit -m "Bump version to $NEW_VERSION [skip ci]"
           git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
           git push origin main
           git push origin "v$NEW_VERSION"
 
       - name: Commit DOAP revision update (no crates publish)
-        if: steps.compute_outputs.outputs.build_binaries == 'true' && steps.check_crate.outputs.publish_crate != 'true' && steps.sync_doap.outputs.changed == 'true'
+        if: steps.compute_outputs.outputs.build_binaries == 'true' && steps.check_crate.outputs.publish_crate != 'true' && (steps.sync_doap.outputs.changed == 'true' || steps.update_dockerfile.outputs.changed == 'true')
         run: |
           NEW_VERSION=${{ steps.determine_version.outputs.version }}
-          git add doap.ttl
-          git commit -m "chore(doap): set doap:revision to $NEW_VERSION [skip ci]"
+          git add doap.ttl Dockerfile || true
+          git commit -m "chore: update doap:revision and Dockerfile version to $NEW_VERSION [skip ci]"
           git push origin main
 
       - name: Publish to crates.io
@@ -275,7 +301,7 @@ jobs:
     if: needs.publish.outputs.build_binaries == 'true'
     strategy:
       matrix:
-        ubuntu: ['22.04', '20.04']
+        ubuntu: ['24.04', '22.04', '20.04']
     steps:
       - uses: actions/checkout@v4
       - name: Build .deb in Ubuntu ${{ matrix.ubuntu }}
@@ -420,7 +446,8 @@ jobs:
           # Copy and rename macOS binary
           cp "./artifacts/rdfless-${VERSION}-macos-x86_64/rdfless-macos-x86_64" "./release-artifacts/rdfless-${VERSION}-macos-x86_64"
           
-          # Copy Debian packages for Ubuntu 22.04 and 20.04
+          # Copy Debian packages for Ubuntu 24.04, 22.04 and 20.04
+          cp "./artifacts/rdfless_${VERSION}_amd64-ubuntu-24.04.deb/rdfless_${VERSION}_amd64-ubuntu-24.04.deb" "./release-artifacts/rdfless_${VERSION}_amd64-ubuntu-24.04.deb"
           cp "./artifacts/rdfless_${VERSION}_amd64-ubuntu-22.04.deb/rdfless_${VERSION}_amd64-ubuntu-22.04.deb" "./release-artifacts/rdfless_${VERSION}_amd64-ubuntu-22.04.deb"
           cp "./artifacts/rdfless_${VERSION}_amd64-ubuntu-20.04.deb/rdfless_${VERSION}_amd64-ubuntu-20.04.deb" "./release-artifacts/rdfless_${VERSION}_amd64-ubuntu-20.04.deb"
 
@@ -435,5 +462,6 @@ jobs:
             ./release-artifacts/rdfless-${{ needs.publish.outputs.version }}-linux-x86_64
             ./release-artifacts/rdfless-${{ needs.publish.outputs.version }}-windows-x86_64.exe
             ./release-artifacts/rdfless-${{ needs.publish.outputs.version }}-macos-x86_64
+            ./release-artifacts/rdfless_${{ needs.publish.outputs.version }}_amd64-ubuntu-24.04.deb
             ./release-artifacts/rdfless_${{ needs.publish.outputs.version }}_amd64-ubuntu-22.04.deb
             ./release-artifacts/rdfless_${{ needs.publish.outputs.version }}_amd64-ubuntu-20.04.deb
