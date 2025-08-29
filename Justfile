@@ -69,6 +69,20 @@ dist-linux: fmt clippy build
     cp {{linux_binary_path}} {{linux_dist_path}}
     echo "Distribution binary: {{linux_dist_path}}"
 
+# Build static Linux distribution with musl
+dist-linux-static: fmt clippy
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cargo build --release --target x86_64-unknown-linux-musl
+    musl_binary_path="target/x86_64-unknown-linux-musl/release/{{binary_name}}"
+    if command -v upx >/dev/null 2>&1; then
+        upx --best --lzma "$musl_binary_path" || echo "UPX failed, skipping compression."
+    else
+        echo "UPX not found, skipping compression."
+    fi
+    cp "$musl_binary_path" {{linux_dist_path}}
+    echo "Static distribution binary: {{linux_dist_path}}"
+
 # Build Windows distribution
 dist-windows: fmt clippy
     #!/usr/bin/env bash
@@ -138,7 +152,7 @@ uninstall: uninstall-man
     echo "rdfless uninstalled"
 
 # Build all platform distributions
-dist: dist-linux dist-windows dist-macos
+dist: dist-linux-static dist-windows dist-macos
 
 # Run tests
 test:
@@ -172,6 +186,12 @@ check-tools:
         echo "✓ upx found (optional - for binary compression)"
     else
         echo "○ upx not found (optional - binary compression will be skipped)"
+    fi
+    
+    if command -v musl-gcc >/dev/null 2>&1; then
+        echo "✓ musl-gcc found (for static Linux builds)"
+    else
+        echo "○ musl-gcc not found (install musl-tools for static Linux builds)"
     fi
     
     echo "Tool check complete!"
