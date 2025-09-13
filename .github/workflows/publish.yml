@@ -19,6 +19,8 @@ on:
 
 permissions:
   contents: write
+  id-token: write # Required for SLSA provenance
+  attestations: write # Required for SLSA provenance
 
 jobs:
   publish:
@@ -410,6 +412,11 @@ jobs:
     if: needs.publish.outputs.build_binaries == 'true'
     permissions:
       contents: write
+      id-token: write # Required for SLSA provenance
+      attestations: write # Required for SLSA provenance
+    outputs:
+      slsa-subjects: ${{ steps.hash.outputs.slsa-subjects }}
+      version: ${{ needs.publish.outputs.version }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -454,6 +461,31 @@ jobs:
           cp "./artifacts/rdfless_${VERSION}_amd64-ubuntu-22.04.deb/rdfless_${VERSION}_amd64-ubuntu-22.04.deb" "./release-artifacts/rdfless_${VERSION}_amd64-ubuntu-22.04.deb"
           cp "./artifacts/rdfless_${VERSION}_amd64-ubuntu-20.04.deb/rdfless_${VERSION}_amd64-ubuntu-20.04.deb" "./release-artifacts/rdfless_${VERSION}_amd64-ubuntu-20.04.deb"
 
+      - name: Generate SHA256 hashes for SLSA provenance
+        id: hash
+        run: |
+          cd ./release-artifacts
+          # Generate individual hashes and create subjects file for SLSA
+          echo "Creating SLSA subjects..."
+          SUBJECTS=""
+          for file in *; do
+            if [ -f "$file" ]; then
+              HASH=$(sha256sum "$file" | cut -d' ' -f1)
+              echo "$HASH  $file" >> ../checksums.txt
+              if [ -z "$SUBJECTS" ]; then
+                SUBJECTS="{\"name\":\"$file\",\"digest\":{\"sha256\":\"$HASH\"}}"
+              else
+                SUBJECTS="$SUBJECTS,{\"name\":\"$file\",\"digest\":{\"sha256\":\"$HASH\"}}"
+              fi
+            fi
+          done
+          echo "[$SUBJECTS]" > ../slsa-subjects.json
+          cat ../checksums.txt
+          cat ../slsa-subjects.json
+          # Encode subjects for SLSA
+          ENCODED_SUBJECTS=$(cat ../slsa-subjects.json | base64 -w 0)
+          echo "slsa-subjects=$ENCODED_SUBJECTS" >> $GITHUB_OUTPUT
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -461,6 +493,14 @@ jobs:
           name: Release v${{ needs.publish.outputs.version }}
           body: |
             Automated release of rdfless v${{ needs.publish.outputs.version }}
+            
+            ## SHA256 Checksums
+            ```
+            $(cat checksums.txt)
+            ```
+            
+            ## SLSA Provenance
+            This release includes SLSA Build Level 3 provenance. You can verify the provenance of these artifacts using the [slsa-verifier](https://github.com/slsa-framework/slsa-verifier) tool.
           files: |
             ./release-artifacts/rdfless-${{ needs.publish.outputs.version }}-linux-x86_64
             ./release-artifacts/rdfless-${{ needs.publish.outputs.version }}-windows-x86_64.exe
@@ -468,3 +508,20 @@ jobs:
             ./release-artifacts/rdfless_${{ needs.publish.outputs.version }}_amd64-ubuntu-24.04.deb
             ./release-artifacts/rdfless_${{ needs.publish.outputs.version }}_amd64-ubuntu-22.04.deb
             ./release-artifacts/rdfless_${{ needs.publish.outputs.version }}_amd64-ubuntu-20.04.deb
+            checksums.txt
+
+  # SLSA provenance generation
+  provenance:
+    name: Generate SLSA Provenance
+    needs: [create-release]
+    if: needs.create-release.result == 'success'
+    permissions:
+      actions: read
+      id-token: write
+      contents: write
+      attestations: write
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    with:
+      base64-subjects: "${{ needs.create-release.outputs.slsa-subjects }}"
+      upload-assets: true # Upload provenance to release
+      upload-tag-name: "v${{ needs.create-release.outputs.version }}"

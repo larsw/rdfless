@@ -76,6 +76,30 @@ Download the latest release for your platform from the [GitHub Releases](https:/
 - **macOS**: `rdfless-VERSION-macos-x86_64`
 - **Debian/Ubuntu**: `rdfless_VERSION_amd64.deb`
 
+#### Verifying Release Integrity
+
+All release artifacts include SLSA Build Level 3 provenance and SHA256 checksums for verification:
+
+1. **SHA256 Verification**: Each release includes a `checksums.txt` file with SHA256 hashes for all artifacts:
+   ```bash
+   # Download your binary and the checksums file, then verify:
+   sha256sum -c checksums.txt
+   ```
+
+2. **SLSA Provenance Verification**: All artifacts include SLSA provenance that can be verified using the [slsa-verifier](https://github.com/slsa-framework/slsa-verifier) tool:
+   ```bash
+   # Install slsa-verifier
+   go install github.com/slsa-framework/slsa-verifier/v2/cli/slsa-verifier@latest
+   
+   # Verify a binary (example for Linux)
+   slsa-verifier verify-artifact \
+     --provenance-path rdfless-VERSION-linux-x86_64.intoto.jsonl \
+     --source-uri github.com/larsw/rdfless \
+     rdfless-VERSION-linux-x86_64
+   ```
+
+This ensures that the binaries you download were built by the official GitHub Actions workflow and haven't been tampered with.
+
 ### Using Cargo
 
 ```bash
