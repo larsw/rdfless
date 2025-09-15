@@ -18,7 +18,7 @@ clap = { version = "4.5.47", features = ["derive"] }
 clap_complete = "4.5.57"
 anyhow = "1.0.99"
 serde = { version = "1.0", features = ["derive"] }
-toml = "0.9.5"
+toml = "0.9.6"
 dirs = "6.0.0"
 minus = { version = "5.6.1", features = ["search", "static_output"] }
 terminal_size = "0.4.3"
