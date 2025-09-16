@@ -31,7 +31,7 @@ Key features:
     doap:implements <http://www.w3.org/TR/trig/> ;
     doap:release [
         a doap:Version ;
-        doap:revision "0.3.7" ;
+        doap:revision "0.3.8" ;
         doap:created "2025"^^xsd:gYear  # Estimated based on current version
     ] ;
     doap:maintainer [
