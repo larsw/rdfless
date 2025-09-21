@@ -1,5 +1,5 @@
 ---
-applyTo: "**/.rs"
+applyTo: "**/*"
 ---
 
 # Copilot instructions for Rust code in the rdfless project
@@ -13,3 +13,5 @@ applyTo: "**/.rs"
 - Always ensure that the code is idiomatic Rust, following best practices and conventions.
 - Always ensure that the code is efficient and does not introduce unnecessary complexity.
 - Always ensure that the code is secure and does not introduce vulnerabilities.
+- Always ensure that the man pages in the `man/` directory are updated if you change command line options or functionality.
+- Always ensure that the README.md file is updated if you change functionality or usage.
