@@ -465,26 +465,15 @@ jobs:
         id: hash
         run: |
           cd ./release-artifacts
-          # Generate individual hashes and create subjects file for SLSA
+          # Generate the subjects in the format expected by SLSA generator
           echo "Creating SLSA subjects..."
-          SUBJECTS=""
-          for file in *; do
-            if [ -f "$file" ]; then
-              HASH=$(sha256sum "$file" | cut -d' ' -f1)
-              echo "$HASH  $file" >> ../checksums.txt
-              if [ -z "$SUBJECTS" ]; then
-                SUBJECTS="{\"name\":\"$file\",\"digest\":{\"sha256\":\"$HASH\"}}"
-              else
-                SUBJECTS="$SUBJECTS,{\"name\":\"$file\",\"digest\":{\"sha256\":\"$HASH\"}}"
-              fi
-            fi
-          done
-          echo "[$SUBJECTS]" > ../slsa-subjects.json
+          # The SLSA generator expects the base64-encoded output of sha256sum directly
+          HASHES=$(sha256sum * | base64 -w0)
+          echo "slsa-subjects=$HASHES" >> $GITHUB_OUTPUT
+          
+          # Also create checksums file for the release
+          sha256sum * > ../checksums.txt
           cat ../checksums.txt
-          cat ../slsa-subjects.json
-          # Encode subjects for SLSA
-          ENCODED_SUBJECTS=$(cat ../slsa-subjects.json | base64 -w 0)
-          echo "slsa-subjects=$ENCODED_SUBJECTS" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
