@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - SLSA Build Level 3 provenance generation for all release artifacts
 - SHA256 checksums for all release artifacts included in GitHub releases
 
+### Fixed
+- Updated SLSA generator from v2.0.0 to v2.1.0 to fix failing provenance generation in GitHub Actions workflow
+
 ## [0.2.22] - 2025-08-09
 
 ## [0.3.0] - 2025-08-09
