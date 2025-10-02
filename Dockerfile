@@ -64,7 +64,7 @@ CMD ["--help"]
 # Metadata
 LABEL org.opencontainers.image.title="rdfless" \
       org.opencontainers.image.description="A colorful pretty printer for RDF data with ANSI colors" \
-      org.opencontainers.image.version="0.3.14" \
+      org.opencontainers.image.version="0.3.15" \
       org.opencontainers.image.authors="Lars Wilhelmsen <lars@lars-backwards.org>" \
       org.opencontainers.image.url="https://github.com/larsw/rdfless" \
       org.opencontainers.image.source="https://github.com/larsw/rdfless" \
