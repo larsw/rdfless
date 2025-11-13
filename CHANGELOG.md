@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Updated SLSA generator from v2.0.0 to v2.1.0 to fix failing provenance generation in GitHub Actions workflow
 - Fixed SLSA subjects format to use base64-encoded sha256sum output instead of JSON structure
+- Display `@base` directives in output (previously parsed but not shown)
+- Display `rdf:type` predicate as bold `a` shortcut instead of expanded/compact form
 
 ## [0.2.22] - 2025-08-09
 

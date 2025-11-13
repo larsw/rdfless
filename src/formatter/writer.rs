@@ -31,6 +31,11 @@ pub fn format_predicate(
     prefixes: Option<&HashMap<String, String>>,
     colors: &config::ColorConfig,
 ) -> String {
+    // Special case for rdf:type - display as bold 'a'
+    if triple.predicate == "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" {
+        return colors.colorize_bold("a", "predicate");
+    }
+
     let predicate_text = resolve_uri_with_prefixes(&triple.predicate, prefixes);
     colors.colorize(&predicate_text, "predicate")
 }
