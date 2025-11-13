@@ -319,3 +319,92 @@ fn test_format_with_graph_information() {
     let subject_result = rdfless::format_owned_subject(&triple, None, &colors);
     assert_eq!(subject_result, "<https://example.org/subject>");
 }
+
+#[rstest]
+fn test_format_predicate_rdf_type_as_a() {
+    let triple = OwnedTriple {
+        subject_type: SubjectType::NamedNode,
+        subject_value: "https://example.org/subject".to_string(),
+        predicate: "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".to_string(),
+        object_type: ObjectType::NamedNode,
+        object_value: "https://example.org/Class".to_string(),
+        object_datatype: None,
+        object_language: None,
+        graph: None,
+        subject_triple: None,
+        object_triple: None,
+    };
+
+    let mut prefixes = HashMap::new();
+    prefixes.insert(
+        "rdf".to_string(),
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#".to_string(),
+    );
+
+    let colors = ColorConfig::default();
+
+    // rdf:type should be displayed as 'a' regardless of prefix availability
+    let result_with_prefix = rdfless::format_owned_predicate(&triple, Some(&prefixes), &colors);
+    assert!(result_with_prefix.contains("a"));
+    assert!(!result_with_prefix.contains("type"));
+    assert!(!result_with_prefix.contains("rdf:"));
+
+    // Even without prefixes, rdf:type should be displayed as 'a'
+    let result_without_prefix = rdfless::format_owned_predicate(&triple, None, &colors);
+    assert!(result_without_prefix.contains("a"));
+    assert!(!result_without_prefix.contains("type"));
+    assert!(!result_without_prefix.contains("http://"));
+}
+
+#[rstest]
+fn test_print_prefixes_with_base() {
+    let mut prefixes = HashMap::new();
+    prefixes.insert("".to_string(), "https://example.org/".to_string()); // Base IRI
+    prefixes.insert(
+        "rdf".to_string(),
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#".to_string(),
+    );
+    prefixes.insert("ex".to_string(), "https://example.org/vocab/".to_string());
+
+    let colors = ColorConfig::no_color();
+    let mut output = Vec::new();
+
+    rdfless::print_prefixes_to_writer(&prefixes, &colors, &mut output).unwrap();
+
+    let output_str = String::from_utf8(output).unwrap();
+
+    // @base should be present and come before @prefix
+    assert!(output_str.contains("@base <https://example.org/>"));
+    assert!(output_str.contains("@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>"));
+    assert!(output_str.contains("@prefix ex: <https://example.org/vocab/>"));
+
+    // @base should appear before the first @prefix
+    let base_pos = output_str.find("@base").unwrap();
+    let prefix_pos = output_str.find("@prefix").unwrap();
+    assert!(
+        base_pos < prefix_pos,
+        "@base should appear before @prefix declarations"
+    );
+}
+
+#[rstest]
+fn test_print_prefixes_without_base() {
+    let mut prefixes = HashMap::new();
+    prefixes.insert(
+        "rdf".to_string(),
+        "http://www.w3.org/1999/02/22-rdf-syntax-ns#".to_string(),
+    );
+    prefixes.insert("ex".to_string(), "https://example.org/vocab/".to_string());
+
+    let colors = ColorConfig::no_color();
+    let mut output = Vec::new();
+
+    rdfless::print_prefixes_to_writer(&prefixes, &colors, &mut output).unwrap();
+
+    let output_str = String::from_utf8(output).unwrap();
+
+    // @base should not be present
+    assert!(!output_str.contains("@base"));
+    assert!(output_str.contains("@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>"));
+    assert!(output_str.contains("@prefix ex: <https://example.org/vocab/>"));
+}

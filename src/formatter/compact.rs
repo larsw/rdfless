@@ -41,7 +41,21 @@ pub fn print_prefixes_to_writer<W: Write>(
     colors: &config::ColorConfig,
     writer: &mut W,
 ) -> Result<()> {
+    // First, check if there's a base IRI (stored with empty string key)
+    if let Some(base_iri) = prefixes.get("") {
+        writeln!(
+            writer,
+            "{} <{}> .",
+            colors.colorize_bold("@base", "base"),
+            base_iri
+        )?;
+    }
+
+    // Then print all other prefixes (skip the empty string key if present)
     for (prefix, iri) in prefixes {
+        if prefix.is_empty() {
+            continue; // Skip the base IRI, already printed above
+        }
         writeln!(
             writer,
             "{} {}: <{}> .",

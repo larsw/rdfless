@@ -24,6 +24,7 @@ pub use config::{
     ThemeConfig,
 };
 pub use filter::TripleFilter;
+pub use formatter::compact::print_prefixes_to_writer;
 pub use formatter::writer::{format_object, format_predicate, format_subject};
 pub use formatter::{estimate_output_lines, render_output};
 pub use pager::should_use_pager;
