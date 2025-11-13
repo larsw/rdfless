@@ -67,7 +67,10 @@ pub fn parse_turtle_robust<R: Read>(
         parse_turtle_line_by_line(reader)
     } else {
         // Use the standard parser for strict mode
-        let parser = TurtleParser::new().for_reader(reader);
+        // Set a default base IRI to allow relative IRI references in prefixes
+        let parser = TurtleParser::new()
+            .with_base_iri("http://example.org/")?
+            .for_reader(reader);
         let mut result = ParseResult::new();
 
         for triple_result in parser {
@@ -163,7 +166,10 @@ fn parse_turtle_line_by_line<R: Read>(reader: BufReader<R>) -> Result<ParseResul
 
 fn try_parse_turtle_fragment(input: &str) -> ParseFragmentResult {
     let reader = BufReader::new(input.as_bytes());
-    let parser = TurtleParser::new().for_reader(reader);
+    // Set a default base IRI to allow relative IRI references in prefixes
+    let parser = TurtleParser::new()
+        .with_base_iri("http://example.org/")?
+        .for_reader(reader);
     let mut triples = Vec::new();
 
     for triple_result in parser {
@@ -187,7 +193,10 @@ pub fn parse_trig_robust<R: Read>(
         parse_trig_line_by_line(reader)
     } else {
         // Use the standard parser for strict mode
-        let parser = TriGParser::new().for_reader(reader);
+        // Set a default base IRI to allow relative IRI references in prefixes
+        let parser = TriGParser::new()
+            .with_base_iri("http://example.org/")?
+            .for_reader(reader);
         let mut result = ParseResult::new();
 
         for quad_result in parser {
@@ -287,7 +296,10 @@ fn parse_trig_line_by_line<R: Read>(reader: BufReader<R>) -> Result<ParseResult>
 
 fn try_parse_trig_fragment(input: &str) -> ParseFragmentResult {
     let reader = BufReader::new(input.as_bytes());
-    let parser = TriGParser::new().for_reader(reader);
+    // Set a default base IRI to allow relative IRI references in prefixes
+    let parser = TriGParser::new()
+        .with_base_iri("http://example.org/")?
+        .for_reader(reader);
     let mut triples = Vec::new();
 
     for quad_result in parser {

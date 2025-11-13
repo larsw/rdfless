@@ -21,7 +21,10 @@ pub fn parse_for_estimation<R: Read>(
     let prefixes = extract_prefixes(Cursor::new(&content));
 
     // Then parse quads (RDF 1.2 quoted triples enabled by feature)
-    let parser = TriGParser::new().for_reader(Cursor::new(&content));
+    // Set a default base IRI to allow relative IRI references in prefixes
+    let parser = TriGParser::new()
+        .with_base_iri("http://example.org/")?
+        .for_reader(Cursor::new(&content));
     let mut triples = Vec::new();
 
     // Process each quad
