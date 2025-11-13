@@ -5,8 +5,10 @@
 // LICENSE file in the root directory of this source tree.
 
 use rdfless::extract_prefixes;
+use rdfless::parse_for_estimation;
+use rdfless::InputFormat;
 use std::collections::HashMap;
-use std::io::Cursor;
+use std::io::{BufReader, Cursor};
 
 #[test]
 fn test_extract_turtle_prefixes() {
@@ -133,4 +135,90 @@ fn test_extract_prefixes_no_prefixes() {
 
     let prefixes = extract_prefixes(Cursor::new(input.as_bytes()));
     assert!(prefixes.is_empty());
+}
+
+#[test]
+fn test_extract_relative_prefix_sparql_syntax() {
+    let input = r#"
+PREFIX : <#>
+PREFIX ex: <https://example.org/>
+
+ex:Person a :Person .
+"#;
+
+    let prefixes = extract_prefixes(Cursor::new(input.as_bytes()));
+
+    let mut expected = HashMap::new();
+    expected.insert("".to_string(), "#".to_string());
+    expected.insert("ex".to_string(), "https://example.org/".to_string());
+
+    assert_eq!(prefixes, expected);
+}
+
+#[test]
+fn test_extract_relative_prefix_turtle_syntax() {
+    let input = r#"
+@prefix : <#> .
+@prefix ex: <https://example.org/> .
+
+ex:Person a :Person .
+"#;
+
+    let prefixes = extract_prefixes(Cursor::new(input.as_bytes()));
+
+    let mut expected = HashMap::new();
+    expected.insert("".to_string(), "#".to_string());
+    expected.insert("ex".to_string(), "https://example.org/".to_string());
+
+    assert_eq!(prefixes, expected);
+}
+
+#[test]
+fn test_parse_turtle_with_relative_prefix_sparql_syntax() {
+    let input = r#"
+PREFIX : <#>
+PREFIX ex: <https://example.org/>
+
+ex:Person a :Person .
+"#;
+
+    // This should work once we add base IRI support
+    let reader = BufReader::new(input.as_bytes());
+    let result = parse_for_estimation(reader, InputFormat::Turtle);
+
+    // Currently this fails with "No scheme found in an absolute IRI"
+    // After the fix, it should succeed
+    assert!(
+        result.is_ok(),
+        "Failed to parse Turtle with relative prefix IRI: {:?}",
+        result.err()
+    );
+
+    let (triples, _prefixes) = result.unwrap();
+    assert_eq!(triples.len(), 1);
+}
+
+#[test]
+fn test_parse_turtle_with_relative_prefix_turtle_syntax() {
+    let input = r#"
+@prefix : <#> .
+@prefix ex: <https://example.org/> .
+
+ex:Person a :Person .
+"#;
+
+    // This should work once we add base IRI support
+    let reader = BufReader::new(input.as_bytes());
+    let result = parse_for_estimation(reader, InputFormat::Turtle);
+
+    // Currently this fails with "No scheme found in an absolute IRI"
+    // After the fix, it should succeed
+    assert!(
+        result.is_ok(),
+        "Failed to parse Turtle with relative prefix IRI: {:?}",
+        result.err()
+    );
+
+    let (triples, _prefixes) = result.unwrap();
+    assert_eq!(triples.len(), 1);
 }
