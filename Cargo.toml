@@ -15,7 +15,7 @@ oxttl = { version = "0.2.1", features = ["rdf-12"] }
 oxrdf = { version = "0.3.0-beta.2", features = ["rdf-12"] }
 colored = "3.0.0"
 clap = { version = "4.5.53", features = ["derive"] }
-clap_complete = "4.5.62"
+clap_complete = "4.5.63"
 anyhow = "1.0.100"
 serde = { version = "1.0", features = ["derive"] }
 toml = "0.9.10"
@@ -26,7 +26,7 @@ termbg = "0.6.2"
 
 [dev-dependencies]
 rstest = "0.26.1"
-tempfile = "3.23.0"
+tempfile = "3.24.0"
 
 [profile.release]
 strip = "debuginfo"
