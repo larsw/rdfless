@@ -455,3 +455,22 @@ fn try_parse_nquads_line(
 
     Err("No valid quad found in line".into())
 }
+
+/// Parse PROV-N input with robust error handling
+pub fn parse_provn_robust<R: Read>(
+    reader: BufReader<R>,
+    _continue_on_error: bool,
+) -> Result<ParseResult> {
+    // PROV-N parsing is already relatively robust, so we use the same parser
+    // but wrap it in our ParseResult structure
+    let (triples, prefixes) = crate::parser::provn::parse_for_estimation(reader)?;
+    
+    let mut result = ParseResult::new();
+    result.triples = triples;
+    result.prefixes = prefixes;
+    
+    // If not continuing on error, propagate any parsing errors that occurred
+    // For now, PROV-N parser already handles errors internally
+    
+    Ok(result)
+}

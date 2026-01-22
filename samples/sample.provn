@@ -1,0 +1,23 @@
+document
+  prefix ex <http://example.org/>
+  prefix prov <http://www.w3.org/ns/prov#>
+  prefix xsd <http://www.w3.org/2001/XMLSchema#>
+  
+  entity(ex:dataset1, [prov:type="Dataset"])
+  entity(ex:dataset2, [prov:type="Dataset"])
+  
+  activity(ex:analysis1, 2024-01-15T10:00:00, 2024-01-15T11:30:00)
+  
+  agent(ex:researcher1, [prov:type="Person"])
+  agent(ex:organization1, [prov:type="Organization"])
+  
+  wasGeneratedBy(ex:dataset2, ex:analysis1, 2024-01-15T11:30:00)
+  used(ex:analysis1, ex:dataset1, 2024-01-15T10:15:00)
+  
+  wasAssociatedWith(ex:analysis1, ex:researcher1)
+  wasAttributedTo(ex:dataset2, ex:researcher1)
+  
+  wasDerivedFrom(ex:dataset2, ex:dataset1)
+  
+  actedOnBehalfOf(ex:researcher1, ex:organization1, ex:analysis1)
+endDocument

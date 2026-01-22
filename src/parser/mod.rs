@@ -7,6 +7,7 @@
 pub mod common;
 pub mod nquads;
 pub mod ntriples;
+pub mod provn;
 pub mod robust;
 pub mod trig;
 pub mod turtle;
@@ -26,6 +27,7 @@ pub fn parse_for_estimation<R: Read>(
         InputFormat::TriG => trig::parse_for_estimation(reader),
         InputFormat::NTriples => ntriples::parse_for_estimation(reader),
         InputFormat::NQuads => nquads::parse_for_estimation(reader),
+        InputFormat::ProvN => provn::parse_for_estimation(reader),
     }
 }
 
@@ -40,5 +42,6 @@ pub fn parse_robust<R: Read>(
         InputFormat::TriG => robust::parse_trig_robust(reader, continue_on_error),
         InputFormat::NTriples => robust::parse_ntriples_robust(reader, continue_on_error),
         InputFormat::NQuads => robust::parse_nquads_robust(reader, continue_on_error),
+        InputFormat::ProvN => robust::parse_provn_robust(reader, continue_on_error),
     }
 }
