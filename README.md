@@ -8,7 +8,7 @@ A colorful pretty printer for RDF data with ANSI colors.
 
 ## Description
 
-`rdfless` is a command-line tool that reads RDF data in Turtle, TriG, N-Triples, and N-Quads and pretty-prints it with syntax highlighting. It's designed to make RDF data more readable in terminal environments. RDF 1.2 for Turtle and TriG is supported, including quoted triples, triple terms, annotation syntax (`~` with `{| |}`), and VERSION/@version directives.
+`rdfless` is a command-line tool that reads RDF data in Turtle, TriG, N-Triples, N-Quads, and PROV-N formats and pretty-prints it with syntax highlighting. It's designed to make RDF data more readable in terminal environments. RDF 1.2 for Turtle and TriG is supported, including quoted triples, triple terms, annotation syntax (`~` with `{| |}`), and VERSION/@version directives.
 
 Key features:
 - Colorized output for different RDF components (subjects, predicates, objects, literals)
@@ -27,12 +27,12 @@ Key features:
 Usage: rdfless [OPTIONS] [FILE]...
 
 Arguments:
-  [FILE]...  Input files (Turtle, TriG, N-Triples, or N-Quads format)
+  [FILE]...  Input files (Turtle, TriG, N-Triples, N-Quads, or PROV-N format)
 
 Options:
       --expand                   Expand prefixes instead of showing PREFIX declarations
       --compact                  Compact mode (opposite of 'expand')
-      --format <FORMAT>          Override the input format (auto-detected from file extension by default) Supported formats: turtle, trig, ntriples, nquads [possible values: turtle, trig, ntriples, nquads]
+      --format <FORMAT>          Override the input format (auto-detected from file extension by default) Supported formats: turtle, trig, ntriples, nquads, provn [possible values: turtle, trig, ntriples, nquads, provn]
       --pager                    Enable paging for large outputs
       --no-pager                 Disable paging (useful when paging is enabled by default in config)
       --dark-theme               Force dark theme colors
@@ -54,6 +54,7 @@ Options:
 - TriG / RDF 1.2 (quoted triples)
 - N-Triples (NT)
 - N-Quads (NQ)
+- PROV-N (Provenance Notation)
 
 ## Installation
 
@@ -209,8 +210,11 @@ rdfless file.nt
 # Process an N-Quads file
 rdfless file.nq
 
+# Process a PROV-N file
+rdfless file.provn
+
 # Process multiple files
-rdfless file1.ttl file2.trig file3.nt file4.nq
+rdfless file1.ttl file2.trig file3.nt file4.nq file5.provn
 
 # Read from stdin
 cat file.ttl | rdfless
@@ -223,6 +227,7 @@ rdfless --format turtle file.rdf
 rdfless --format trig file.rdf
 rdfless --format ntriples file.rdf
 rdfless --format nquads file.rdf
+rdfless --format provn file.rdf
 
 # Continue parsing even if there are errors in the RDF file
 rdfless --continue-on-error malformed_file.ttl

@@ -6,7 +6,7 @@ rdfless \- a colorful pretty printer for RDF data with ANSI colors
 [\fIOPTION\fR]... [\fIFILE\fR]...
 .SH DESCRIPTION
 .B rdfless
-is a command-line tool for pretty-printing RDF data with syntax highlighting and ANSI colors. It supports multiple RDF formats including Turtle, TriG, N-Triples, and N-Quads. The tool automatically detects the input format from file extensions and provides options for customizing the output format and appearance.
+is a command-line tool for pretty-printing RDF data with syntax highlighting and ANSI colors. It supports multiple RDF formats including Turtle, TriG, N-Triples, N-Quads, and PROV-N. The tool automatically detects the input format from file extensions and provides options for customizing the output format and appearance.
 
 The tool includes robust error handling capabilities and can continue parsing even when encountering malformed RDF data. It also provides flexible filtering options to display only specific triples matching subject, predicate, or object criteria.
 
@@ -39,6 +39,15 @@ Override the input format detection. By default, the format is auto-detected fro
 .IP \[bu] 2
 .B trig
 \- TriG format (.trig files)
+.IP \[bu] 2
+.B ntriples
+\- N-Triples format (.nt files)
+.IP \[bu] 2
+.B nquads
+\- N-Quads format (.nq files)
+.IP \[bu] 2
+.B provn
+\- PROV-N format (.provn files)
 .RE
 .TP
 .B \-\-pager
