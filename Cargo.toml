@@ -1,8 +1,8 @@
 [package]
 name = "rdfless"
-version = "0.3.30"
+version = "0.3.31"
 edition = "2021"
-description = "A colorful pretty printer for RDF (Turtle/TriG/N-Triples/N-Quads) with ANSI colors"
+description = "A colorful pretty printer for RDF (Turtle/TriG/N-Triples/N-Quads/PROV-N) with ANSI colors"
 authors = ["Lars Wilhelmsen"]
 license = "BSD-3-Clause"
 repository = "https://github.com/larsw/rdfless"

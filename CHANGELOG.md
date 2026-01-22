@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - SLSA Build Level 3 provenance generation for all release artifacts
 - SHA256 checksums for all release artifacts included in GitHub releases
+- PROV-N (Provenance Notation) format support with parser and sample file
+- Auto-detection of PROV-N format from `.provn` file extension
+- PROV-N format option in CLI (`--format provn`)
+- Comprehensive test suite for PROV-N parsing
 
 ### Fixed
 - Updated SLSA generator from v2.0.0 to v2.1.0 to fix failing provenance generation in GitHub Actions workflow

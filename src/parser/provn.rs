@@ -21,7 +21,7 @@ pub fn parse_for_estimation<R: Read>(
     for line in reader.lines() {
         let line = line?;
         lines_buffer.push(line.clone());
-        
+
         // Extract prefix declarations
         if let Some((prefix, iri)) = parse_provn_prefix(&line) {
             prefixes.insert(prefix, iri);
@@ -31,7 +31,7 @@ pub fn parse_for_estimation<R: Read>(
     // Second pass: parse PROV-N statements and convert to triples
     for line in lines_buffer {
         let trimmed = line.trim();
-        
+
         // Skip empty lines, comments, document markers, and prefix declarations
         if trimmed.is_empty()
             || trimmed.starts_with("//")
@@ -55,7 +55,7 @@ pub fn parse_for_estimation<R: Read>(
 /// Format: prefix ex <http://example.org/>
 fn parse_provn_prefix(line: &str) -> Option<(String, String)> {
     let trimmed = line.trim();
-    
+
     if !trimmed.starts_with("prefix") {
         return None;
     }
@@ -81,7 +81,7 @@ fn expand_qname(qname: &str, prefixes: &HashMap<String, String>) -> String {
     if let Some(colon_pos) = qname.find(':') {
         let prefix = &qname[..colon_pos];
         let local = &qname[colon_pos + 1..];
-        
+
         if let Some(base_iri) = prefixes.get(prefix) {
             return format!("{}{}", base_iri, local);
         }
@@ -96,12 +96,14 @@ fn parse_provn_statement(
     prefixes: &HashMap<String, String>,
 ) -> Result<Option<Vec<OwnedTriple>>> {
     let statement = statement.trim();
-    
+
     // Remove trailing parenthesis if present
     let statement = statement.trim_end_matches(')');
-    
+
     // Find the opening parenthesis
-    let paren_pos = statement.find('(').ok_or_else(|| anyhow!("Invalid PROV-N statement"))?;
+    let paren_pos = statement
+        .find('(')
+        .ok_or_else(|| anyhow!("Invalid PROV-N statement"))?;
     let relation_type = statement[..paren_pos].trim();
     let args = statement[paren_pos + 1..].trim();
 
@@ -440,7 +442,7 @@ fn parse_attributes(
     prefixes: &HashMap<String, String>,
 ) -> Result<Vec<(String, String)>> {
     let mut attributes = Vec::new();
-    
+
     let attrs_str = attrs_str.trim();
     if !attrs_str.starts_with('[') || !attrs_str.ends_with(']') {
         return Ok(attributes);
@@ -454,7 +456,7 @@ fn parse_attributes(
         if let Some(eq_pos) = attr_part.find('=') {
             let attr_name = attr_part[..eq_pos].trim();
             let attr_value = attr_part[eq_pos + 1..].trim().trim_matches('"');
-            
+
             let expanded_name = expand_qname(attr_name, prefixes);
             attributes.push((expanded_name, attr_value.to_string()));
         }
