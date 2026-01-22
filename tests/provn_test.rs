@@ -310,3 +310,29 @@ fn test_provn_format_detection() {
 
     assert_eq!(format, Some(InputFormat::ProvN));
 }
+
+#[rstest]
+fn test_provn_parser_attribute_with_comma() {
+    let provn = r#"
+document
+  prefix ex <http://example.org/>
+  prefix prov <http://www.w3.org/ns/prov#>
+  
+  entity(ex:e1, [prov:label="Hello, World"])
+endDocument
+    "#;
+
+    let reader = BufReader::new(provn.as_bytes());
+    let (triples, _) = rdfless::parse_for_estimation(reader, InputFormat::ProvN).unwrap();
+
+    // Should have type triple and attribute triple
+    assert!(triples.len() >= 2);
+
+    // Check that the attribute with comma was parsed correctly
+    let attr_triple = triples
+        .iter()
+        .find(|t| t.predicate.contains("prov#label"))
+        .expect("Should have prov:label attribute");
+    assert_eq!(attr_triple.object_type, ObjectType::Literal);
+    assert_eq!(attr_triple.object_value, "Hello, World");
+}
