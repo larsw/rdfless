@@ -9,6 +9,9 @@ use anyhow::{anyhow, Result};
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader, Read};
 
+/// Constant for null/empty timestamp marker in PROV-N
+const NULL_TIMESTAMP: &str = "-";
+
 /// Parse PROV-N input and convert to RDF triples
 pub fn parse_for_estimation<R: Read>(
     reader: BufReader<R>,
@@ -180,7 +183,7 @@ fn parse_activity_statement(
     ));
 
     // Add start time if present
-    if parts.len() > 1 && !parts[1].is_empty() && parts[1] != "-" {
+    if parts.len() > 1 && !parts[1].is_empty() && parts[1] != NULL_TIMESTAMP {
         triples.push(create_triple(
             &activity_id,
             "http://www.w3.org/ns/prov#startedAtTime",
@@ -190,7 +193,7 @@ fn parse_activity_statement(
     }
 
     // Add end time if present
-    if parts.len() > 2 && !parts[2].is_empty() && parts[2] != "-" {
+    if parts.len() > 2 && !parts[2].is_empty() && parts[2] != NULL_TIMESTAMP {
         triples.push(create_triple(
             &activity_id,
             "http://www.w3.org/ns/prov#endedAtTime",
@@ -449,20 +452,54 @@ fn parse_attributes(
     }
 
     let attrs_content = &attrs_str[1..attrs_str.len() - 1];
-    let attr_parts = attrs_content.split(',');
-
-    for attr_part in attr_parts {
-        let attr_part = attr_part.trim();
-        if let Some(eq_pos) = attr_part.find('=') {
-            let attr_name = attr_part[..eq_pos].trim();
-            let attr_value = attr_part[eq_pos + 1..].trim().trim_matches('"');
-
-            let expanded_name = expand_qname(attr_name, prefixes);
-            attributes.push((expanded_name, attr_value.to_string()));
+    
+    // Parse attributes handling commas within quotes
+    let mut current_attr = String::new();
+    let mut in_quotes = false;
+    
+    for ch in attrs_content.chars() {
+        match ch {
+            '"' => {
+                in_quotes = !in_quotes;
+                current_attr.push(ch);
+            }
+            ',' if !in_quotes => {
+                // Found attribute separator
+                if !current_attr.is_empty() {
+                    if let Some((name, value)) = parse_single_attribute(&current_attr, prefixes) {
+                        attributes.push((name, value));
+                    }
+                    current_attr.clear();
+                }
+            }
+            _ => {
+                current_attr.push(ch);
+            }
+        }
+    }
+    
+    // Handle last attribute
+    if !current_attr.is_empty() {
+        if let Some((name, value)) = parse_single_attribute(&current_attr, prefixes) {
+            attributes.push((name, value));
         }
     }
 
     Ok(attributes)
+}
+
+/// Parse a single attribute in the form "name=value"
+fn parse_single_attribute(
+    attr_str: &str,
+    prefixes: &HashMap<String, String>,
+) -> Option<(String, String)> {
+    let attr_str = attr_str.trim();
+    let eq_pos = attr_str.find('=')?;
+    let attr_name = attr_str[..eq_pos].trim();
+    let attr_value = attr_str[eq_pos + 1..].trim().trim_matches('"');
+    
+    let expanded_name = expand_qname(attr_name, prefixes);
+    Some((expanded_name, attr_value.to_string()))
 }
 
 /// Create an RDF type triple
