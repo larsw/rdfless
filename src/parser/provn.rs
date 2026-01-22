@@ -452,11 +452,11 @@ fn parse_attributes(
     }
 
     let attrs_content = &attrs_str[1..attrs_str.len() - 1];
-    
+
     // Parse attributes handling commas within quotes
     let mut current_attr = String::new();
     let mut in_quotes = false;
-    
+
     for ch in attrs_content.chars() {
         match ch {
             '"' => {
@@ -477,7 +477,7 @@ fn parse_attributes(
             }
         }
     }
-    
+
     // Handle last attribute
     if !current_attr.is_empty() {
         if let Some((name, value)) = parse_single_attribute(&current_attr, prefixes) {
@@ -497,7 +497,7 @@ fn parse_single_attribute(
     let eq_pos = attr_str.find('=')?;
     let attr_name = attr_str[..eq_pos].trim();
     let attr_value = attr_str[eq_pos + 1..].trim().trim_matches('"');
-    
+
     let expanded_name = expand_qname(attr_name, prefixes);
     Some((expanded_name, attr_value.to_string()))
 }
