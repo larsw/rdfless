@@ -27,13 +27,15 @@ enum FormatArg {
     NTriples,
     #[value(name = "nquads")]
     NQuads,
+    #[value(name = "provn")]
+    ProvN,
 }
 
 /// A pretty printer for RDF data with ANSI colors
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    /// Input files (Turtle, TriG, N-Triples, or N-Quads format)
+    /// Input files (Turtle, TriG, N-Triples, N-Quads, or PROV-N format)
     #[arg(name = "FILE")]
     files: Vec<PathBuf>,
 
@@ -46,7 +48,7 @@ struct Args {
     compact: bool,
 
     /// Override the input format (auto-detected from file extension by default)
-    /// Supported formats: turtle, trig, ntriples, nquads
+    /// Supported formats: turtle, trig, ntriples, nquads, provn
     #[arg(long, value_enum)]
     format: Option<FormatArg>,
 
@@ -177,6 +179,7 @@ impl rdfless::ArgsConfig for Args {
                 FormatArg::Trig => InputFormat::TriG,
                 FormatArg::NTriples => InputFormat::NTriples,
                 FormatArg::NQuads => InputFormat::NQuads,
+                FormatArg::ProvN => InputFormat::ProvN,
             });
         }
 

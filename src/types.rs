@@ -13,6 +13,7 @@ pub enum InputFormat {
     TriG,
     NTriples,
     NQuads,
+    ProvN,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -87,6 +88,7 @@ pub fn detect_format_from_path(path: &Path) -> Option<InputFormat> {
             "trig" => InputFormat::TriG,
             "nt" => InputFormat::NTriples,
             "nq" => InputFormat::NQuads,
+            "provn" => InputFormat::ProvN,
             _ => InputFormat::Turtle, // Default to Turtle for unknown extensions
         })
 }
