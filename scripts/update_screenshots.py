@@ -4,11 +4,14 @@
 Generate README screenshots by running rdfless in a VTE terminal and capturing the window.
 Requires: python3-gi, gir1.2-gtk-3.0, gir1.2-vte-2.91
 
-This script orchestrates four images:
+This script orchestrates the README screenshot images:
 - assets/sample-ttl-compact.png
 - assets/sample-ttl-expanded.png
 - assets/sample-trig-compact.png
 - assets/sample-trig-expanded.png
+- assets/sample-nt.png
+- assets/sample-nq.png
+- assets/sample-provn.png
 """
 
 import os
@@ -32,6 +35,7 @@ IMAGES = [
     # N-Triples and N-Quads don't have compact/expanded variants; one shot each
     (ASSETS / "sample-nt.png", f"{BIN} --no-pager --no-auto-theme {SAMPLES / 'sample.nt'}"),
     (ASSETS / "sample-nq.png", f"{BIN} --no-pager --no-auto-theme {SAMPLES / 'sample.nq'}"),
+    (ASSETS / "sample-provn.png", f"{BIN} --no-pager --no-auto-theme {SAMPLES / 'sample.provn'}"),
 ]
 
 # Deterministic terminal look

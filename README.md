@@ -348,6 +348,10 @@ Compact Mode | Expanded Mode
 
 ![N-Quads](assets/sample-nq.png)
 
+### PROV-N (PROVN)
+
+![PROV-N](assets/sample-provn.png)
+
 For how to regenerate these screenshots, see the Contributors guide.
 
 ## License
