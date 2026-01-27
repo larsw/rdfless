@@ -11,7 +11,7 @@ keywords = ["rdf", "turtle", "ntriples", "nquads", "pretty-printer"]
 categories = ["command-line-utilities", "text-processing"]
 
 [dependencies]
-oxttl = { version = "0.2.1", features = ["rdf-12"] }
+oxttl = { version = "0.2.2", features = ["rdf-12"] }
 oxrdf = { version = "0.3.0-beta.2", features = ["rdf-12"] }
 colored = "3.1.1"
 clap = { version = "4.5.54", features = ["derive"] }
