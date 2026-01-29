@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - _None_
 
+### Changed
+- Updated default dark theme colors to use bright variants (bright_blue, bright_green, bright_white, bright_red, bright_yellow) for improved visibility and contrast on dark terminal backgrounds, following recommendations from https://blog.xoria.org/terminal-colors/
+
 ### Fixed
 - _None_
 

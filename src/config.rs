@@ -67,13 +67,13 @@ impl Default for ThemeConfig {
         ThemeConfig {
             auto_detect: true,
             dark_theme: ColorConfig {
-                subject: "blue".to_string(),
-                predicate: "green".to_string(),
-                object: "white".to_string(),
-                literal: "red".to_string(),
-                prefix: "yellow".to_string(),
-                base: "yellow".to_string(),
-                graph: "yellow".to_string(),
+                subject: "bright_blue".to_string(),
+                predicate: "bright_green".to_string(),
+                object: "bright_white".to_string(),
+                literal: "bright_red".to_string(),
+                prefix: "bright_yellow".to_string(),
+                base: "bright_yellow".to_string(),
+                graph: "bright_yellow".to_string(),
             },
             light_theme: ColorConfig {
                 subject: "blue".to_string(),
@@ -91,13 +91,13 @@ impl Default for ThemeConfig {
 impl Default for ColorConfig {
     fn default() -> Self {
         ColorConfig {
-            subject: "blue".to_string(),
-            predicate: "green".to_string(),
-            object: "white".to_string(),
-            literal: "red".to_string(),
-            prefix: "yellow".to_string(),
-            base: "yellow".to_string(),
-            graph: "yellow".to_string(),
+            subject: "bright_blue".to_string(),
+            predicate: "bright_green".to_string(),
+            object: "bright_white".to_string(),
+            literal: "bright_red".to_string(),
+            prefix: "bright_yellow".to_string(),
+            base: "bright_yellow".to_string(),
+            graph: "bright_yellow".to_string(),
         }
     }
 }
