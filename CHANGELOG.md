@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated default dark theme colors to use bright variants (bright_blue, bright_green, bright_white, bright_red, bright_yellow) for improved visibility and contrast on dark terminal backgrounds, following recommendations from https://blog.xoria.org/terminal-colors/
 
 ### Fixed
-- _None_
+- Replace `dtolnay/rust-toolchain@stable` with `actions-rust-lang/setup-rust-toolchain@v1` in CI workflow to resolve intermittent 401 Unauthorized failures on macOS runners
 
 ## [0.4.1] - 2026-01-22
 
