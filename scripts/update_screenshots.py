@@ -114,6 +114,11 @@ def main():
 
         env = os.environ.copy()
         env["HOME"] = tmp_home
+        # Screenshot assets should always demonstrate syntax highlighting, even
+        # when the invoking shell has opted out of color globally.
+        env.pop("NO_COLOR", None)
+        if env.get("CLICOLOR") == "0":
+            env.pop("CLICOLOR", None)
         for out, cmd in IMAGES:
             run_one(out, cmd, env)
     print("All screenshots generated")
