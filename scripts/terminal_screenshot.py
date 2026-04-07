@@ -76,11 +76,12 @@ class TerminalScreenshotApp(Gtk.Window):
 
         # Start the command
         try:
+            envv = [f"{key}={value}" for key, value in os.environ.items()]
             self.term.spawn_sync(
                 Vte.PtyFlags.DEFAULT,
                 cwd,
                 command,
-                [],
+                envv,
                 GLib.SpawnFlags.DEFAULT,
                 None, None,
                 None,

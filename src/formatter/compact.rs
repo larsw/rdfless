@@ -108,76 +108,60 @@ pub fn print_triples_to_writer<W: Write>(
             writeln!(writer, "{} {{", colors.colorize(&formatted_graph, "graph"))?;
         }
 
-        // Group by subject within this graph
-        let mut current_subject: Option<String> = None;
-        let terminal_width = get_terminal_width();
-
+        // Group by subject within this graph while preserving input order.
+        let mut subject_groups: Vec<(String, Vec<&OwnedTriple>)> = Vec::new();
         for triple in triples_in_graph {
             let subject = format_subject(triple, prefixes, colors);
-            let predicate = format_predicate(triple, prefixes, colors);
-            let object = format_object(triple, prefixes, colors);
+            if let Some((_, subject_triples)) = subject_groups
+                .iter_mut()
+                .find(|(group_subject, _)| group_subject == &subject)
+            {
+                subject_triples.push(triple);
+            } else {
+                subject_groups.push((subject, vec![triple]));
+            }
+        }
 
+        let terminal_width = get_terminal_width();
+
+        for (subject_index, (subject, subject_triples)) in subject_groups.iter().enumerate() {
             // Indent more if we're in a named graph
             let indent = if graph_key.is_some() { "  " } else { "" };
 
-            // Check if we're continuing with the same subject
-            if let Some(ref current) = current_subject {
-                if current == &subject {
-                    // Same subject, continue with predicate-object
-                    // Calculate if we can fit predicate and object on the same line
-                    let predicate_line = format!("{indent}    {predicate}");
-                    let object_part = format!(" {object} .");
-                    let full_line = format!("{predicate_line}{object_part}");
-                    let line_length = strip_ansi_codes(&full_line).len();
+            if subject_index > 0 && graph_key.is_none() {
+                writeln!(writer)?; // Add a blank line between statements
+            }
 
-                    if line_length <= terminal_width {
-                        // Fits on one line
-                        writeln!(writer, "{full_line}")?;
-                    } else {
-                        // Split across lines
-                        writeln!(writer, "{predicate_line} ;")?;
-                        writeln!(writer, "{indent}        {object} .")?;
-                    }
+            for (triple_index, triple) in subject_triples.iter().enumerate() {
+                let predicate = format_predicate(triple, prefixes, colors);
+                let object = format_object(triple, prefixes, colors);
+                let terminator = if triple_index + 1 == subject_triples.len() {
+                    "."
                 } else {
-                    // Different subject, add blank line and start new triple
-                    if graph_key.is_none() {
-                        writeln!(writer)?; // Add a blank line between statements
-                    }
+                    ";"
+                };
 
-                    // Calculate if subject, predicate, and object fit on one line
-                    let subject_colored = colors.colorize(&subject, "subject");
-                    let subject_line = format!("{indent}{subject_colored} {predicate}");
-                    let object_part = format!(" {object} .");
-                    let full_line = format!("{subject_line}{object_part}");
-                    let line_length = strip_ansi_codes(&full_line).len();
-
-                    if line_length <= terminal_width {
-                        // Fits on one line
-                        writeln!(writer, "{full_line}")?;
-                    } else {
-                        // Split across lines
-                        writeln!(writer, "{subject_line} ;")?;
-                        writeln!(writer, "{indent}    {object} .")?;
-                    }
-                    current_subject = Some(subject);
-                }
-            } else {
-                // First triple
-                let subject_colored = colors.colorize(&subject, "subject");
-                let subject_line = format!("{indent}{subject_colored} {predicate}");
-                let object_part = format!(" {object} .");
-                let full_line = format!("{subject_line}{object_part}");
+                let predicate_line = if triple_index == 0 {
+                    let subject_colored = colors.colorize(subject, "subject");
+                    format!("{indent}{subject_colored} {predicate}")
+                } else {
+                    format!("{indent}    {predicate}")
+                };
+                let object_part = format!(" {object} {terminator}");
+                let full_line = format!("{predicate_line}{object_part}");
                 let line_length = strip_ansi_codes(&full_line).len();
 
                 if line_length <= terminal_width {
-                    // Fits on one line
                     writeln!(writer, "{full_line}")?;
                 } else {
-                    // Split across lines
-                    writeln!(writer, "{subject_line} ;")?;
-                    writeln!(writer, "{indent}    {object} .")?;
+                    writeln!(writer, "{predicate_line}")?;
+                    let object_indent = if triple_index == 0 {
+                        format!("{indent}    ")
+                    } else {
+                        format!("{indent}        ")
+                    };
+                    writeln!(writer, "{object_indent}{object} {terminator}")?;
                 }
-                current_subject = Some(subject);
             }
         }
 

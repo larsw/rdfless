@@ -408,3 +408,91 @@ fn test_print_prefixes_without_base() {
     assert!(output_str.contains("@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>"));
     assert!(output_str.contains("@prefix ex: <https://example.org/vocab/>"));
 }
+
+#[rstest]
+fn test_compact_turtle_repeated_subject_uses_semicolon_until_final_period() {
+    let triples = vec![
+        OwnedTriple {
+            subject_type: SubjectType::NamedNode,
+            subject_value: "https://example.org/x".to_string(),
+            predicate: "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".to_string(),
+            object_type: ObjectType::NamedNode,
+            object_value: "http://www.w3.org/2000/01/rdf-schema#Class".to_string(),
+            object_datatype: None,
+            object_language: None,
+            graph: None,
+            subject_triple: None,
+            object_triple: None,
+        },
+        OwnedTriple {
+            subject_type: SubjectType::NamedNode,
+            subject_value: "https://example.org/x".to_string(),
+            predicate: "http://www.w3.org/2000/01/rdf-schema#label".to_string(),
+            object_type: ObjectType::Literal,
+            object_value: "X".to_string(),
+            object_datatype: None,
+            object_language: None,
+            graph: None,
+            subject_triple: None,
+            object_triple: None,
+        },
+    ];
+    let mut prefixes = HashMap::new();
+    prefixes.insert("".to_string(), "https://example.org/".to_string());
+    prefixes.insert(
+        "rdfs".to_string(),
+        "http://www.w3.org/2000/01/rdf-schema#".to_string(),
+    );
+
+    let colors = ColorConfig::no_color();
+    let mut output = Vec::new();
+    rdfless::render_output(&triples, &prefixes, false, &colors, &mut output).unwrap();
+
+    let output_str = String::from_utf8(output).unwrap();
+    assert!(output_str.contains(":x a rdfs:Class ;\n    rdfs:label \"X\" ."));
+    assert!(!output_str.contains(":x a rdfs:Class .\n    rdfs:label \"X\" ."));
+}
+
+#[rstest]
+fn test_compact_trig_repeated_subject_uses_semicolon_until_final_period() {
+    let triples = vec![
+        OwnedTriple {
+            subject_type: SubjectType::NamedNode,
+            subject_value: "https://example.org/x".to_string(),
+            predicate: "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".to_string(),
+            object_type: ObjectType::NamedNode,
+            object_value: "http://www.w3.org/2000/01/rdf-schema#Class".to_string(),
+            object_datatype: None,
+            object_language: None,
+            graph: Some("https://example.org/g".to_string()),
+            subject_triple: None,
+            object_triple: None,
+        },
+        OwnedTriple {
+            subject_type: SubjectType::NamedNode,
+            subject_value: "https://example.org/x".to_string(),
+            predicate: "http://www.w3.org/2000/01/rdf-schema#label".to_string(),
+            object_type: ObjectType::Literal,
+            object_value: "X".to_string(),
+            object_datatype: None,
+            object_language: None,
+            graph: Some("https://example.org/g".to_string()),
+            subject_triple: None,
+            object_triple: None,
+        },
+    ];
+    let mut prefixes = HashMap::new();
+    prefixes.insert("".to_string(), "https://example.org/".to_string());
+    prefixes.insert(
+        "rdfs".to_string(),
+        "http://www.w3.org/2000/01/rdf-schema#".to_string(),
+    );
+
+    let colors = ColorConfig::no_color();
+    let mut output = Vec::new();
+    rdfless::render_output(&triples, &prefixes, false, &colors, &mut output).unwrap();
+
+    let output_str = String::from_utf8(output).unwrap();
+    assert!(output_str.contains(":g {\n  :x a rdfs:Class ;\n      rdfs:label \"X\" .\n}"));
+    assert!(!output_str.contains("  :x a rdfs:Class .\n      rdfs:label \"X\" ."));
+}
