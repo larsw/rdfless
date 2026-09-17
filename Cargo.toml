@@ -25,7 +25,7 @@ terminal_size = "0.4.4"
 termbg = "0.6.2"
 
 [dev-dependencies]
-rstest = "0.26.1"
+rstest = "0.27.0"
 tempfile = "3.27.0"
 
 [profile.release]
