@@ -462,9 +462,9 @@ checksum = "32a282da65faaf38286cf3be983213fcf1d2e2a58700e808f83f4ea9a4804bc0"
 
 [[package]]
 name = "minus"
-version = "5.7.2"
+version = "5.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1db1df1b8dd701aa57b41283b50b751b3ebc8fe1406955ec90c53b46b475fa56"
+checksum = "b20be26a360f37e73a59ba17f4bee3ad24cd67417d82b9946acd58173a495bfe"
 dependencies = [
  "crossbeam-channel",
  "crossterm 0.29.0",
